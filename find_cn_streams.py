@@ -1,0 +1,1200 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import dataclasses
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any, Iterable
+from urllib.error import HTTPError, URLError
+from urllib.parse import urljoin, urlparse
+from urllib.request import Request, urlopen
+
+DEFAULT_USER_AGENT = "iptv-cn-finder/1.0"
+CHINESE_LANGUAGE_CODES = {
+    "chi",
+    "cmn",
+    "cdo",
+    "cjy",
+    "hak",
+    "nan",
+    "wuu",
+    "yue",
+    "zho",
+}
+CHINESE_REGION_CODES = {"CN", "HK", "MO", "TW", "SG", "MY"}
+CHINESE_HINT_KEYWORDS = (
+    "beijing",
+    "cantonese",
+    "cctv",
+    "chinese",
+    "dragon tv",
+    "guangdong",
+    "hong kong",
+    "mandarin",
+    "phoenix",
+    "shanghai",
+    "taiwan",
+    "tvb",
+    "中文",
+    "华语",
+    "台视",
+    "国语",
+    "央视",
+    "广东",
+    "本港台",
+    "粤语",
+    "香港",
+)
+M3U_CONTENT_TYPES = {
+    "application/vnd.apple.mpegurl",
+    "application/x-mpegurl",
+    "audio/mpegurl",
+    "audio/x-mpegurl",
+}
+PLAYABLE_CONTENT_PREFIXES = ("audio/", "video/")
+TEXT_SAMPLE_LIMIT = 65536
+MEDIA_SAMPLE_LIMIT = 4096
+HAN_RE = re.compile(r"[\u3400-\u9FFF]")
+EXTINF_ATTR_RE = re.compile(r'([A-Za-z0-9_-]+)="([^"]*)"')
+IP_HOST_RE = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
+CCTV_CHANNEL_LABELS = {
+    "CCTV1.cn": "CCTV-1 综合",
+    "CCTV2.cn": "CCTV-2 财经",
+    "CCTV3.cn": "CCTV-3 综艺",
+    "CCTV4K.cn": "CCTV-4K 超高清",
+    "CCTV5.cn": "CCTV-5 体育",
+    "CCTV5Plus.cn": "CCTV-5+ 体育赛事",
+    "CCTV6.cn": "CCTV-6 电影",
+    "CCTV7.cn": "CCTV-7 国防军事",
+    "CCTV8.cn": "CCTV-8 电视剧",
+    "CCTV8K.cn": "CCTV-8K 超高清",
+    "CCTV9.cn": "CCTV-9 纪录",
+    "CCTV10.cn": "CCTV-10 科教",
+    "CCTV11.cn": "CCTV-11 戏曲",
+    "CCTV12.cn": "CCTV-12 社会与法",
+    "CCTV13.cn": "CCTV-13 新闻",
+    "CCTV14.cn": "CCTV-14 少儿",
+    "CCTV15.cn": "CCTV-15 音乐",
+    "CCTV16.cn": "CCTV-16 奥林匹克",
+    "CCTV17.cn": "CCTV-17 农业农村",
+}
+SATELLITE_CHANNEL_LABELS = {
+    "AnhuiSatelliteTV.cn": "安徽卫视",
+    "AnhuiTV.cn": "安徽卫视",
+    "BeijingSatelliteTV.cn": "北京卫视",
+    "BingtuanSatelliteTV.cn": "兵团卫视",
+    "ChongqingSatelliteTV.cn": "重庆卫视",
+    "DragonTV.cn": "东方卫视",
+    "FujianSoutheastTV.cn": "东南卫视",
+    "FujianStraitsTV.cn": "海峡卫视",
+    "GansuSatelliteTV.cn": "甘肃卫视",
+    "GBASatelliteTV.cn": "大湾区卫视",
+    "GuangdongSatelliteTV.cn": "广东卫视",
+    "HainanSatelliteTV.cn": "海南卫视",
+    "HebeiSatelliteTV.cn": "河北卫视",
+    "HeilongjiangSatelliteTV.cn": "黑龙江卫视",
+    "HenanSatelliteTV.cn": "河南卫视",
+    "HubeiSatelliteTV.cn": "湖北卫视",
+    "HunanSatelliteTV.cn": "湖南卫视",
+    "InnerMongoliaSatelliteTV.cn": "内蒙古卫视",
+    "JiangsuSatelliteTV.cn": "江苏卫视",
+    "JiangxiSatelliteTV.cn": "江西卫视",
+    "JilinSatelliteTV.cn": "吉林卫视",
+    "KangbaTV.cn": "康巴卫视",
+    "LiaoningSatelliteTV.cn": "辽宁卫视",
+    "NingxiaSatelliteChannel.cn": "宁夏卫视",
+    "QinghaiSatelliteTV.cn": "青海卫视",
+    "ShaanxiSatelliteTV.cn": "陕西卫视",
+    "ShandongSatelliteTV.cn": "山东卫视",
+    "ShenzhenSatelliteTV.cn": "深圳卫视",
+    "SichuanSatelliteTV.cn": "四川卫视",
+    "TheGreaterBaySatelliteTV.cn": "大湾区卫视",
+    "TianjinSatelliteTV.cn": "天津卫视",
+    "XinjiangSatelliteTV.cn": "新疆卫视",
+    "YanbianSatelliteTV.cn": "延边卫视",
+    "YunnanSatelliteTV.cn": "云南卫视",
+    "ZhejiangSatelliteTV.cn": "浙江卫视",
+}
+TARGET_CHANNEL_LABELS = {**CCTV_CHANNEL_LABELS, **SATELLITE_CHANNEL_LABELS}
+
+
+@dataclasses.dataclass(frozen=True)
+class Candidate:
+    source: str
+    url: str
+    title: str
+    channel_id: str | None = None
+    feed_id: str | None = None
+    country: str | None = None
+    languages: tuple[str, ...] = ()
+    categories: tuple[str, ...] = ()
+    quality: str | None = None
+    user_agent: str | None = None
+    referrer: str | None = None
+    group_title: str | None = None
+    logo: str | None = None
+    website: str | None = None
+    channel_group: str | None = None
+
+    def request_headers(self) -> dict[str, str]:
+        headers = {
+            "Accept": "*/*",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.6",
+            "Connection": "close",
+            "User-Agent": self.user_agent or DEFAULT_USER_AGENT,
+        }
+        if self.referrer:
+            headers["Referer"] = self.referrer
+        return headers
+
+
+@dataclasses.dataclass(frozen=True)
+class ProbeResult:
+    ok: bool
+    status: int | None
+    content_type: str | None
+    detail: str
+    elapsed_ms: int
+    final_url: str | None = None
+    via_ffprobe: bool = False
+
+
+@dataclasses.dataclass(frozen=True)
+class FetchResult:
+    status: int | None
+    content_type: str | None
+    final_url: str
+    body: bytes
+
+
+class CacheStore:
+    def __init__(self, root: Path | None, ttl_seconds: int) -> None:
+        self.root = root
+        self.ttl_seconds = ttl_seconds
+        if self.root:
+            self.root.mkdir(parents=True, exist_ok=True)
+
+    def load_bytes(self, url: str, timeout: float) -> bytes:
+        if not self.root:
+            return fetch_bytes(url, timeout=timeout)
+        cache_path = self.root / hashlib.sha256(url.encode("utf-8")).hexdigest()
+        if cache_path.exists():
+            age_seconds = time.time() - cache_path.stat().st_mtime
+            if age_seconds <= self.ttl_seconds:
+                return cache_path.read_bytes()
+        data = fetch_bytes(url, timeout=timeout)
+        cache_path.write_bytes(data)
+        return data
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Collect public IPTV candidates, filter Chinese-language channels, "
+            "probe availability, and export a verified M3U playlist."
+        )
+    )
+    parser.add_argument(
+        "--provider",
+        action="append",
+        choices=("iptv-org",),
+        default=["iptv-org"],
+        help="Candidate source provider. Repeat to add more providers.",
+    )
+    parser.add_argument(
+        "--remote-m3u",
+        action="append",
+        default=[],
+        help="Extra remote M3U playlist URL to merge into the candidate pool.",
+    )
+    parser.add_argument(
+        "--local-m3u",
+        action="append",
+        default=[],
+        help="Extra local M3U playlist file to merge into the candidate pool.",
+    )
+    parser.add_argument(
+        "--out",
+        default="output/chinese-public-verified.m3u",
+        help="Output M3U path for verified streams.",
+    )
+    parser.add_argument(
+        "--report",
+        default="output/chinese-public-report.json",
+        help="Output JSON report path for probe results.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=300,
+        help="Maximum number of ranked candidates to probe. Use 0 for exhaustive mode.",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=8.0,
+        help="Per-request timeout in seconds.",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=min(32, max(8, (os.cpu_count() or 4) * 4)),
+        help="Concurrent probe workers.",
+    )
+    parser.add_argument(
+        "--min-quality",
+        type=int,
+        default=0,
+        help="Drop streams below this numeric quality value, for example 720.",
+    )
+    parser.add_argument(
+        "--allow-ip-hosts",
+        action="store_true",
+        help="Keep streams served from raw IP addresses instead of domain names.",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        default=".cache",
+        help="Directory used to cache provider downloads. Empty string disables cache.",
+    )
+    parser.add_argument(
+        "--cache-ttl",
+        type=int,
+        default=3600,
+        help="Provider cache TTL in seconds.",
+    )
+    parser.add_argument(
+        "--ffprobe",
+        action="store_true",
+        help="Use ffprobe when available for a deeper validation pass.",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=1,
+        help="Retry transient network failures this many times.",
+    )
+    parser.add_argument(
+        "--stability-checks",
+        type=int,
+        default=2,
+        help="Require this many successful probe passes for a channel to be kept.",
+    )
+    parser.add_argument(
+        "--include-nsfw",
+        action="store_true",
+        help="Keep NSFW or xxx-tagged entries.",
+    )
+    parser.add_argument(
+        "--keep-failures",
+        action="store_true",
+        help="Keep failed entries in the JSON report.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print progress logs to stderr.",
+    )
+    return parser.parse_args()
+
+
+def log(message: str, verbose: bool = True) -> None:
+    if verbose:
+        print(message, file=sys.stderr)
+
+
+def fetch_bytes(url: str, timeout: float, headers: dict[str, str] | None = None) -> bytes:
+    request = Request(url, headers=headers or {"User-Agent": DEFAULT_USER_AGENT})
+    with urlopen(request, timeout=timeout) as response:
+        return response.read()
+
+
+def fetch_json(url: str, cache: CacheStore, timeout: float) -> Any:
+    return json.loads(cache.load_bytes(url, timeout=timeout).decode("utf-8"))
+
+
+def fetch_text(url: str, cache: CacheStore, timeout: float) -> str:
+    return cache.load_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
+
+
+def contains_han(text: str | None) -> bool:
+    return bool(text and HAN_RE.search(text))
+
+
+def text_looks_chinese(text: str | None) -> bool:
+    if not text:
+        return False
+    normalized = text.lower()
+    return contains_han(text) or any(keyword in normalized for keyword in CHINESE_HINT_KEYWORDS)
+
+
+def normalize_url(url: str) -> str:
+    return url.strip()
+
+
+def safe_tuple(values: Iterable[str] | None) -> tuple[str, ...]:
+    return tuple(sorted({value for value in (values or []) if value}))
+
+
+def quality_value(quality: str | None) -> int:
+    if not quality:
+        return 0
+    match = re.search(r"(\d+)", quality)
+    return int(match.group(1)) if match else 0
+
+
+def quality_tier(quality: str | None) -> int:
+    value = quality_value(quality)
+    if value >= 1080:
+        return 3
+    if value >= 720:
+        return 2
+    if value >= 480:
+        return 1
+    return 0
+
+
+def host_is_ip_address(url: str) -> bool:
+    hostname = urlparse(url).hostname or ""
+    return bool(IP_HOST_RE.fullmatch(hostname))
+
+
+def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int]:
+    language_match = int(bool(set(candidate.languages) & CHINESE_LANGUAGE_CODES))
+    region_match = int(candidate.country in CHINESE_REGION_CODES)
+    han_title = int(contains_han(candidate.title))
+    domain_match = int(not host_is_ip_address(candidate.url))
+    https_match = int(candidate.url.startswith("https://"))
+    return (
+        language_match,
+        domain_match,
+        https_match,
+        region_match,
+        quality_tier(candidate.quality),
+        han_title,
+    )
+
+
+def target_channel_group(channel_id: str | None) -> str | None:
+    if not channel_id:
+        return None
+    if channel_id in CCTV_CHANNEL_LABELS:
+        return "央视"
+    if channel_id in SATELLITE_CHANNEL_LABELS:
+        return "卫视"
+    return None
+
+
+def is_target_channel(channel: dict[str, Any] | None) -> bool:
+    if not channel:
+        return False
+    if channel.get("country") != "CN":
+        return False
+    return channel.get("id") in TARGET_CHANNEL_LABELS
+
+
+def choose_display_title(
+    channel_id: str | None,
+    stream_title: str | None,
+    channel: dict[str, Any] | None,
+) -> str:
+    if channel_id in TARGET_CHANNEL_LABELS:
+        return TARGET_CHANNEL_LABELS[channel_id]
+
+    preferred = [stream_title or ""]
+    if channel:
+        preferred.extend(channel.get("alt_names") or [])
+        preferred.append(channel.get("name") or "")
+    for name in preferred:
+        if contains_han(name):
+            return name.strip()
+    return (stream_title or (channel or {}).get("name") or "").strip()
+
+
+def verified_item_rank(item: tuple[Candidate, ProbeResult]) -> tuple[int, int, int, int]:
+    candidate, probe = item
+    return (
+        int(not host_is_ip_address(candidate.url)),
+        int(candidate.url.startswith("https://")),
+        quality_tier(candidate.quality),
+        -probe.elapsed_ms,
+    )
+
+
+def collapse_verified_items(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+) -> list[tuple[Candidate, ProbeResult]]:
+    by_title: dict[str, tuple[Candidate, ProbeResult]] = {}
+    for item in verified_items:
+        title = item[0].title
+        current = by_title.get(title)
+        if current is None or verified_item_rank(item) > verified_item_rank(current):
+            by_title[title] = item
+
+    collapsed = list(by_title.values())
+    collapsed.sort(
+        key=lambda item: (
+            0 if item[0].channel_group == "央视" else 1,
+            item[0].title,
+        )
+    )
+    return collapsed
+
+
+def best_candidate(existing: Candidate, challenger: Candidate) -> Candidate:
+    return challenger if candidate_rank(challenger) > candidate_rank(existing) else existing
+
+
+def dedupe_candidates(candidates: Iterable[Candidate]) -> list[Candidate]:
+    deduped: dict[str, Candidate] = {}
+    for candidate in candidates:
+        deduped[candidate.url] = (
+            best_candidate(deduped[candidate.url], candidate)
+            if candidate.url in deduped
+            else candidate
+        )
+    return list(deduped.values())
+
+
+def build_candidate(
+    *,
+    source: str,
+    url: str,
+    title: str,
+    channel_id: str | None = None,
+    feed_id: str | None = None,
+    country: str | None = None,
+    languages: Iterable[str] | None = None,
+    categories: Iterable[str] | None = None,
+    quality: str | None = None,
+    user_agent: str | None = None,
+    referrer: str | None = None,
+    group_title: str | None = None,
+    logo: str | None = None,
+    website: str | None = None,
+    channel_group: str | None = None,
+) -> Candidate:
+    return Candidate(
+        source=source,
+        url=normalize_url(url),
+        title=title.strip() or url.strip(),
+        channel_id=channel_id,
+        feed_id=feed_id,
+        country=country,
+        languages=safe_tuple(languages),
+        categories=safe_tuple(categories),
+        quality=quality,
+        user_agent=user_agent,
+        referrer=referrer,
+        group_title=group_title,
+        logo=logo,
+        website=website,
+        channel_group=channel_group,
+    )
+
+
+def load_iptv_org_candidates(
+    cache: CacheStore,
+    timeout: float,
+    include_nsfw: bool,
+    min_quality: int,
+    allow_ip_hosts: bool,
+) -> list[Candidate]:
+    channels = fetch_json("https://iptv-org.github.io/api/channels.json", cache, timeout)
+    feeds = fetch_json("https://iptv-org.github.io/api/feeds.json", cache, timeout)
+    streams = fetch_json("https://iptv-org.github.io/api/streams.json", cache, timeout)
+
+    channels_by_id = {item["id"]: item for item in channels}
+    feeds_by_key = {(item["channel"], item["id"]): item for item in feeds if item.get("channel")}
+
+    candidates: list[Candidate] = []
+    for stream in streams:
+        url = normalize_url(stream.get("url") or "")
+        if not url or urlparse(url).scheme not in {"http", "https"}:
+            continue
+        if not allow_ip_hosts and host_is_ip_address(url):
+            continue
+        if quality_value(stream.get("quality")) < min_quality:
+            continue
+
+        channel = channels_by_id.get(stream.get("channel")) if stream.get("channel") else None
+        if not is_target_channel(channel):
+            continue
+        feed = (
+            feeds_by_key.get((stream.get("channel"), stream.get("feed")))
+            if stream.get("channel") and stream.get("feed")
+            else None
+        )
+
+        categories = safe_tuple((channel or {}).get("categories"))
+        if not include_nsfw:
+            if (channel or {}).get("is_nsfw"):
+                continue
+            if "xxx" in categories:
+                continue
+
+        channel_id = (channel or {}).get("id")
+        title = choose_display_title(channel_id, stream.get("title"), channel)
+        languages = safe_tuple((feed or {}).get("languages"))
+        country = (channel or {}).get("country")
+        channel_group = target_channel_group(channel_id)
+        if not channel_group:
+            continue
+
+        candidates.append(
+            build_candidate(
+                source="iptv-org",
+                url=url,
+                title=title,
+                channel_id=channel_id,
+                feed_id=(feed or {}).get("id"),
+                country=country,
+                languages=languages or ("zho",),
+                categories=categories,
+                quality=stream.get("quality"),
+                user_agent=stream.get("user_agent"),
+                referrer=stream.get("referrer"),
+                group_title=channel_group,
+                website=(channel or {}).get("website"),
+                channel_group=channel_group,
+            )
+        )
+    return dedupe_candidates(candidates)
+
+
+def parse_extinf(line: str) -> tuple[dict[str, str], str]:
+    payload = line[len("#EXTINF:") :]
+    info_blob, _, title = payload.partition(",")
+    attrs = {key.lower(): value for key, value in EXTINF_ATTR_RE.findall(info_blob)}
+    return attrs, title.strip()
+
+
+def load_m3u_file(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def load_extra_m3u_candidates(
+    content: str,
+    source_name: str,
+    include_nsfw: bool,
+    min_quality: int,
+    allow_ip_hosts: bool,
+) -> list[Candidate]:
+    candidates: list[Candidate] = []
+    pending_attrs: dict[str, str] = {}
+    pending_title = ""
+    pending_user_agent: str | None = None
+    pending_referrer: str | None = None
+
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#EXTINF:"):
+            pending_attrs, pending_title = parse_extinf(line)
+            pending_user_agent = None
+            pending_referrer = None
+            continue
+        if line.startswith("#EXTVLCOPT:"):
+            option = line[len("#EXTVLCOPT:") :]
+            if option.startswith("http-user-agent="):
+                pending_user_agent = option.split("=", 1)[1].strip()
+            elif option.startswith("http-referrer="):
+                pending_referrer = option.split("=", 1)[1].strip()
+            continue
+        if line.startswith("#"):
+            continue
+
+        url = normalize_url(line)
+        if urlparse(url).scheme not in {"http", "https"}:
+            continue
+        if not allow_ip_hosts and host_is_ip_address(url):
+            pending_attrs = {}
+            pending_title = ""
+            pending_user_agent = None
+            pending_referrer = None
+            continue
+
+        title = pending_title or pending_attrs.get("tvg-name") or url
+        group_title = pending_attrs.get("group-title")
+        country = pending_attrs.get("tvg-country") or None
+        quality = pending_attrs.get("tvg-quality")
+        if quality_value(quality) < min_quality:
+            pending_attrs = {}
+            pending_title = ""
+            pending_user_agent = None
+            pending_referrer = None
+            continue
+
+        if not include_nsfw:
+            searchable = " ".join([title, group_title or ""]).lower()
+            if "xxx" in searchable or "adult" in searchable:
+                pending_attrs = {}
+                pending_title = ""
+                pending_user_agent = None
+                pending_referrer = None
+                continue
+
+        searchable = " ".join(
+            [
+                title,
+                group_title or "",
+                pending_attrs.get("tvg-name", ""),
+                pending_attrs.get("tvg-id", ""),
+            ]
+        )
+        if not text_looks_chinese(searchable):
+            pending_attrs = {}
+            pending_title = ""
+            pending_user_agent = None
+            pending_referrer = None
+            continue
+
+        candidates.append(
+            build_candidate(
+                source=source_name,
+                url=url,
+                title=title,
+                channel_id=pending_attrs.get("tvg-id") or None,
+                country=country,
+                languages=("zho",) if contains_han(searchable) else (),
+                quality=quality,
+                user_agent=pending_user_agent,
+                referrer=pending_referrer,
+                group_title=group_title,
+                logo=pending_attrs.get("tvg-logo") or None,
+            )
+        )
+        pending_attrs = {}
+        pending_title = ""
+        pending_user_agent = None
+        pending_referrer = None
+    return dedupe_candidates(candidates)
+
+
+def choose_playlist_target(playlist_text: str) -> tuple[str | None, bool]:
+    items = [line.strip() for line in playlist_text.splitlines() if line.strip() and not line.startswith("#")]
+    is_master = "#EXT-X-STREAM-INF" in playlist_text
+    if not items:
+        return None, is_master
+    return (items[0] if is_master else items[-1]), is_master
+
+
+def classify_response(content_type: str | None, final_url: str, body: bytes) -> str:
+    normalized_type = (content_type or "").split(";")[0].strip().lower()
+    lowered_url = final_url.lower()
+    prefix = body[:256].lstrip()
+    if normalized_type in M3U_CONTENT_TYPES or lowered_url.endswith(".m3u8") or prefix.startswith(b"#EXTM3U"):
+        return "hls"
+    if lowered_url.endswith(".mpd") or b"<mpd" in prefix.lower():
+        return "dash"
+    if normalized_type.startswith(PLAYABLE_CONTENT_PREFIXES):
+        return "media"
+    if lowered_url.endswith((".aac", ".flv", ".m4a", ".mp3", ".mp4", ".ts")):
+        return "media"
+    if body:
+        return "generic"
+    return "unknown"
+
+
+def http_fetch(
+    url: str,
+    headers: dict[str, str],
+    timeout: float,
+    *,
+    max_bytes: int,
+    range_request: bool = False,
+) -> FetchResult:
+    request_headers = dict(headers)
+    if range_request:
+        request_headers["Range"] = f"bytes=0-{max_bytes - 1}"
+    request = Request(url, headers=request_headers)
+    with urlopen(request, timeout=timeout) as response:
+        body = response.read(max_bytes)
+        status = getattr(response, "status", None)
+        content_type = response.headers.get("Content-Type")
+        return FetchResult(
+            status=status,
+            content_type=content_type,
+            final_url=response.geturl(),
+            body=body,
+        )
+
+
+def ok_status(status: int | None) -> bool:
+    return status is not None and 200 <= status < 400
+
+
+def should_retry_probe(result: ProbeResult) -> bool:
+    return result.status is None or (result.status >= 500 if result.status is not None else False)
+
+
+def run_ffprobe(candidate: Candidate, timeout: float) -> ProbeResult | None:
+    ffprobe_path = shutil.which("ffprobe")
+    if not ffprobe_path:
+        return None
+
+    command = [
+        ffprobe_path,
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=codec_type",
+        "-of",
+        "json",
+        candidate.url,
+    ]
+    if candidate.user_agent:
+        command[1:1] = ["-user_agent", candidate.user_agent]
+    if candidate.referrer:
+        command[1:1] = ["-headers", f"Referer: {candidate.referrer}\r\n"]
+
+    start = time.perf_counter()
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=f"ffprobe error: {error}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            via_ffprobe=True,
+        )
+
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    if completed.returncode != 0:
+        detail = completed.stderr.strip().splitlines()[-1] if completed.stderr.strip() else "ffprobe failed"
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=detail,
+            elapsed_ms=elapsed_ms,
+            via_ffprobe=True,
+        )
+
+    try:
+        payload = json.loads(completed.stdout or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    has_streams = bool(payload.get("streams"))
+    return ProbeResult(
+        ok=has_streams,
+        status=200 if has_streams else None,
+        content_type="ffprobe",
+        detail="ffprobe detected streams" if has_streams else "ffprobe returned no streams",
+        elapsed_ms=elapsed_ms,
+        final_url=candidate.url,
+        via_ffprobe=True,
+    )
+
+
+def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool) -> ProbeResult:
+    if use_ffprobe:
+        ffprobe_result = run_ffprobe(candidate, timeout)
+        if ffprobe_result and ffprobe_result.ok:
+            return ffprobe_result
+
+    headers = candidate.request_headers()
+    start = time.perf_counter()
+    try:
+        top = http_fetch(candidate.url, headers, timeout, max_bytes=TEXT_SAMPLE_LIMIT)
+        kind = classify_response(top.content_type, top.final_url, top.body)
+
+        if not ok_status(top.status):
+            return ProbeResult(
+                ok=False,
+                status=top.status,
+                content_type=top.content_type,
+                detail="unexpected http status",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+            )
+
+        if kind == "hls":
+            playlist_text = top.body.decode("utf-8", errors="ignore")
+            child, is_master = choose_playlist_target(playlist_text)
+            if not child:
+                return ProbeResult(
+                    ok=True,
+                    status=top.status,
+                    content_type=top.content_type,
+                    detail="playlist reachable",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=top.final_url,
+                )
+
+            child_url = urljoin(top.final_url, child)
+            child_fetch = http_fetch(
+                child_url,
+                headers,
+                timeout,
+                max_bytes=TEXT_SAMPLE_LIMIT if is_master else MEDIA_SAMPLE_LIMIT,
+                range_request=not is_master,
+            )
+            child_kind = classify_response(child_fetch.content_type, child_fetch.final_url, child_fetch.body)
+
+            if is_master and child_kind == "hls":
+                child_playlist_text = child_fetch.body.decode("utf-8", errors="ignore")
+                grandchild, _ = choose_playlist_target(child_playlist_text)
+                if not grandchild:
+                    return ProbeResult(
+                        ok=True,
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail="master playlist reachable",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                    )
+                segment_url = urljoin(child_fetch.final_url, grandchild)
+                segment_fetch = http_fetch(
+                    segment_url,
+                    headers,
+                    timeout,
+                    max_bytes=MEDIA_SAMPLE_LIMIT,
+                    range_request=True,
+                )
+                ok = ok_status(segment_fetch.status) and bool(segment_fetch.body)
+                return ProbeResult(
+                    ok=ok,
+                    status=segment_fetch.status,
+                    content_type=segment_fetch.content_type,
+                    detail="variant segment reachable" if ok else "variant segment fetch failed",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=segment_fetch.final_url,
+                )
+
+            ok = ok_status(child_fetch.status) and bool(child_fetch.body)
+            return ProbeResult(
+                ok=ok,
+                status=child_fetch.status,
+                content_type=child_fetch.content_type,
+                detail="playlist segment reachable" if ok else "playlist segment fetch failed",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=child_fetch.final_url,
+            )
+
+        if kind == "dash":
+            ok = b"<mpd" in top.body[:TEXT_SAMPLE_LIMIT].lower()
+            return ProbeResult(
+                ok=ok,
+                status=top.status,
+                content_type=top.content_type,
+                detail="mpd manifest reachable" if ok else "dash manifest malformed",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+            )
+
+        if kind in {"media", "generic"}:
+            ok = bool(top.body)
+            return ProbeResult(
+                ok=ok,
+                status=top.status,
+                content_type=top.content_type,
+                detail="media endpoint reachable" if ok else "empty media response",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+            )
+
+        return ProbeResult(
+            ok=False,
+            status=top.status,
+            content_type=top.content_type,
+            detail="unknown response format",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=top.final_url,
+        )
+    except HTTPError as error:
+        return ProbeResult(
+            ok=False,
+            status=error.code,
+            content_type=error.headers.get("Content-Type") if error.headers else None,
+            detail=f"http error: {error.code}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=error.geturl() if hasattr(error, "geturl") else candidate.url,
+        )
+    except (TimeoutError, URLError, OSError) as error:
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=f"network error: {error}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=candidate.url,
+        )
+    except Exception as error:  # noqa: BLE001
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=f"probe error: {error}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=candidate.url,
+        )
+
+
+def probe_candidate(
+    candidate: Candidate,
+    timeout: float,
+    use_ffprobe: bool,
+    retries: int,
+    stability_checks: int,
+) -> ProbeResult:
+    result = probe_candidate_once(candidate, timeout, use_ffprobe)
+    retry_count = 0
+    while not result.ok and retry_count < retries and should_retry_probe(result):
+        retry_count += 1
+        result = probe_candidate_once(candidate, timeout, use_ffprobe)
+
+    if not result.ok:
+        return result
+
+    for check_index in range(1, max(1, stability_checks)):
+        follow_up = probe_candidate_once(candidate, timeout, use_ffprobe)
+        if not follow_up.ok:
+            return ProbeResult(
+                ok=False,
+                status=follow_up.status,
+                content_type=follow_up.content_type,
+                detail=f"stability check {check_index + 1} failed: {follow_up.detail}",
+                elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
+                final_url=follow_up.final_url,
+                via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+            )
+        result = ProbeResult(
+            ok=True,
+            status=result.status,
+            content_type=result.content_type,
+            detail=f"{result.detail}; stable x{check_index + 1}",
+            elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
+            final_url=result.final_url,
+            via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+        )
+    return result
+
+
+def format_group_title(candidate: Candidate) -> str | None:
+    if candidate.group_title in {"央视", "卫视"}:
+        return candidate.group_title
+    if candidate.group_title:
+        return candidate.group_title
+    pieces = [candidate.country]
+    if candidate.languages:
+        pieces.append("+".join(candidate.languages))
+    elif candidate.categories:
+        pieces.append(candidate.categories[0])
+    value = "/".join(piece for piece in pieces if piece)
+    return value or None
+
+
+def escape_attr(value: str) -> str:
+    return value.replace('"', "'")
+
+
+def write_m3u(path: Path, verified_items: list[tuple[Candidate, ProbeResult]]) -> None:
+    lines = ["#EXTM3U"]
+    for candidate, _probe in verified_items:
+        attributes = []
+        if candidate.channel_id:
+            attributes.append(f'tvg-id="{escape_attr(candidate.channel_id)}"')
+        attributes.append(f'tvg-name="{escape_attr(candidate.title)}"')
+        if candidate.logo:
+            attributes.append(f'tvg-logo="{escape_attr(candidate.logo)}"')
+        group_title = format_group_title(candidate)
+        if group_title:
+            attributes.append(f'group-title="{escape_attr(group_title)}"')
+        lines.append(f'#EXTINF:-1 {" ".join(attributes)},{candidate.title}')
+        if candidate.user_agent:
+            lines.append(f"#EXTVLCOPT:http-user-agent={candidate.user_agent}")
+        if candidate.referrer:
+            lines.append(f"#EXTVLCOPT:http-referrer={candidate.referrer}")
+        lines.append(candidate.url)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_report(
+    path: Path,
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    failed_items: list[tuple[Candidate, ProbeResult]],
+    keep_failures: bool,
+) -> None:
+    payload = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "success_count": len(verified_items),
+        "failure_count": len(failed_items),
+        "verified": [
+            {
+                "candidate": dataclasses.asdict(candidate),
+                "probe": dataclasses.asdict(probe),
+            }
+            for candidate, probe in verified_items
+        ],
+    }
+    if keep_failures:
+        payload["failed"] = [
+            {
+                "candidate": dataclasses.asdict(candidate),
+                "probe": dataclasses.asdict(probe),
+            }
+            for candidate, probe in failed_items
+        ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candidate]:
+    candidates: list[Candidate] = []
+    providers = list(dict.fromkeys(args.provider))
+
+    if "iptv-org" in providers:
+        candidates.extend(
+            load_iptv_org_candidates(
+                cache=cache,
+                timeout=args.timeout,
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=args.allow_ip_hosts,
+            )
+        )
+
+    for remote_url in args.remote_m3u:
+        text = fetch_text(remote_url, cache, timeout=args.timeout)
+        candidates.extend(
+            load_extra_m3u_candidates(
+                text,
+                source_name=f"remote:{remote_url}",
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=args.allow_ip_hosts,
+            )
+        )
+
+    for local_path in args.local_m3u:
+        text = load_m3u_file(Path(local_path))
+        candidates.extend(
+            load_extra_m3u_candidates(
+                text,
+                source_name=f"local:{local_path}",
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=args.allow_ip_hosts,
+            )
+        )
+
+    deduped = dedupe_candidates(candidates)
+    deduped.sort(key=candidate_rank, reverse=True)
+    if args.limit > 0:
+        deduped = deduped[: args.limit]
+    return deduped
+
+
+def probe_all(
+    candidates: list[Candidate],
+    timeout: float,
+    workers: int,
+    use_ffprobe: bool,
+    retries: int,
+    stability_checks: int,
+    verbose: bool,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[tuple[Candidate, ProbeResult]]]:
+    verified: list[tuple[Candidate, ProbeResult]] = []
+    failed: list[tuple[Candidate, ProbeResult]] = []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_candidate = {
+            executor.submit(
+                probe_candidate,
+                candidate,
+                timeout,
+                use_ffprobe,
+                retries,
+                stability_checks,
+            ): candidate
+            for candidate in candidates
+        }
+        total = len(future_to_candidate)
+        completed = 0
+        for future in concurrent.futures.as_completed(future_to_candidate):
+            candidate = future_to_candidate[future]
+            probe = future.result()
+            completed += 1
+            if probe.ok:
+                verified.append((candidate, probe))
+            else:
+                failed.append((candidate, probe))
+            if verbose and (completed == total or completed % 25 == 0):
+                log(
+                    f"progress {completed}/{total} "
+                    f"(ok={len(verified)} fail={len(failed)})",
+                    verbose=True,
+                )
+
+    verified.sort(
+        key=lambda item: (candidate_rank(item[0]), -item[1].elapsed_ms),
+        reverse=True,
+    )
+    failed.sort(
+        key=lambda item: (candidate_rank(item[0]), -item[1].elapsed_ms),
+        reverse=True,
+    )
+    return verified, failed
+
+
+def main() -> int:
+    args = parse_args()
+    cache_dir = Path(args.cache_dir) if args.cache_dir else None
+    cache = CacheStore(cache_dir, ttl_seconds=args.cache_ttl)
+
+    candidates = load_candidates(args, cache)
+    log(f"loaded {len(candidates)} ranked candidates", verbose=args.verbose)
+
+    verified, failed = probe_all(
+        candidates,
+        timeout=args.timeout,
+        workers=args.workers,
+        use_ffprobe=args.ffprobe,
+        retries=max(0, args.retries),
+        stability_checks=max(1, args.stability_checks),
+        verbose=args.verbose,
+    )
+    verified = collapse_verified_items(verified)
+
+    out_path = Path(args.out)
+    report_path = Path(args.report)
+    write_m3u(out_path, verified)
+    write_report(report_path, verified, failed, keep_failures=args.keep_failures)
+
+    print(
+        json.dumps(
+            {
+                "candidates": len(candidates),
+                "verified": len(verified),
+                "failed": len(failed),
+                "m3u": str(out_path),
+                "report": str(report_path),
+            },
+            ensure_ascii=False,
+        )
+    )
+    return 0 if verified else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
