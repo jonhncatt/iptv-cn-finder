@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qsl, quote, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 DEFAULT_USER_AGENT = "iptv-cn-finder/1.0"
@@ -66,6 +66,21 @@ MEDIA_SAMPLE_LIMIT = 4096
 HAN_RE = re.compile(r"[\u3400-\u9FFF]")
 EXTINF_ATTR_RE = re.compile(r'([A-Za-z0-9_-]+)="([^"]*)"')
 IP_HOST_RE = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
+CCTV_OFFICIAL_JS_URL = "https://js.player.cntv.cn/creator/liveplayer.js"
+CURATED_PUBLIC_M3U_URLS = {
+    "suxuang": "https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
+    "guovin": "https://raw.githubusercontent.com/Guovin/TV/gd/output/result.m3u",
+    "zbds": "https://live.zbds.top/tv/iptv4.m3u",
+    "chinaiptv": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8",
+}
+BLOCKED_CANDIDATE_URL_PATTERNS = (
+    "iptv.catvod.com/live.php",
+    "cdn.jsdelivr.net/gh/namegenliang/fast-github-access",
+)
+CCTV_OFFICIAL_WEBSITES = {
+    "CCTV1.cn": "https://tv.cctv.com/live/cctv1/",
+    "CCTV13.cn": "https://tv.cctv.com/live/cctv13/",
+}
 CCTV_CHANNEL_LABELS = {
     "CCTV1.cn": "CCTV-1 综合",
     "CCTV2.cn": "CCTV-2 财经",
@@ -124,7 +139,81 @@ SATELLITE_CHANNEL_LABELS = {
     "YunnanSatelliteTV.cn": "云南卫视",
     "ZhejiangSatelliteTV.cn": "浙江卫视",
 }
-TARGET_CHANNEL_LABELS = {**CCTV_CHANNEL_LABELS, **SATELLITE_CHANNEL_LABELS}
+SUBCHANNEL_LABELS = {
+    "LiaoningSports.local": "辽宁体育",
+    "LiaoningMetro.local": "辽宁都市",
+    "LiaoningMovie.local": "辽宁影视剧",
+    "LiaoningPublic.local": "辽宁公共",
+}
+SUBCHANNEL_GROUPS = {
+    "LiaoningSports.local": "辽宁台",
+    "LiaoningMetro.local": "辽宁台",
+    "LiaoningMovie.local": "辽宁台",
+    "LiaoningPublic.local": "辽宁台",
+}
+TARGET_CHANNEL_LABELS = {**CCTV_CHANNEL_LABELS, **SATELLITE_CHANNEL_LABELS, **SUBCHANNEL_LABELS}
+DISABLED_CHANNEL_IDS: set[str] = set()
+PREFERRED_URL_PATTERNS_BY_TITLE = {
+    "北京卫视": (
+        "183.215.134.239:19901/tsfile/live/0122_1.m3u8",
+        "101.35.240.114:88/live.php?id=%E5%8C%97%E4%BA%AC%E5%8D%AB%E8%A7%86",
+        "satellitepull.cnr.cn/live/wxbtv",
+    ),
+    "河北卫视": (
+        "112.27.235.94:8000/hls/39",
+        "event.pull.hebtv.com/jishi/weishi_tingyun",
+    ),
+    "湖南卫视": (
+        "112.27.235.94:8000/hls/31",
+        "101.35.240.114:88/live.php?id=%E6%B9%96%E5%8D%97%E5%8D%AB%E8%A7%864K",
+    ),
+    "东南卫视": ("112.27.235.94:8000/hls/38",),
+    "辽宁卫视": ("112.27.235.94:8000/hls/47",),
+    "辽宁体育": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2",),
+}
+TARGET_CHANNEL_ALIASES = {
+    "CCTV1.cn": ("CCTV-1", "CCTV1", "CCTV-1综合", "CCTV1综合", "央视一套", "央视综合"),
+    "CCTV2.cn": ("CCTV-2", "CCTV2", "CCTV-2财经", "CCTV2财经", "央视二套"),
+    "CCTV3.cn": ("CCTV-3", "CCTV3", "CCTV-3综艺", "CCTV3综艺", "央视三套"),
+    "CCTV4K.cn": ("CCTV-4K", "CCTV4K"),
+    "CCTV5.cn": ("CCTV-5", "CCTV5", "CCTV-5体育", "CCTV5体育"),
+    "CCTV5Plus.cn": ("CCTV-5+", "CCTV5+", "CCTV5PLUS", "CCTV-5+体育赛事", "CCTV5+体育赛事"),
+    "CCTV6.cn": ("CCTV-6", "CCTV6", "CCTV-6电影", "CCTV6电影"),
+    "CCTV7.cn": ("CCTV-7", "CCTV7", "CCTV-7国防军事", "CCTV7国防军事"),
+    "CCTV8.cn": ("CCTV-8", "CCTV8", "CCTV-8电视剧", "CCTV8电视剧"),
+    "CCTV8K.cn": ("CCTV-8K", "CCTV8K"),
+    "CCTV9.cn": ("CCTV-9", "CCTV9", "CCTV-9纪录", "CCTV9纪录"),
+    "CCTV10.cn": ("CCTV-10", "CCTV10", "CCTV-10科教", "CCTV10科教"),
+    "CCTV11.cn": ("CCTV-11", "CCTV11", "CCTV-11戏曲", "CCTV11戏曲"),
+    "CCTV12.cn": ("CCTV-12", "CCTV12", "CCTV-12社会与法", "CCTV12社会与法"),
+    "CCTV13.cn": ("CCTV-13", "CCTV13", "CCTV-13新闻", "CCTV13新闻", "央视新闻"),
+    "CCTV14.cn": ("CCTV-14", "CCTV14", "CCTV-14少儿", "CCTV14少儿"),
+    "CCTV15.cn": ("CCTV-15", "CCTV15", "CCTV-15音乐", "CCTV15音乐"),
+    "CCTV16.cn": ("CCTV-16", "CCTV16", "CCTV-16奥林匹克", "CCTV16奥林匹克"),
+    "CCTV17.cn": ("CCTV-17", "CCTV17", "CCTV-17农业农村", "CCTV17农业农村"),
+    "DragonTV.cn": ("东方卫视", "东方卫视4K", "上海卫视", "上海东方卫视"),
+    "BeijingSatelliteTV.cn": ("北京卫视", "北京卫视4K", "北京卫视4K超"),
+    "HunanSatelliteTV.cn": ("湖南卫视", "湖南卫视4K"),
+    "JiangsuSatelliteTV.cn": ("江苏卫视", "江苏卫视4K"),
+    "ZhejiangSatelliteTV.cn": ("浙江卫视", "浙江卫视4K"),
+    "ShenzhenSatelliteTV.cn": ("深圳卫视", "深圳卫视4K"),
+    "LiaoningSatelliteTV.cn": ("辽宁卫视",),
+    "AnhuiSatelliteTV.cn": ("安徽卫视",),
+    "ShandongSatelliteTV.cn": ("山东卫视", "山东卫视4K"),
+    "GuangdongSatelliteTV.cn": ("广东卫视", "广东卫视4K"),
+    "SichuanSatelliteTV.cn": ("四川卫视", "四川卫视4K"),
+    "TianjinSatelliteTV.cn": ("天津卫视",),
+    "HebeiSatelliteTV.cn": ("河北卫视",),
+    "HenanSatelliteTV.cn": ("河南卫视",),
+    "HubeiSatelliteTV.cn": ("湖北卫视",),
+    "ChongqingSatelliteTV.cn": ("重庆卫视",),
+    "FujianSoutheastTV.cn": ("东南卫视",),
+    "HeilongjiangSatelliteTV.cn": ("黑龙江卫视",),
+    "LiaoningSports.local": ("辽宁体育",),
+    "LiaoningMetro.local": ("辽宁都市",),
+    "LiaoningMovie.local": ("辽宁影视", "辽宁影视剧"),
+    "LiaoningPublic.local": ("辽宁公共",),
+}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -206,8 +295,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         action="append",
-        choices=("iptv-org",),
-        default=["iptv-org"],
+        choices=("iptv-org", "cctv-official", "curated-public"),
+        default=["iptv-org", "cctv-official", "curated-public"],
         help="Candidate source provider. Repeat to add more providers.",
     )
     parser.add_argument(
@@ -338,7 +427,33 @@ def text_looks_chinese(text: str | None) -> bool:
 
 
 def normalize_url(url: str) -> str:
-    return url.strip()
+    value = url.strip()
+    if not value:
+        return value
+    try:
+        parts = urlsplit(value)
+    except ValueError:
+        return value
+    if not parts.scheme or not parts.netloc:
+        return value
+    try:
+        query = urlencode(parse_qsl(parts.query, keep_blank_values=True), doseq=True)
+    except ValueError:
+        query = quote(parts.query, safe="=&/%:@+$,;?-._~")
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            quote(parts.path or "/", safe="/%:@+$,;=-._~"),
+            query,
+            quote(parts.fragment, safe=""),
+        )
+    )
+
+
+def is_blocked_candidate_url(url: str) -> bool:
+    lowered = url.lower()
+    return any(pattern in lowered for pattern in BLOCKED_CANDIDATE_URL_PATTERNS)
 
 
 def safe_tuple(values: Iterable[str] | None) -> tuple[str, ...]:
@@ -363,9 +478,57 @@ def quality_tier(quality: str | None) -> int:
     return 0
 
 
+def infer_quality(*texts: str | None) -> str | None:
+    searchable = " ".join(text.lower() for text in texts if text)
+    if "8k" in searchable:
+        return "4320p"
+    if "4k" in searchable or "uhd" in searchable or "超高清" in searchable:
+        return "2160p"
+    if "1080" in searchable or "高清" in searchable:
+        return "1080p"
+    return None
+
+
 def host_is_ip_address(url: str) -> bool:
     hostname = urlparse(url).hostname or ""
     return bool(IP_HOST_RE.fullmatch(hostname))
+
+
+def canonicalize_channel_alias(text: str | None) -> str:
+    if not text:
+        return ""
+    value = text.strip().lower()
+    for token in (
+        "超高清",
+        "超清",
+        "高清",
+        "uhd",
+        "fhd",
+        "hd",
+        "标清",
+        "频道",
+        "电视台",
+        "直播",
+        "卫视频道",
+        "央视台",
+        "卫视台",
+    ):
+        value = value.replace(token, "")
+    value = value.replace("＋", "+")
+    value = re.sub(r"[\s_\-()/\[\]【】·:：,，.。'\"|]+", "", value)
+    value = re.sub(r"\d{3,4}p", "", value)
+    value = value.replace("4k超", "").replace("4k", "").replace("8k", "")
+    return value
+
+
+CHANNEL_ALIAS_TO_ID = {
+    canonicalize_channel_alias(alias): channel_id
+    for channel_id, aliases in {
+        **{channel_id: (label, *TARGET_CHANNEL_ALIASES.get(channel_id, ())) for channel_id, label in TARGET_CHANNEL_LABELS.items()}
+    }.items()
+    for alias in aliases
+    if canonicalize_channel_alias(alias)
+}
 
 
 def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int]:
@@ -387,6 +550,10 @@ def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int]:
 def target_channel_group(channel_id: str | None) -> str | None:
     if not channel_id:
         return None
+    if channel_id in DISABLED_CHANNEL_IDS:
+        return None
+    if channel_id in SUBCHANNEL_GROUPS:
+        return SUBCHANNEL_GROUPS[channel_id]
     if channel_id in CCTV_CHANNEL_LABELS:
         return "央视"
     if channel_id in SATELLITE_CHANNEL_LABELS:
@@ -399,7 +566,8 @@ def is_target_channel(channel: dict[str, Any] | None) -> bool:
         return False
     if channel.get("country") != "CN":
         return False
-    return channel.get("id") in TARGET_CHANNEL_LABELS
+    channel_id = channel.get("id")
+    return channel_id in TARGET_CHANNEL_LABELS and channel_id not in DISABLED_CHANNEL_IDS
 
 
 def choose_display_title(
@@ -407,6 +575,8 @@ def choose_display_title(
     stream_title: str | None,
     channel: dict[str, Any] | None,
 ) -> str:
+    if channel_id in DISABLED_CHANNEL_IDS:
+        return ""
     if channel_id in TARGET_CHANNEL_LABELS:
         return TARGET_CHANNEL_LABELS[channel_id]
 
@@ -420,9 +590,16 @@ def choose_display_title(
     return (stream_title or (channel or {}).get("name") or "").strip()
 
 
-def verified_item_rank(item: tuple[Candidate, ProbeResult]) -> tuple[int, int, int, int]:
+def verified_item_rank(item: tuple[Candidate, ProbeResult]) -> tuple[int, int, int, int, int]:
     candidate, probe = item
+    preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
+    preferred_rank = 0
+    for index, pattern in enumerate(preferred_patterns):
+        if pattern in candidate.url:
+            preferred_rank = len(preferred_patterns) - index
+            break
     return (
+        preferred_rank,
         int(not host_is_ip_address(candidate.url)),
         int(candidate.url.startswith("https://")),
         quality_tier(candidate.quality),
@@ -443,7 +620,12 @@ def collapse_verified_items(
     collapsed = list(by_title.values())
     collapsed.sort(
         key=lambda item: (
-            0 if item[0].channel_group == "央视" else 1,
+            0
+            if item[0].channel_group == "央视"
+            else 1
+            if item[0].channel_group == "卫视"
+            else 2,
+            item[0].channel_group or "",
             item[0].title,
         )
     )
@@ -521,6 +703,8 @@ def load_iptv_org_candidates(
         url = normalize_url(stream.get("url") or "")
         if not url or urlparse(url).scheme not in {"http", "https"}:
             continue
+        if is_blocked_candidate_url(url):
+            continue
         if not allow_ip_hosts and host_is_ip_address(url):
             continue
         if quality_value(stream.get("quality")) < min_quality:
@@ -571,6 +755,99 @@ def load_iptv_org_candidates(
     return dedupe_candidates(candidates)
 
 
+def build_cctv_official_variants(url: str) -> list[tuple[str, str, str]]:
+    variants: list[tuple[str, str, str]] = []
+    if "cdrmldcctv1_1/index.m3u8" in url:
+        variants.append(("CCTV1.cn", "CCTV-1 综合", url))
+        variants.append(
+            (
+                "CCTV13.cn",
+                "CCTV-13 新闻",
+                url.replace("cdrmldcctv1_1/index.m3u8", "cdrmldcctv13_1/index.m3u8"),
+            )
+        )
+    elif "ldcctv1_2/index.m3u8" in url:
+        variants.append(("CCTV1.cn", "CCTV-1 综合", url))
+        variants.append(
+            (
+                "CCTV13.cn",
+                "CCTV-13 新闻",
+                url.replace("ldcctv1_2/index.m3u8", "ldcctv13_2/index.m3u8"),
+            )
+        )
+    return variants
+
+
+def load_cctv_official_candidates(
+    cache: CacheStore,
+    timeout: float,
+    min_quality: int,
+) -> list[Candidate]:
+    js_text = fetch_text(CCTV_OFFICIAL_JS_URL, cache, timeout)
+    raw_urls = sorted(
+        {
+            match
+            for match in re.findall(r"http://[^\"']+index\.m3u8", js_text)
+            if "ldncctv" in match
+            and (
+                "ldcctv1_2/index.m3u8" in match
+                or "cdrmldcctv1_1/index.m3u8" in match
+            )
+        }
+    )
+
+    candidates: list[Candidate] = []
+    for raw_url in raw_urls:
+        for channel_id, title, variant_url in build_cctv_official_variants(raw_url):
+            quality = "1080p" if "cdrm" in variant_url else "360p"
+            if quality_value(quality) < min_quality:
+                continue
+            channel_group = target_channel_group(channel_id)
+            candidates.append(
+                build_candidate(
+                    source="cctv-official",
+                    url=variant_url,
+                    title=title,
+                    channel_id=channel_id,
+                    country="CN",
+                    languages=("zho",),
+                    quality=quality,
+                    group_title=channel_group,
+                    website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+                    channel_group=channel_group,
+                )
+            )
+    return dedupe_candidates(candidates)
+
+
+def match_target_channel_id(*texts: str | None) -> str | None:
+    for text in texts:
+        key = canonicalize_channel_alias(text)
+        if not key:
+            continue
+        channel_id = CHANNEL_ALIAS_TO_ID.get(key)
+        if channel_id and channel_id not in DISABLED_CHANNEL_IDS:
+            return channel_id
+    return None
+
+
+def extract_inline_headers(attrs: dict[str, str]) -> tuple[str | None, str | None]:
+    user_agent = attrs.get("http-user-agent") or attrs.get("user-agent")
+    referrer = (
+        attrs.get("http-referrer")
+        or attrs.get("referrer")
+        or attrs.get("referer")
+    )
+    raw_header = attrs.get("http-header") or ""
+    if raw_header and not referrer:
+        for chunk in raw_header.split("&"):
+            key, _, value = chunk.partition("=")
+            if key.strip().lower() == "referer" and value:
+                referrer = value.strip()
+                break
+    return user_agent, referrer
+
+
 def parse_extinf(line: str) -> tuple[dict[str, str], str]:
     payload = line[len("#EXTINF:") :]
     info_blob, _, title = payload.partition(",")
@@ -617,6 +894,12 @@ def load_extra_m3u_candidates(
         url = normalize_url(line)
         if urlparse(url).scheme not in {"http", "https"}:
             continue
+        if is_blocked_candidate_url(url):
+            pending_attrs = {}
+            pending_title = ""
+            pending_user_agent = None
+            pending_referrer = None
+            continue
         if not allow_ip_hosts and host_is_ip_address(url):
             pending_attrs = {}
             pending_title = ""
@@ -624,10 +907,18 @@ def load_extra_m3u_candidates(
             pending_referrer = None
             continue
 
-        title = pending_title or pending_attrs.get("tvg-name") or url
+        inline_user_agent, inline_referrer = extract_inline_headers(pending_attrs)
+        user_agent = pending_user_agent or inline_user_agent
+        referrer = pending_referrer or inline_referrer
+        raw_title = pending_title or pending_attrs.get("tvg-name") or url
         group_title = pending_attrs.get("group-title")
         country = pending_attrs.get("tvg-country") or None
-        quality = pending_attrs.get("tvg-quality")
+        quality = pending_attrs.get("tvg-quality") or infer_quality(
+            raw_title,
+            pending_attrs.get("tvg-name"),
+            pending_attrs.get("tvg-id"),
+            group_title,
+        )
         if quality_value(quality) < min_quality:
             pending_attrs = {}
             pending_title = ""
@@ -636,7 +927,7 @@ def load_extra_m3u_candidates(
             continue
 
         if not include_nsfw:
-            searchable = " ".join([title, group_title or ""]).lower()
+            searchable = " ".join([raw_title, group_title or ""]).lower()
             if "xxx" in searchable or "adult" in searchable:
                 pending_attrs = {}
                 pending_title = ""
@@ -646,32 +937,40 @@ def load_extra_m3u_candidates(
 
         searchable = " ".join(
             [
-                title,
+                raw_title,
                 group_title or "",
                 pending_attrs.get("tvg-name", ""),
                 pending_attrs.get("tvg-id", ""),
             ]
         )
-        if not text_looks_chinese(searchable):
+        channel_id = match_target_channel_id(
+            raw_title,
+            pending_attrs.get("tvg-name"),
+            pending_attrs.get("tvg-id"),
+        )
+        if not channel_id:
             pending_attrs = {}
             pending_title = ""
             pending_user_agent = None
             pending_referrer = None
             continue
+        title = TARGET_CHANNEL_LABELS[channel_id]
+        channel_group = target_channel_group(channel_id)
 
         candidates.append(
             build_candidate(
                 source=source_name,
                 url=url,
                 title=title,
-                channel_id=pending_attrs.get("tvg-id") or None,
-                country=country,
+                channel_id=channel_id,
+                country=country or "CN",
                 languages=("zho",) if contains_han(searchable) else (),
                 quality=quality,
-                user_agent=pending_user_agent,
-                referrer=pending_referrer,
-                group_title=group_title,
+                user_agent=user_agent,
+                referrer=referrer,
+                group_title=channel_group,
                 logo=pending_attrs.get("tvg-logo") or None,
+                channel_group=channel_group,
             )
         )
         pending_attrs = {}
@@ -681,12 +980,55 @@ def load_extra_m3u_candidates(
     return dedupe_candidates(candidates)
 
 
+def load_curated_public_candidates(
+    cache: CacheStore,
+    timeout: float,
+    include_nsfw: bool,
+    min_quality: int,
+) -> list[Candidate]:
+    candidates: list[Candidate] = []
+    for name, url in CURATED_PUBLIC_M3U_URLS.items():
+        text = fetch_text(url, cache, timeout=timeout)
+        candidates.extend(
+            load_extra_m3u_candidates(
+                text,
+                source_name=f"curated:{name}",
+                include_nsfw=include_nsfw,
+                min_quality=min_quality,
+                allow_ip_hosts=True,
+            )
+        )
+    return dedupe_candidates(candidates)
+
+
 def choose_playlist_target(playlist_text: str) -> tuple[str | None, bool]:
     items = [line.strip() for line in playlist_text.splitlines() if line.strip() and not line.startswith("#")]
     is_master = "#EXT-X-STREAM-INF" in playlist_text
     if not items:
         return None, is_master
     return (items[0] if is_master else items[-1]), is_master
+
+
+def playlist_is_ended(playlist_text: str) -> bool:
+    return "#EXT-X-ENDLIST" in playlist_text
+
+
+def slow_playable_result(
+    *,
+    status: int | None,
+    content_type: str | None,
+    detail: str,
+    elapsed_ms: int,
+    final_url: str | None,
+) -> ProbeResult:
+    return ProbeResult(
+        ok=True,
+        status=status or 200,
+        content_type=content_type,
+        detail=detail,
+        elapsed_ms=elapsed_ms,
+        final_url=final_url,
+    )
 
 
 def classify_response(content_type: str | None, final_url: str, body: bytes) -> str:
@@ -829,6 +1171,15 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
 
         if kind == "hls":
             playlist_text = top.body.decode("utf-8", errors="ignore")
+            if playlist_is_ended(playlist_text):
+                return ProbeResult(
+                    ok=False,
+                    status=top.status,
+                    content_type=top.content_type,
+                    detail="playlist looks like ended vod, not live tv",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=top.final_url,
+                )
             child, is_master = choose_playlist_target(playlist_text)
             if not child:
                 return ProbeResult(
@@ -840,18 +1191,36 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                     final_url=top.final_url,
                 )
 
-            child_url = urljoin(top.final_url, child)
-            child_fetch = http_fetch(
-                child_url,
-                headers,
-                timeout,
-                max_bytes=TEXT_SAMPLE_LIMIT if is_master else MEDIA_SAMPLE_LIMIT,
-                range_request=not is_master,
-            )
+            child_url = normalize_url(urljoin(top.final_url, child))
+            try:
+                child_fetch = http_fetch(
+                    child_url,
+                    headers,
+                    timeout,
+                    max_bytes=TEXT_SAMPLE_LIMIT if is_master else MEDIA_SAMPLE_LIMIT,
+                    range_request=not is_master,
+                )
+            except (TimeoutError, URLError, OSError) as error:
+                return slow_playable_result(
+                    status=top.status,
+                    content_type=top.content_type,
+                    detail=f"playlist reachable; child fetch slow but may still be playable ({error})",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=child_url,
+                )
             child_kind = classify_response(child_fetch.content_type, child_fetch.final_url, child_fetch.body)
 
             if is_master and child_kind == "hls":
                 child_playlist_text = child_fetch.body.decode("utf-8", errors="ignore")
+                if playlist_is_ended(child_playlist_text):
+                    return ProbeResult(
+                        ok=False,
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail="variant playlist looks like ended vod, not live tv",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                    )
                 grandchild, _ = choose_playlist_target(child_playlist_text)
                 if not grandchild:
                     return ProbeResult(
@@ -862,14 +1231,23 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                         elapsed_ms=int((time.perf_counter() - start) * 1000),
                         final_url=child_fetch.final_url,
                     )
-                segment_url = urljoin(child_fetch.final_url, grandchild)
-                segment_fetch = http_fetch(
-                    segment_url,
-                    headers,
-                    timeout,
-                    max_bytes=MEDIA_SAMPLE_LIMIT,
-                    range_request=True,
-                )
+                segment_url = normalize_url(urljoin(child_fetch.final_url, grandchild))
+                try:
+                    segment_fetch = http_fetch(
+                        segment_url,
+                        headers,
+                        timeout,
+                        max_bytes=MEDIA_SAMPLE_LIMIT,
+                        range_request=True,
+                    )
+                except (TimeoutError, URLError, OSError) as error:
+                    return slow_playable_result(
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail=f"variant playlist reachable; segment slow but may still be playable ({error})",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                    )
                 ok = ok_status(segment_fetch.status) and bool(segment_fetch.body)
                 return ProbeResult(
                     ok=ok,
@@ -880,6 +1258,14 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                     final_url=segment_fetch.final_url,
                 )
 
+            if not is_master and not child_fetch.body and ok_status(child_fetch.status):
+                return slow_playable_result(
+                    status=child_fetch.status,
+                    content_type=child_fetch.content_type,
+                    detail="playlist reachable; segment response empty but may still be playable",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=child_fetch.final_url,
+                )
             ok = ok_status(child_fetch.status) and bool(child_fetch.body)
             return ProbeResult(
                 ok=ok,
@@ -901,13 +1287,34 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                 final_url=top.final_url,
             )
 
-        if kind in {"media", "generic"}:
+        if kind == "media":
+            lowered_final = (top.final_url or "").lower()
+            normalized_type = (top.content_type or "").split(";")[0].strip().lower()
+            if lowered_final.endswith((".m4a", ".mov", ".mp3", ".mp4")) or "mp4" in normalized_type:
+                return ProbeResult(
+                    ok=False,
+                    status=top.status,
+                    content_type=top.content_type,
+                    detail="static media file, not live tv",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=top.final_url,
+                )
             ok = bool(top.body)
             return ProbeResult(
                 ok=ok,
                 status=top.status,
                 content_type=top.content_type,
                 detail="media endpoint reachable" if ok else "empty media response",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+            )
+
+        if kind == "generic":
+            return ProbeResult(
+                ok=False,
+                status=top.status,
+                content_type=top.content_type,
+                detail="generic http body is not a validated stream",
                 elapsed_ms=int((time.perf_counter() - start) * 1000),
                 final_url=top.final_url,
             )
@@ -968,6 +1375,16 @@ def probe_candidate(
     for check_index in range(1, max(1, stability_checks)):
         follow_up = probe_candidate_once(candidate, timeout, use_ffprobe)
         if not follow_up.ok:
+            if follow_up.status is None and "timed out" in follow_up.detail.lower():
+                return ProbeResult(
+                    ok=True,
+                    status=result.status,
+                    content_type=result.content_type,
+                    detail=f"{result.detail}; slow follow-up timeout tolerated",
+                    elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
+                    final_url=result.final_url,
+                    via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+                )
             return ProbeResult(
                 ok=False,
                 status=follow_up.status,
@@ -1071,6 +1488,25 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
                 include_nsfw=args.include_nsfw,
                 min_quality=args.min_quality,
                 allow_ip_hosts=args.allow_ip_hosts,
+            )
+        )
+
+    if "cctv-official" in providers:
+        candidates.extend(
+            load_cctv_official_candidates(
+                cache=cache,
+                timeout=args.timeout,
+                min_quality=args.min_quality,
+            )
+        )
+
+    if "curated-public" in providers:
+        candidates.extend(
+            load_curated_public_candidates(
+                cache=cache,
+                timeout=args.timeout,
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
             )
         )
 
