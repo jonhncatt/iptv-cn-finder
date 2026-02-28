@@ -170,7 +170,57 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     "东南卫视": ("112.27.235.94:8000/hls/38",),
     "辽宁卫视": ("112.27.235.94:8000/hls/47",),
     "辽宁体育": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2",),
+    "辽宁公共": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1",),
+    "辽宁影视剧": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7",),
+    "辽宁都市": ("ls.qingting.fm/live/1099/64k",),
 }
+MANUAL_PREFERRED_CANDIDATES = (
+    {
+        "channel_id": "BeijingSatelliteTV.cn",
+        "title": "北京卫视",
+        "url": "http://183.215.134.239:19901/tsfile/live/0122_1.m3u8?key=txiptv&playlive=1&authid=0",
+    },
+    {
+        "channel_id": "HebeiSatelliteTV.cn",
+        "title": "河北卫视",
+        "url": "http://112.27.235.94:8000/hls/39/index.m3u8",
+    },
+    {
+        "channel_id": "HunanSatelliteTV.cn",
+        "title": "湖南卫视",
+        "url": "http://112.27.235.94:8000/hls/31/index.m3u8",
+    },
+    {
+        "channel_id": "FujianSoutheastTV.cn",
+        "title": "东南卫视",
+        "url": "http://112.27.235.94:8000/hls/38/index.m3u8",
+    },
+    {
+        "channel_id": "LiaoningSatelliteTV.cn",
+        "title": "辽宁卫视",
+        "url": "http://112.27.235.94:8000/hls/47/index.m3u8",
+    },
+    {
+        "channel_id": "LiaoningSports.local",
+        "title": "辽宁体育",
+        "url": "http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2/index.m3u8",
+    },
+    {
+        "channel_id": "LiaoningPublic.local",
+        "title": "辽宁公共",
+        "url": "http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1/index.m3u8",
+    },
+    {
+        "channel_id": "LiaoningMovie.local",
+        "title": "辽宁影视剧",
+        "url": "http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7/index.m3u8",
+    },
+    {
+        "channel_id": "LiaoningMetro.local",
+        "title": "辽宁都市",
+        "url": "https://ls.qingting.fm/live/1099/64k.m3u8",
+    },
+)
 TARGET_CHANNEL_ALIASES = {
     "CCTV1.cn": ("CCTV-1", "CCTV1", "CCTV-1综合", "CCTV1综合", "央视一套", "央视综合"),
     "CCTV2.cn": ("CCTV-2", "CCTV2", "CCTV-2财经", "CCTV2财经", "央视二套"),
@@ -295,8 +345,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         action="append",
-        choices=("iptv-org", "cctv-official", "curated-public"),
-        default=["iptv-org", "cctv-official", "curated-public"],
+        choices=("iptv-org", "cctv-official", "curated-public", "manual-preferred"),
+        default=["iptv-org", "cctv-official", "curated-public", "manual-preferred"],
         help="Candidate source provider. Repeat to add more providers.",
     )
     parser.add_argument(
@@ -531,13 +581,16 @@ CHANNEL_ALIAS_TO_ID = {
 }
 
 
-def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int]:
+def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int]:
+    preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
+    preferred_rank = int(any(pattern in candidate.url for pattern in preferred_patterns))
     language_match = int(bool(set(candidate.languages) & CHINESE_LANGUAGE_CODES))
     region_match = int(candidate.country in CHINESE_REGION_CODES)
     han_title = int(contains_han(candidate.title))
     domain_match = int(not host_is_ip_address(candidate.url))
     https_match = int(candidate.url.startswith("https://"))
     return (
+        preferred_rank,
         language_match,
         domain_match,
         https_match,
@@ -996,6 +1049,29 @@ def load_curated_public_candidates(
                 include_nsfw=include_nsfw,
                 min_quality=min_quality,
                 allow_ip_hosts=True,
+            )
+        )
+    return dedupe_candidates(candidates)
+
+
+def load_manual_preferred_candidates() -> list[Candidate]:
+    candidates: list[Candidate] = []
+    for item in MANUAL_PREFERRED_CANDIDATES:
+        channel_id = item["channel_id"]
+        channel_group = target_channel_group(channel_id)
+        if not channel_group:
+            continue
+        candidates.append(
+            build_candidate(
+                source="manual-preferred",
+                url=item["url"],
+                title=item["title"],
+                channel_id=channel_id,
+                country="CN",
+                languages=("zho",),
+                quality="1080p",
+                group_title=channel_group,
+                channel_group=channel_group,
             )
         )
     return dedupe_candidates(candidates)
@@ -1509,6 +1585,9 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
                 min_quality=args.min_quality,
             )
         )
+
+    if "manual-preferred" in providers:
+        candidates.extend(load_manual_preferred_candidates())
 
     for remote_url in args.remote_m3u:
         text = fetch_text(remote_url, cache, timeout=args.timeout)
