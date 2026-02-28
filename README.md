@@ -88,6 +88,18 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 - 包含成功和失败的探测结果
 - 适合排查某个频道为什么没进最终列表
 
+## GitHub 订阅
+
+仓库里会额外保留一份可直接订阅的 `m3u` 文件：
+
+- `m3u/chinese-public-verified.m3u`
+
+可直接用于 APTV 远程订阅：
+
+- `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-verified.m3u`
+
+仓库已配置 GitHub Actions 定时刷新，默认每 6 小时自动运行一次，也支持手动触发。
+
 ## 说明
 
 - 公开 IPTV 源变化很快，有些台会失效、限地区，或者只在部分网络下可播。

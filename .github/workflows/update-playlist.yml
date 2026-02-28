@@ -1,0 +1,50 @@
+name: Update IPTV Playlist
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-iptv-playlist
+  cancel-in-progress: false
+
+jobs:
+  update-playlist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffprobe
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Refresh verified playlist
+        run: |
+          python3 find_cn_streams.py --ffprobe --limit 0 --timeout 12 --workers 20 --keep-failures --verbose
+          mkdir -p m3u
+          cp output/chinese-public-verified.m3u m3u/chinese-public-verified.m3u
+          cp output/chinese-public-report.json m3u/chinese-public-report.json
+
+      - name: Commit updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add m3u/chinese-public-verified.m3u m3u/chinese-public-report.json
+          if git diff --cached --quiet; then
+            echo "No playlist changes to commit."
+            exit 0
+          fi
+          git commit -m "Update verified IPTV playlist"
+          git push
