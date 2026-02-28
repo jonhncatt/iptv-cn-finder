@@ -1,75 +1,95 @@
-# Chinese IPTV Finder
+# 中文 IPTV 筛选工具
 
-This tool builds a verified M3U playlist of public mainland China core channels.
-The default scope is intentionally narrow: only CCTV and mainland satellite TV channels.
-Channel names and groups are written in Chinese wherever possible.
-It is aimed at open playlists and channel indexes that are already publicly exposed.
-It does not scrape private services or bypass paywalls.
+这个工具会从公开 IPTV 数据源里收集候选频道，自动筛出当前可播的中文频道，并生成可直接导入播放器的 `m3u` 播放列表。
 
-## What it does
+默认目标比较聚焦：
 
-- pulls candidate streams from the public `iptv-org` dataset
-- narrows the scope to mainland CCTV and satellite TV channels
-- normalizes channel names and groups into Chinese labels like `央视` and `卫视`
-- probes each stream over HTTP/HLS and keeps only the working ones
-- runs an extra stability pass so flaky entries are dropped
-- writes a clean M3U file plus a JSON report
+- `央视`
+- `中国大陆卫视`
+- 部分已补充的省级子频道
 
-## Requirements
+频道名、分组名会尽量统一成中文，适合直接导入 APTV 一类播放器使用。
+它只处理已经公开暴露的播放列表和频道索引，不抓私有服务，也不绕过付费或权限限制。
 
-- macOS or Linux
+## 功能说明
+
+- 从公开数据源拉取候选流，包括 `iptv-org` 和若干公开中文 `m3u`
+- 自动收窄到目标频道范围，只保留需要的中文频道
+- 把频道名和分组统一成中文，例如 `央视`、`卫视`、`辽宁台`
+- 对每个链接做 HTTP/HLS 探测，尽量剔除失效、静态文件和假回退流
+- 对常见慢源做更宽容的判断，避免把“能看但首开慢”的源误删
+- 支持内联 `User-Agent` / `Referrer`
+- 输出整理后的 `m3u` 文件和完整 JSON 报告
+
+## 运行环境
+
+- macOS 或 Linux
 - Python 3.10+
-- optional: `ffprobe` for deeper validation (`brew install ffmpeg`)
+- 可选：`ffprobe`
+  - 用来做更深一层的媒体流校验
+  - 安装方式：`brew install ffmpeg`
 
-## Quick start
+## 快速开始
 
 ```bash
 cd /Users/zhoudali/Desktop/iptv
 python3 find_cn_streams.py --verbose
 ```
 
-That writes:
+默认会生成两个文件：
 
 - `output/chinese-public-verified.m3u`
 - `output/chinese-public-report.json`
 
-By default the script probes the target scope with two successful checks required per channel.
-It skips raw IP-hosted streams unless you explicitly add `--allow-ip-hosts`, because those entries are much more likely to be unstable.
+默认策略会做稳定性检查，并优先保留更可靠的候选源。
+脚本默认不偏好裸 IP 源，但当前也会保留一部分已经实测可用的手工优选源。
 
-## Useful commands
+## 常用命令
 
-Probe more aggressively:
+全量更激进地扫描：
 
 ```bash
 python3 find_cn_streams.py --limit 0 --workers 32 --timeout 10 --verbose
 ```
 
-Include raw IP sources too:
-
-```bash
-python3 find_cn_streams.py --allow-ip-hosts --limit 0 --verbose
-```
-
-Relax the stability filter:
+放宽稳定性过滤：
 
 ```bash
 python3 find_cn_streams.py --stability-checks 1 --retries 0 --verbose
 ```
 
-Require HD-ish streams:
+只保留高清及以上候选：
 
 ```bash
 python3 find_cn_streams.py --min-quality 720 --verbose
 ```
 
-Use `ffprobe` if installed:
+如果本机装了 `ffprobe`，可以启用更深校验：
 
 ```bash
 python3 find_cn_streams.py --ffprobe --limit 150 --verbose
 ```
 
-## Notes
+合并你自己的本地 `m3u` 一起筛：
 
-- Some public streams are geo-restricted or unstable. Re-run the script when channels stop working.
-- The generated M3U preserves `User-Agent` and `Referrer` hints when they exist.
-- The default output is intentionally conservative. If very few channels pass, that usually means the public sources are currently unstable or blocked from your network.
+```bash
+python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
+```
+
+## 输出内容
+
+`output/chinese-public-verified.m3u`
+
+- 可直接导入播放器
+- 保留频道名、分组、必要的 `User-Agent` / `Referrer`
+
+`output/chinese-public-report.json`
+
+- 包含成功和失败的探测结果
+- 适合排查某个频道为什么没进最终列表
+
+## 说明
+
+- 公开 IPTV 源变化很快，有些台会失效、限地区，或者只在部分网络下可播。
+- 有些源虽然测速偏慢，但播放器里实际仍然能播，所以当前脚本对“慢但可播”的情况做了更宽容的处理。
+- 如果某个频道在你本地能播但脚本没收进去，可以把台名告诉我，再继续补优先源或调整规则。
