@@ -7,6 +7,11 @@
 - `央视`
 - `中国大陆卫视`
 - 部分已补充的省级子频道
+  - `辽宁台`
+  - `上海台`
+  - `湖南台`
+  - `江苏台`
+  - `广东台`
 
 频道名、分组名会尽量统一成中文，适合直接导入 APTV 一类播放器使用。
 它只处理已经公开暴露的播放列表和频道索引，不抓私有服务，也不绕过付费或权限限制。
@@ -99,6 +104,19 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 - `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-verified.m3u`
 
 仓库已配置 GitHub Actions 定时刷新，默认每 6 小时自动运行一次，也支持手动触发。
+
+手动跑一次的方法：
+
+1. 打开仓库的 `Actions` 页面
+2. 选择 `Update IPTV Playlist`
+3. 点击 `Run workflow`
+4. 选择 `main` 分支并确认运行
+
+如果你本机装了 `gh` 命令，也可以在仓库目录执行：
+
+```bash
+gh workflow run "Update IPTV Playlist"
+```
 
 ## 说明
 

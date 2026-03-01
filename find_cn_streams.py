@@ -144,15 +144,102 @@ SUBCHANNEL_LABELS = {
     "LiaoningMetro.local": "辽宁都市",
     "LiaoningMovie.local": "辽宁影视剧",
     "LiaoningPublic.local": "辽宁公共",
+    "ShanghaiFinance.local": "第一财经",
+    "ShanghaiNews.local": "上海新闻综合",
+    "ShanghaiMetro.local": "上海都市",
+    "ShanghaiSports.local": "五星体育",
+    "ShanghaiDocumentary.local": "纪实人文",
+    "ShanghaiDrama.local": "都市剧场",
+    "ShanghaiLife.local": "生活时尚",
+    "ShanghaiAnimation.local": "哈哈炫动",
+    "ShanghaiMovie.local": "东方影视",
+    "HunanCity.local": "湖南都市",
+    "HunanEconomy.local": "湖南经视",
+    "HunanDrama.local": "湖南电视剧",
+    "HunanEntertainment.local": "湖南娱乐",
+    "HunanPublic.local": "湖南公共",
+    "JinyingDocumentary.local": "金鹰纪实",
+    "JinyingCartoon.local": "金鹰卡通",
+    "JiangsuSports.local": "江苏体育",
+    "JiangsuPublic.local": "江苏公共",
+    "JiangsuCity.local": "江苏城市",
+    "JiangsuMovie.local": "江苏影视",
+    "JiangsuEducation.local": "江苏教育",
+    "YoumanCartoon.local": "优漫卡通",
+    "GuangdongPearl.local": "广东珠江",
+    "GuangdongSports.local": "广东体育",
+    "GuangdongNews.local": "广东新闻",
+    "GuangdongPeople.local": "广东民生",
+    "GuangzhouGeneral.local": "广州综合",
+    "GuangzhouMovie.local": "广州影视",
 }
 SUBCHANNEL_GROUPS = {
     "LiaoningSports.local": "辽宁台",
     "LiaoningMetro.local": "辽宁台",
     "LiaoningMovie.local": "辽宁台",
     "LiaoningPublic.local": "辽宁台",
+    "ShanghaiFinance.local": "上海台",
+    "ShanghaiNews.local": "上海台",
+    "ShanghaiMetro.local": "上海台",
+    "ShanghaiSports.local": "上海台",
+    "ShanghaiDocumentary.local": "上海台",
+    "ShanghaiDrama.local": "上海台",
+    "ShanghaiLife.local": "上海台",
+    "ShanghaiAnimation.local": "上海台",
+    "ShanghaiMovie.local": "上海台",
+    "HunanCity.local": "湖南台",
+    "HunanEconomy.local": "湖南台",
+    "HunanDrama.local": "湖南台",
+    "HunanEntertainment.local": "湖南台",
+    "HunanPublic.local": "湖南台",
+    "JinyingDocumentary.local": "湖南台",
+    "JinyingCartoon.local": "湖南台",
+    "JiangsuSports.local": "江苏台",
+    "JiangsuPublic.local": "江苏台",
+    "JiangsuCity.local": "江苏台",
+    "JiangsuMovie.local": "江苏台",
+    "JiangsuEducation.local": "江苏台",
+    "YoumanCartoon.local": "江苏台",
+    "GuangdongPearl.local": "广东台",
+    "GuangdongSports.local": "广东台",
+    "GuangdongNews.local": "广东台",
+    "GuangdongPeople.local": "广东台",
+    "GuangzhouGeneral.local": "广东台",
+    "GuangzhouMovie.local": "广东台",
 }
 TARGET_CHANNEL_LABELS = {**CCTV_CHANNEL_LABELS, **SATELLITE_CHANNEL_LABELS, **SUBCHANNEL_LABELS}
 DISABLED_CHANNEL_IDS: set[str] = set()
+GROUP_SORT_ORDER = {
+    "央视": 0,
+    "卫视": 1,
+    "上海台": 2,
+    "湖南台": 3,
+    "江苏台": 4,
+    "广东台": 5,
+    "辽宁台": 6,
+}
+VOD_URL_PATTERNS = (
+    "/tvod/",
+    "playback",
+    "catchup",
+    "timeshift",
+    "recorded",
+    "record=",
+)
+LIVE_URL_HINTS = (
+    ".m3u8",
+    ".m3u",
+    ".flv",
+    ".ts",
+)
+DIRECT_FILE_URL_HINTS = (
+    ".aac",
+    ".m4a",
+    ".mkv",
+    ".mov",
+    ".mp3",
+    ".mp4",
+)
 PREFERRED_URL_PATTERNS_BY_TITLE = {
     "北京卫视": (
         "183.215.134.239:19901/tsfile/live/0122_1.m3u8",
@@ -173,6 +260,24 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     "辽宁公共": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1",),
     "辽宁影视剧": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7",),
     "辽宁都市": ("ls.qingting.fm/live/1099/64k",),
+    "第一财经": ("bp-livetytv.bestv.cn/ch/bestvdycj.m3u8",),
+    "上海新闻综合": ("bp-livetytv.bestv.cn/ch/bestvxwzh.m3u8",),
+    "上海都市": ("bp-livetytv.bestv.cn/ch/bestvdspd.m3u8",),
+    "五星体育": ("bp-livetytv.bestv.cn/ch/bestvwxty.m3u8",),
+    "纪实人文": ("bp-resource-dfl.bestv.cn/155/3/video.m3u8",),
+    "湖南都市": ("stream1.freetv.fun/hu-nan-du-shi-9.m3u8",),
+    "湖南经视": ("stream1.freetv.fun/hu-nan-jing-shi-1.m3u8",),
+    "湖南电视剧": ("stream1.freetv.fun/hu-nan-dian-shi-ju-2.m3u8",),
+    "湖南娱乐": ("stream1.freetv.fun/hu-nan-yu-le-3.m3u8",),
+    "湖南公共": ("stream1.freetv.fun/hu-nan-gong-gong-7.m3u8",),
+    "金鹰纪实": ("iptv.huuc.edu.cn/hls/gedocu.m3u8",),
+    "江苏城市": ("gslbmgsplive.miguvideo.com/wd_r2/jstv/jschengshi/600/index.m3u8",),
+    "江苏教育": ("gslbmgsplive.miguvideo.com/wd_r2/jstv/jsjiaoyu/600/index.m3u8",),
+    "优漫卡通": ("stream1.freetv.fun/you-man-qia-tong-11.m3u8",),
+    "广东珠江": ("cdn2.163189.xyz/live/gdzj/stream.m3u8",),
+    "广东体育": ("cdn2.163189.xyz/live/gdty/stream.m3u8",),
+    "广东新闻": ("hls-gateway.vpstv.net/streams/708873.m3u8",),
+    "广州影视": ("stream1.freetv.fun/yan-zhou-ying-shi-25.m3u8",),
 }
 MANUAL_PREFERRED_CANDIDATES = (
     {
@@ -220,6 +325,86 @@ MANUAL_PREFERRED_CANDIDATES = (
         "title": "辽宁都市",
         "url": "https://ls.qingting.fm/live/1099/64k.m3u8",
     },
+    {
+        "channel_id": "ShanghaiFinance.local",
+        "title": "第一财经",
+        "url": "http://bp-livetytv.bestv.cn/ch/bestvdycj.m3u8",
+    },
+    {
+        "channel_id": "ShanghaiNews.local",
+        "title": "上海新闻综合",
+        "url": "http://bp-livetytv.bestv.cn/ch/bestvxwzh.m3u8",
+    },
+    {
+        "channel_id": "ShanghaiMetro.local",
+        "title": "上海都市",
+        "url": "http://bp-livetytv.bestv.cn/ch/bestvdspd.m3u8",
+    },
+    {
+        "channel_id": "ShanghaiSports.local",
+        "title": "五星体育",
+        "url": "http://bp-livetytv.bestv.cn/ch/bestvwxty.m3u8",
+    },
+    {
+        "channel_id": "ShanghaiDocumentary.local",
+        "title": "纪实人文",
+        "url": "http://bp-resource-dfl.bestv.cn/155/3/video.m3u8",
+    },
+    {
+        "channel_id": "HunanCity.local",
+        "title": "湖南都市",
+        "url": "https://stream1.freetv.fun/hu-nan-du-shi-9.m3u8",
+    },
+    {
+        "channel_id": "HunanEconomy.local",
+        "title": "湖南经视",
+        "url": "https://stream1.freetv.fun/hu-nan-jing-shi-1.m3u8",
+    },
+    {
+        "channel_id": "HunanDrama.local",
+        "title": "湖南电视剧",
+        "url": "https://stream1.freetv.fun/hu-nan-dian-shi-ju-2.m3u8",
+    },
+    {
+        "channel_id": "HunanEntertainment.local",
+        "title": "湖南娱乐",
+        "url": "https://stream1.freetv.fun/hu-nan-yu-le-3.m3u8",
+    },
+    {
+        "channel_id": "HunanPublic.local",
+        "title": "湖南公共",
+        "url": "https://stream1.freetv.fun/hu-nan-gong-gong-7.m3u8",
+    },
+    {
+        "channel_id": "JinyingDocumentary.local",
+        "title": "金鹰纪实",
+        "url": "http://iptv.huuc.edu.cn/hls/gedocu.m3u8",
+    },
+    {
+        "channel_id": "YoumanCartoon.local",
+        "title": "优漫卡通",
+        "url": "https://stream1.freetv.fun/you-man-qia-tong-11.m3u8",
+    },
+    {
+        "channel_id": "GuangdongPearl.local",
+        "title": "广东珠江",
+        "url": "http://cdn2.163189.xyz/live/gdzj/stream.m3u8",
+    },
+    {
+        "channel_id": "GuangdongSports.local",
+        "title": "广东体育",
+        "url": "http://cdn2.163189.xyz/live/gdty/stream.m3u8",
+    },
+    {
+        "channel_id": "GuangdongNews.local",
+        "title": "广东新闻",
+        "url": "https://hls-gateway.vpstv.net/streams/708873.m3u8",
+    },
+    {
+        "channel_id": "GuangzhouMovie.local",
+        "title": "广州影视",
+        "url": "https://stream1.freetv.fun/yan-zhou-ying-shi-25.m3u8",
+    },
 )
 TARGET_CHANNEL_ALIASES = {
     "CCTV1.cn": ("CCTV-1", "CCTV1", "CCTV-1综合", "CCTV1综合", "央视一套", "央视综合"),
@@ -263,7 +448,44 @@ TARGET_CHANNEL_ALIASES = {
     "LiaoningMetro.local": ("辽宁都市",),
     "LiaoningMovie.local": ("辽宁影视", "辽宁影视剧"),
     "LiaoningPublic.local": ("辽宁公共",),
+    "ShanghaiFinance.local": ("第一财经", "上海第一财经", "东方财经"),
+    "ShanghaiNews.local": ("上海新闻综合", "上海新闻"),
+    "ShanghaiMetro.local": ("上海都市",),
+    "ShanghaiSports.local": ("五星体育",),
+    "ShanghaiDocumentary.local": ("纪实人文", "上海纪实人文", "新纪实"),
+    "ShanghaiDrama.local": ("都市剧场",),
+    "ShanghaiLife.local": ("生活时尚",),
+    "ShanghaiAnimation.local": ("哈哈炫动", "炫动卡通"),
+    "ShanghaiMovie.local": ("东方影视",),
+    "HunanCity.local": ("湖南都市",),
+    "HunanEconomy.local": ("湖南经视",),
+    "HunanDrama.local": ("湖南电视剧",),
+    "HunanEntertainment.local": ("湖南娱乐", "湖南娱乐频道"),
+    "HunanPublic.local": ("湖南公共",),
+    "JinyingDocumentary.local": ("金鹰纪实",),
+    "JinyingCartoon.local": ("金鹰卡通",),
+    "JiangsuSports.local": ("江苏体育", "江苏体育休闲"),
+    "JiangsuPublic.local": ("江苏公共",),
+    "JiangsuCity.local": ("江苏城市",),
+    "JiangsuMovie.local": ("江苏影视",),
+    "JiangsuEducation.local": ("江苏教育",),
+    "YoumanCartoon.local": ("优漫卡通",),
+    "GuangdongPearl.local": ("广东珠江", "珠江卫视"),
+    "GuangdongSports.local": ("广东体育",),
+    "GuangdongNews.local": ("广东新闻",),
+    "GuangdongPeople.local": ("广东民生",),
+    "GuangzhouGeneral.local": ("广州综合",),
+    "GuangzhouMovie.local": ("广州影视",),
 }
+CONTEXTUAL_CHANNEL_ALIAS_RULES = (
+    (
+        "上海",
+        {
+            "新闻综合": "ShanghaiNews.local",
+            "新闻": "ShanghaiNews.local",
+        },
+    ),
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -501,6 +723,27 @@ def normalize_url(url: str) -> str:
     )
 
 
+def url_has_suffix(url: str, suffixes: tuple[str, ...]) -> bool:
+    lowered = url.lower()
+    return any(lowered.endswith(suffix) or f"{suffix}?" in lowered for suffix in suffixes)
+
+
+def url_looks_like_vod(url: str) -> bool:
+    lowered = url.lower()
+    if url_has_suffix(lowered, DIRECT_FILE_URL_HINTS):
+        return True
+    return any(pattern in lowered for pattern in VOD_URL_PATTERNS)
+
+
+def live_url_rank(url: str) -> int:
+    lowered = url.lower()
+    if ".m3u8" in lowered:
+        return 3
+    if any(hint in lowered for hint in LIVE_URL_HINTS):
+        return 2
+    return 1 if lowered.startswith(("http://", "https://")) else 0
+
+
 def is_blocked_candidate_url(url: str) -> bool:
     lowered = url.lower()
     return any(pattern in lowered for pattern in BLOCKED_CANDIDATE_URL_PATTERNS)
@@ -571,6 +814,19 @@ def canonicalize_channel_alias(text: str | None) -> str:
     return value
 
 
+CONTEXTUAL_ALIAS_TO_ID = [
+    (
+        canonicalize_channel_alias(context),
+        {
+            canonicalize_channel_alias(alias): channel_id
+            for alias, channel_id in mapping.items()
+            if canonicalize_channel_alias(alias)
+        },
+    )
+    for context, mapping in CONTEXTUAL_CHANNEL_ALIAS_RULES
+]
+
+
 CHANNEL_ALIAS_TO_ID = {
     canonicalize_channel_alias(alias): channel_id
     for channel_id, aliases in {
@@ -581,9 +837,11 @@ CHANNEL_ALIAS_TO_ID = {
 }
 
 
-def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int]:
+def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int, int, int]:
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = int(any(pattern in candidate.url for pattern in preferred_patterns))
+    live_rank = live_url_rank(candidate.url)
+    non_vod_rank = int(not url_looks_like_vod(candidate.url))
     language_match = int(bool(set(candidate.languages) & CHINESE_LANGUAGE_CODES))
     region_match = int(candidate.country in CHINESE_REGION_CODES)
     han_title = int(contains_han(candidate.title))
@@ -591,6 +849,8 @@ def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, 
     https_match = int(candidate.url.startswith("https://"))
     return (
         preferred_rank,
+        non_vod_rank,
+        live_rank,
         language_match,
         domain_match,
         https_match,
@@ -643,7 +903,9 @@ def choose_display_title(
     return (stream_title or (channel or {}).get("name") or "").strip()
 
 
-def verified_item_rank(item: tuple[Candidate, ProbeResult]) -> tuple[int, int, int, int, int]:
+def verified_item_rank(
+    item: tuple[Candidate, ProbeResult],
+) -> tuple[int, int, int, int, int, int, int, int, int]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -651,8 +913,14 @@ def verified_item_rank(item: tuple[Candidate, ProbeResult]) -> tuple[int, int, i
         if pattern in candidate.url:
             preferred_rank = len(preferred_patterns) - index
             break
+    probe_confidence = int("slow" not in probe.detail.lower())
+    ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
     return (
         preferred_rank,
+        ffprobe_video,
+        int(not url_looks_like_vod(candidate.url)),
+        live_url_rank(candidate.url),
+        probe_confidence,
         int(not host_is_ip_address(candidate.url)),
         int(candidate.url.startswith("https://")),
         quality_tier(candidate.quality),
@@ -673,11 +941,7 @@ def collapse_verified_items(
     collapsed = list(by_title.values())
     collapsed.sort(
         key=lambda item: (
-            0
-            if item[0].channel_group == "央视"
-            else 1
-            if item[0].channel_group == "卫视"
-            else 2,
+            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
             item[0].channel_group or "",
             item[0].title,
         )
@@ -873,7 +1137,7 @@ def load_cctv_official_candidates(
     return dedupe_candidates(candidates)
 
 
-def match_target_channel_id(*texts: str | None) -> str | None:
+def match_target_channel_id(*texts: str | None, context: str | None = None) -> str | None:
     for text in texts:
         key = canonicalize_channel_alias(text)
         if not key:
@@ -881,6 +1145,15 @@ def match_target_channel_id(*texts: str | None) -> str | None:
         channel_id = CHANNEL_ALIAS_TO_ID.get(key)
         if channel_id and channel_id not in DISABLED_CHANNEL_IDS:
             return channel_id
+    context_key = canonicalize_channel_alias(context)
+    if context_key:
+        for context_alias, mapping in CONTEXTUAL_ALIAS_TO_ID:
+            if context_alias and context_alias in context_key:
+                for text in texts:
+                    key = canonicalize_channel_alias(text)
+                    channel_id = mapping.get(key)
+                    if channel_id and channel_id not in DISABLED_CHANNEL_IDS:
+                        return channel_id
     return None
 
 
@@ -1000,6 +1273,7 @@ def load_extra_m3u_candidates(
             raw_title,
             pending_attrs.get("tvg-name"),
             pending_attrs.get("tvg-id"),
+            context=group_title,
         )
         if not channel_id:
             pending_attrs = {}
@@ -1086,7 +1360,8 @@ def choose_playlist_target(playlist_text: str) -> tuple[str | None, bool]:
 
 
 def playlist_is_ended(playlist_text: str) -> bool:
-    return "#EXT-X-ENDLIST" in playlist_text
+    normalized = playlist_text.upper()
+    return "#EXT-X-ENDLIST" in normalized or "#EXT-X-PLAYLIST-TYPE:VOD" in normalized
 
 
 def slow_playable_result(
@@ -1166,7 +1441,7 @@ def run_ffprobe(candidate: Candidate, timeout: float) -> ProbeResult | None:
         "-v",
         "error",
         "-show_entries",
-        "stream=codec_type",
+        "stream=codec_type:format=format_name",
         "-of",
         "json",
         candidate.url,
@@ -1211,12 +1486,37 @@ def run_ffprobe(candidate: Candidate, timeout: float) -> ProbeResult | None:
         payload = json.loads(completed.stdout or "{}")
     except json.JSONDecodeError:
         payload = {}
-    has_streams = bool(payload.get("streams"))
+    streams = payload.get("streams") or []
+    stream_types = {stream.get("codec_type") for stream in streams if stream.get("codec_type")}
+    has_video = "video" in stream_types
+    has_audio = "audio" in stream_types
+    format_name = ((payload.get("format") or {}).get("format_name") or "").lower()
+    mp4_like_format = any(name in format_name for name in ("mov,mp4", "mp4", "mov"))
+    if not has_video:
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type="ffprobe",
+            detail="ffprobe found no video stream",
+            elapsed_ms=elapsed_ms,
+            final_url=candidate.url,
+            via_ffprobe=True,
+        )
+    if url_looks_like_vod(candidate.url) and mp4_like_format:
+        return ProbeResult(
+            ok=False,
+            status=200,
+            content_type="ffprobe",
+            detail="ffprobe detected mp4-style container on a vod-like url",
+            elapsed_ms=elapsed_ms,
+            final_url=candidate.url,
+            via_ffprobe=True,
+        )
     return ProbeResult(
-        ok=has_streams,
-        status=200 if has_streams else None,
-        content_type="ffprobe",
-        detail="ffprobe detected streams" if has_streams else "ffprobe returned no streams",
+        ok=True,
+        status=200,
+        content_type=f"ffprobe:{format_name or 'unknown'}",
+        detail="ffprobe detected video+audio streams" if has_audio else "ffprobe detected video stream",
         elapsed_ms=elapsed_ms,
         final_url=candidate.url,
         via_ffprobe=True,
@@ -1227,6 +1527,11 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
     if use_ffprobe:
         ffprobe_result = run_ffprobe(candidate, timeout)
         if ffprobe_result and ffprobe_result.ok:
+            return ffprobe_result
+        if ffprobe_result and any(
+            marker in ffprobe_result.detail.lower()
+            for marker in ("no video stream", "vod-like url")
+        ):
             return ffprobe_result
 
     headers = candidate.request_headers()
