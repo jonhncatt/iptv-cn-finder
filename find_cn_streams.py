@@ -262,6 +262,11 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     ),
     "东南卫视": ("112.27.235.94:8000/hls/38",),
     "辽宁卫视": ("112.27.235.94:8000/hls/47",),
+    "浙江卫视": (
+        "112.27.235.94:8000/hls/28",
+        "ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+        "play-qukan.cztv.com",
+    ),
     "辽宁体育": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2",),
     "辽宁公共": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1",),
     "辽宁影视剧": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7",),
@@ -315,6 +320,11 @@ MANUAL_PREFERRED_CANDIDATES = (
         "channel_id": "LiaoningSatelliteTV.cn",
         "title": "辽宁卫视",
         "url": "http://112.27.235.94:8000/hls/47/index.m3u8",
+    },
+    {
+        "channel_id": "ZhejiangSatelliteTV.cn",
+        "title": "浙江卫视",
+        "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
     },
     {
         "channel_id": "LiaoningSports.local",
