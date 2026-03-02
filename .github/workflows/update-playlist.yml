@@ -12,6 +12,10 @@ concurrency:
   group: update-iptv-playlist
   cancel-in-progress: false
 
+env:
+  MIN_CHANNEL_COUNT: "60"
+  MIN_CHANNEL_RATIO_PERCENT: "85"
+
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
@@ -33,6 +37,35 @@ jobs:
       - name: Refresh verified playlist
         run: |
           python3 find_cn_streams.py --ffprobe --limit 0 --timeout 12 --workers 20 --keep-failures --verbose
+
+      - name: Guard published playlist quality
+        run: |
+          previous_count=0
+          if [ -f m3u/chinese-public-verified.m3u ]; then
+            previous_count=$(grep -c '^#EXTINF' m3u/chinese-public-verified.m3u)
+          fi
+          generated_count=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("output/chinese-public-report.json").read_text(encoding="utf-8"))
+          print(int(report.get("success_count", 0)))
+          PY
+          )
+          ratio_floor=$(( previous_count * MIN_CHANNEL_RATIO_PERCENT / 100 ))
+          required_count=$MIN_CHANNEL_COUNT
+          if [ "$ratio_floor" -gt "$required_count" ]; then
+            required_count=$ratio_floor
+          fi
+          echo "previous_count=$previous_count"
+          echo "generated_count=$generated_count"
+          echo "required_count=$required_count"
+          if [ "$generated_count" -lt "$required_count" ]; then
+            echo "Generated playlist is below the safety floor; refusing to overwrite published files."
+            exit 1
+          fi
+
+      - name: Copy refreshed outputs
+        run: |
           mkdir -p m3u
           cp output/chinese-public-verified.m3u m3u/chinese-public-verified.m3u
           cp output/chinese-public-report.json m3u/chinese-public-report.json

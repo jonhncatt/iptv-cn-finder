@@ -73,6 +73,7 @@ CURATED_PUBLIC_M3U_URLS = {
     "zbds": "https://live.zbds.top/tv/iptv4.m3u",
     "chinaiptv": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8",
 }
+PUBLISHED_PLAYLIST_PATH = Path("m3u/chinese-public-verified.m3u")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
     "cdn.jsdelivr.net/gh/namegenliang/fast-github-access",
@@ -241,6 +242,11 @@ DIRECT_FILE_URL_HINTS = (
     ".mp4",
 )
 PREFERRED_URL_PATTERNS_BY_TITLE = {
+    "东方卫视": (
+        "38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8",
+        "112.27.235.94:8000/hls/28",
+        "bp-resource-dfl.bestv.cn/148/3/video.m3u8",
+    ),
     "北京卫视": (
         "183.215.134.239:19901/tsfile/live/0122_1.m3u8",
         "101.35.240.114:88/live.php?id=%E5%8C%97%E4%BA%AC%E5%8D%AB%E8%A7%86",
@@ -280,6 +286,11 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     "广州影视": ("stream1.freetv.fun/yan-zhou-ying-shi-25.m3u8",),
 }
 MANUAL_PREFERRED_CANDIDATES = (
+    {
+        "channel_id": "DragonTV.cn",
+        "title": "东方卫视",
+        "url": "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
+    },
     {
         "channel_id": "BeijingSatelliteTV.cn",
         "title": "北京卫视",
@@ -567,8 +578,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         action="append",
-        choices=("iptv-org", "cctv-official", "curated-public", "manual-preferred"),
-        default=["iptv-org", "cctv-official", "curated-public", "manual-preferred"],
+        choices=("iptv-org", "cctv-official", "curated-public", "published", "manual-preferred"),
+        default=["iptv-org", "cctv-official", "curated-public", "published", "manual-preferred"],
         help="Candidate source provider. Repeat to add more providers.",
     )
     parser.add_argument(
@@ -837,7 +848,19 @@ CHANNEL_ALIAS_TO_ID = {
 }
 
 
-def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int, int, int]:
+def source_priority(source: str) -> int:
+    if source == "manual-preferred":
+        return 4
+    if source == "published":
+        return 3
+    if source.startswith("local:"):
+        return 2
+    if source.startswith("remote:"):
+        return 1
+    return 0
+
+
+def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int, int, int, int]:
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = int(any(pattern in candidate.url for pattern in preferred_patterns))
     live_rank = live_url_rank(candidate.url)
@@ -848,6 +871,7 @@ def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, 
     domain_match = int(not host_is_ip_address(candidate.url))
     https_match = int(candidate.url.startswith("https://"))
     return (
+        source_priority(candidate.source),
         preferred_rank,
         non_vod_rank,
         live_rank,
@@ -905,7 +929,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
-) -> tuple[int, int, int, int, int, int, int, int, int]:
+) -> tuple[int, int, int, int, int, int, int, int, int, int]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -916,6 +940,7 @@ def verified_item_rank(
     probe_confidence = int("slow" not in probe.detail.lower())
     ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
     return (
+        source_priority(candidate.source),
         preferred_rank,
         ffprobe_video,
         int(not url_looks_like_vod(candidate.url)),
@@ -1326,6 +1351,22 @@ def load_curated_public_candidates(
             )
         )
     return dedupe_candidates(candidates)
+
+
+def load_published_candidates(
+    include_nsfw: bool,
+    min_quality: int,
+    allow_ip_hosts: bool,
+) -> list[Candidate]:
+    if not PUBLISHED_PLAYLIST_PATH.exists():
+        return []
+    return load_extra_m3u_candidates(
+        load_m3u_file(PUBLISHED_PLAYLIST_PATH),
+        source_name="published",
+        include_nsfw=include_nsfw,
+        min_quality=min_quality,
+        allow_ip_hosts=allow_ip_hosts,
+    )
 
 
 def load_manual_preferred_candidates() -> list[Candidate]:
@@ -1888,6 +1929,15 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
                 timeout=args.timeout,
                 include_nsfw=args.include_nsfw,
                 min_quality=args.min_quality,
+            )
+        )
+
+    if "published" in providers:
+        candidates.extend(
+            load_published_candidates(
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=True,
             )
         )
 
