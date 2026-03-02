@@ -97,8 +97,8 @@ http://38.75.136.137:98/gslb/dsdqpub/gswshd.m3u8?auth=testpub
 http://112.27.235.94:8000/hls/47/index.m3u8
 #EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/重庆卫视.png" group-title="卫视",重庆卫视
 http://38.75.136.137:98/gslb/dsdqpub/cqwshd.m3u8?auth=testpub
-#EXTINF:-1 tvg-id="ShaanxiSatelliteTV.cn" tvg-name="陕西卫视" tvg-logo="https://live.fanmingming.com/tv/陕西卫视.png" group-title="卫视",陕西卫视
-http://stream.snrtv.com/sxbc-star-bepyHR.m3u8
+#EXTINF:-1 tvg-id="ShaanxiSatelliteTV.cn" tvg-name="陕西卫视" tvg-logo="https://live.fanmingming.cn/tv/陕西卫视.png" group-title="卫视",陕西卫视
+http://112.27.235.94:8000/hls/43/index.m3u8
 #EXTINF:-1 tvg-id="QinghaiSatelliteTV.cn" tvg-name="青海卫视" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/青海卫视.png" group-title="卫视",青海卫视
 http://38.75.136.137:98/gslb/dsdqpub/qhws.m3u8?auth=testpub
 #EXTINF:-1 tvg-id="HeilongjiangSatelliteTV.cn" tvg-name="黑龙江卫视" tvg-logo="https://live.fanmingming.cn/tv/黑龙江卫视.png" group-title="卫视",黑龙江卫视
