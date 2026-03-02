@@ -22,6 +22,10 @@
 - 自动收窄到目标频道范围，只保留需要的中文频道
 - 把频道名和分组统一成中文，例如 `央视`、`卫视`、`辽宁台`
 - 对每个链接做 HTTP/HLS 探测，尽量剔除失效、静态文件和假回退流
+- 对 HLS 做二次“真直播”校验，检查播放列表是否前进，而不只是能访问
+- 为每条源累计历史稳定性评分，区分 `local` 和 `cloud` 两套环境分数
+- 记录首开速度、片段速度、内容异常分数，优先保留更快更稳的源
+- 额外生成一份“主源 + 备用源”的备份播放列表
 - 对常见慢源做更宽容的判断，避免把“能看但首开慢”的源误删
 - 支持内联 `User-Agent` / `Referrer`
 - 输出整理后的 `m3u` 文件和完整 JSON 报告
@@ -44,7 +48,12 @@ python3 find_cn_streams.py --verbose
 默认会生成两个文件：
 
 - `output/chinese-public-verified.m3u`
+- `output/chinese-public-with-backups.m3u`
 - `output/chinese-public-report.json`
+
+脚本还会更新一份长期历史文件：
+
+- `state/probe-history.json`
 
 默认策略会做稳定性检查，并优先保留更可靠的候选源。
 脚本默认不偏好裸 IP 源，但当前也会保留一部分已经实测可用的手工优选源。
@@ -75,6 +84,12 @@ python3 find_cn_streams.py --min-quality 720 --verbose
 python3 find_cn_streams.py --ffprobe --limit 150 --verbose
 ```
 
+指定这次运行是本地网络还是云端网络：
+
+```bash
+python3 find_cn_streams.py --ffprobe --probe-environment local --verbose
+```
+
 合并你自己的本地 `m3u` 一起筛：
 
 ```bash
@@ -92,19 +107,27 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 - 包含成功和失败的探测结果
 - 适合排查某个频道为什么没进最终列表
+- 包含每个频道的备用源链、历史分数、内容异常标记
+
+`state/probe-history.json`
+
+- 保存长期稳定性记忆
+- 同一条源会分别累计 `local` 和 `cloud` 两套分数
 
 ## GitHub 订阅
 
 仓库里会额外保留一份可直接订阅的 `m3u` 文件：
 
 - `m3u/chinese-public-verified.m3u`
+- `m3u/chinese-public-with-backups.m3u`
 
 可直接用于 APTV 远程订阅：
 
 - `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-verified.m3u`
+- `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-with-backups.m3u`
 
 仓库已配置 GitHub Actions 定时刷新，默认每 30 分钟自动运行一次，也支持手动触发。
-工作流会优先参考仓库里当前已发布的订阅结果，并在新结果频道数明显过低时拒绝覆盖，避免云端网络波动把可用列表刷坏。
+工作流会以 `cloud` 环境身份运行，更新云端历史分数；同时优先参考仓库里当前已发布的订阅结果，并在新结果频道数明显过低时拒绝覆盖，避免云端网络波动把可用列表刷坏。
 
 手动跑一次的方法：
 

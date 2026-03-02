@@ -63,6 +63,11 @@ M3U_CONTENT_TYPES = {
 PLAYABLE_CONTENT_PREFIXES = ("audio/", "video/")
 TEXT_SAMPLE_LIMIT = 65536
 MEDIA_SAMPLE_LIMIT = 4096
+CONTENT_SAMPLE_SIZE = 16 * 16
+PROBE_ENVIRONMENTS = ("local", "cloud")
+DEFAULT_PROBE_ENVIRONMENT = os.environ.get("IPTV_PROBE_ENV", "local")
+PLAYLIST_MEDIA_SEQUENCE_RE = re.compile(r"#EXT-X-MEDIA-SEQUENCE:(\d+)", re.IGNORECASE)
+PLAYLIST_TARGET_DURATION_RE = re.compile(r"#EXT-X-TARGETDURATION:(\d+)", re.IGNORECASE)
 HAN_RE = re.compile(r"[\u3400-\u9FFF]")
 EXTINF_ATTR_RE = re.compile(r'([A-Za-z0-9_-]+)="([^"]*)"')
 IP_HOST_RE = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
@@ -74,6 +79,8 @@ CURATED_PUBLIC_M3U_URLS = {
     "chinaiptv": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8",
 }
 PUBLISHED_PLAYLIST_PATH = Path("m3u/chinese-public-verified.m3u")
+PUBLISHED_BACKUP_PLAYLIST_PATH = Path("m3u/chinese-public-with-backups.m3u")
+DEFAULT_HISTORY_PATH = Path("state/probe-history.json")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
     "cdn.jsdelivr.net/gh/namegenliang/fast-github-access",
@@ -552,6 +559,14 @@ class ProbeResult:
     elapsed_ms: int
     final_url: str | None = None
     via_ffprobe: bool = False
+    playlist_ms: int | None = None
+    media_ms: int | None = None
+    startup_score: int = 0
+    live_score: int = 0
+    content_score: int = 50
+    history_local_score: float = 0.0
+    history_cloud_score: float = 0.0
+    anomaly_flags: tuple[str, ...] = ()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -560,6 +575,13 @@ class FetchResult:
     content_type: str | None
     final_url: str
     body: bytes
+
+
+@dataclasses.dataclass(frozen=True)
+class PlaylistSnapshot:
+    media_sequence: int | None
+    target_duration: int | None
+    segment_keys: tuple[str, ...]
 
 
 class CacheStore:
@@ -580,6 +602,132 @@ class CacheStore:
         data = fetch_bytes(url, timeout=timeout)
         cache_path.write_bytes(data)
         return data
+
+
+class HistoryStore:
+    def __init__(self, path: Path | None) -> None:
+        self.path = path
+        self.payload: dict[str, Any] = {
+            "version": 1,
+            "updated_at": None,
+            "streams": {},
+        }
+        if not self.path or not self.path.exists():
+            return
+        try:
+            loaded = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        if isinstance(loaded, dict) and isinstance(loaded.get("streams"), dict):
+            self.payload = loaded
+
+    def _default_stats(self) -> dict[str, Any]:
+        return {
+            "runs": 0,
+            "successes": 0,
+            "failures": 0,
+            "ffprobe_successes": 0,
+            "anomaly_hits": 0,
+            "elapsed_total_ms": 0,
+            "playlist_total_ms": 0,
+            "media_total_ms": 0,
+            "startup_score_total": 0,
+            "live_score_total": 0,
+            "content_score_total": 0,
+            "last_ok": False,
+            "last_detail": "",
+            "last_updated": None,
+        }
+
+    def _entry(self, candidate: Candidate) -> dict[str, Any]:
+        streams = self.payload.setdefault("streams", {})
+        entry = streams.setdefault(
+            candidate.url,
+            {
+                "title": candidate.title,
+                "channel_id": candidate.channel_id,
+                "group": candidate.channel_group,
+                "source": candidate.source,
+                "environments": {},
+            },
+        )
+        entry["title"] = candidate.title
+        entry["channel_id"] = candidate.channel_id
+        entry["group"] = candidate.channel_group
+        entry["source"] = candidate.source
+        return entry
+
+    def stats(self, url: str, environment: str) -> dict[str, Any]:
+        entry = self.payload.get("streams", {}).get(url, {})
+        envs = entry.get("environments", {})
+        stats = envs.get(environment)
+        return stats if isinstance(stats, dict) else {}
+
+    def score(self, url: str, environment: str) -> float:
+        stats = self.stats(url, environment)
+        runs = int(stats.get("runs", 0) or 0)
+        if runs <= 0:
+            return 0.0
+        successes = int(stats.get("successes", 0) or 0)
+        success_rate = successes / runs
+        avg_elapsed = int(stats.get("elapsed_total_ms", 0) or 0) / runs
+        avg_startup = int(stats.get("startup_score_total", 0) or 0) / runs
+        avg_live = int(stats.get("live_score_total", 0) or 0) / runs
+        avg_content = int(stats.get("content_score_total", 0) or 0) / runs
+        anomaly_rate = int(stats.get("anomaly_hits", 0) or 0) / runs
+        ffprobe_rate = int(stats.get("ffprobe_successes", 0) or 0) / runs
+        if avg_elapsed <= 1200:
+            speed_component = 18.0
+        elif avg_elapsed <= 2500:
+            speed_component = 14.0
+        elif avg_elapsed <= 5000:
+            speed_component = 10.0
+        elif avg_elapsed <= 9000:
+            speed_component = 6.0
+        else:
+            speed_component = 2.0
+        score = (
+            success_rate * 55.0
+            + ffprobe_rate * 10.0
+            + speed_component
+            + avg_startup * 0.12
+            + avg_live * 0.18
+            + avg_content * 0.1
+            - anomaly_rate * 15.0
+        )
+        return round(max(0.0, min(100.0, score)), 2)
+
+    def record(self, candidate: Candidate, probe: ProbeResult, environment: str) -> None:
+        environment = environment if environment in PROBE_ENVIRONMENTS else "local"
+        entry = self._entry(candidate)
+        envs = entry.setdefault("environments", {})
+        stats = envs.setdefault(environment, self._default_stats())
+        stats["runs"] += 1
+        if probe.ok:
+            stats["successes"] += 1
+        else:
+            stats["failures"] += 1
+        if probe.ok and probe.via_ffprobe:
+            stats["ffprobe_successes"] += 1
+        stats["anomaly_hits"] += len(probe.anomaly_flags)
+        stats["elapsed_total_ms"] += max(0, probe.elapsed_ms)
+        if probe.playlist_ms is not None:
+            stats["playlist_total_ms"] += max(0, probe.playlist_ms)
+        if probe.media_ms is not None:
+            stats["media_total_ms"] += max(0, probe.media_ms)
+        stats["startup_score_total"] += probe.startup_score
+        stats["live_score_total"] += probe.live_score
+        stats["content_score_total"] += probe.content_score
+        stats["last_ok"] = probe.ok
+        stats["last_detail"] = probe.detail
+        stats["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    def save(self) -> None:
+        if not self.path:
+            return
+        self.payload["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
@@ -617,6 +765,28 @@ def parse_args() -> argparse.Namespace:
         "--report",
         default="output/chinese-public-report.json",
         help="Output JSON report path for probe results.",
+    )
+    parser.add_argument(
+        "--backup-out",
+        default="output/chinese-public-with-backups.m3u",
+        help="Output M3U path that keeps the primary source plus backups per channel.",
+    )
+    parser.add_argument(
+        "--backup-count",
+        type=int,
+        default=3,
+        help="How many verified sources to keep per channel in the backup playlist.",
+    )
+    parser.add_argument(
+        "--history",
+        default=str(DEFAULT_HISTORY_PATH),
+        help="Persistent JSON history used for long-term stability scoring.",
+    )
+    parser.add_argument(
+        "--probe-environment",
+        choices=PROBE_ENVIRONMENTS,
+        default=DEFAULT_PROBE_ENVIRONMENT if DEFAULT_PROBE_ENVIRONMENT in PROBE_ENVIRONMENTS else "local",
+        help="Label this run as local or cloud for separate historical scoring.",
     )
     parser.add_argument(
         "--limit",
@@ -674,6 +844,18 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="Require this many successful probe passes for a channel to be kept.",
+    )
+    parser.add_argument(
+        "--live-sequence-delay",
+        type=float,
+        default=2.5,
+        help="Seconds to wait before rechecking an HLS media playlist for sequence movement.",
+    )
+    parser.add_argument(
+        "--content-check-timeout",
+        type=float,
+        default=6.0,
+        help="Timeout for ffmpeg-based content anomaly detection on verified candidates.",
     )
     parser.add_argument(
         "--include-nsfw",
@@ -751,6 +933,11 @@ def normalize_url(url: str) -> str:
 def url_has_suffix(url: str, suffixes: tuple[str, ...]) -> bool:
     lowered = url.lower()
     return any(lowered.endswith(suffix) or f"{suffix}?" in lowered for suffix in suffixes)
+
+
+def url_looks_like_hls(url: str) -> bool:
+    lowered = url.lower()
+    return ".m3u8" in lowered or ".m3u" in lowered
 
 
 def url_looks_like_vod(url: str) -> bool:
@@ -962,7 +1149,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
-) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int]:
+) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -973,41 +1160,51 @@ def verified_item_rank(
     probe_confidence = int("slow" not in probe.detail.lower())
     ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
     fast_probe = latency_rank(probe.elapsed_ms)
+    clean_content = int(not any(flag in probe.anomaly_flags for flag in ("black-frame", "frozen-frames", "ended-playlist")))
     return (
         ffprobe_video,
+        clean_content,
+        preferred_rank,
+        source_priority(candidate.source),
+        int(probe.history_local_score * 100),
+        int(probe.history_cloud_score * 100),
+        probe.live_score,
+        probe.content_score,
+        probe.startup_score,
         probe_confidence,
         fast_probe,
         int(not url_looks_like_vod(candidate.url)),
         live_url_rank(candidate.url),
         int(not source_is_known_slow(candidate.url)),
-        source_priority(candidate.source),
-        preferred_rank,
         int(not host_is_ip_address(candidate.url)),
         int(candidate.url.startswith("https://")),
         quality_tier(candidate.quality),
+        -len(probe.anomaly_flags),
         -probe.elapsed_ms,
     )
 
 
 def collapse_verified_items(
     verified_items: list[tuple[Candidate, ProbeResult]],
-) -> list[tuple[Candidate, ProbeResult]]:
-    by_title: dict[str, tuple[Candidate, ProbeResult]] = {}
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    by_title: dict[str, list[tuple[Candidate, ProbeResult]]] = {}
     for item in verified_items:
         title = item[0].title
-        current = by_title.get(title)
-        if current is None or verified_item_rank(item) > verified_item_rank(current):
-            by_title[title] = item
+        by_title.setdefault(title, []).append(item)
 
-    collapsed = list(by_title.values())
-    collapsed.sort(
-        key=lambda item: (
-            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
-            item[0].channel_group or "",
-            item[0].title,
+    grouped = []
+    for items in by_title.values():
+        items.sort(key=verified_item_rank, reverse=True)
+        grouped.append(items)
+
+    grouped.sort(
+        key=lambda items: (
+            GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+            items[0][0].channel_group or "",
+            items[0][0].title,
         )
     )
-    return collapsed
+    return [items[0] for items in grouped], grouped
 
 
 def best_candidate(existing: Candidate, challenger: Candidate) -> Candidate:
@@ -1441,6 +1638,328 @@ def playlist_is_ended(playlist_text: str) -> bool:
     return "#EXT-X-ENDLIST" in normalized or "#EXT-X-PLAYLIST-TYPE:VOD" in normalized
 
 
+def playlist_segments(playlist_text: str) -> tuple[str, ...]:
+    return tuple(
+        line.strip()
+        for line in playlist_text.splitlines()
+        if line.strip() and not line.startswith("#")
+    )
+
+
+def parse_playlist_snapshot(playlist_text: str) -> PlaylistSnapshot:
+    segments = playlist_segments(playlist_text)
+    media_sequence_match = PLAYLIST_MEDIA_SEQUENCE_RE.search(playlist_text)
+    target_duration_match = PLAYLIST_TARGET_DURATION_RE.search(playlist_text)
+    return PlaylistSnapshot(
+        media_sequence=int(media_sequence_match.group(1)) if media_sequence_match else None,
+        target_duration=int(target_duration_match.group(1)) if target_duration_match else None,
+        segment_keys=segments[-3:],
+    )
+
+
+def compute_startup_score(playlist_ms: int | None, media_ms: int | None) -> int:
+    def bucket(value: int | None) -> int:
+        if value is None:
+            return 10
+        if value <= 400:
+            return 50
+        if value <= 900:
+            return 44
+        if value <= 1600:
+            return 36
+        if value <= 2600:
+            return 28
+        if value <= 4500:
+            return 20
+        if value <= 8000:
+            return 12
+        return 4
+
+    playlist_score = bucket(playlist_ms)
+    media_score = bucket(media_ms)
+    return min(100, int(playlist_score * 0.4 + media_score * 0.6))
+
+
+def merge_probe_results(base: ProbeResult, extra: ProbeResult) -> ProbeResult:
+    detail_parts = [base.detail]
+    if extra.detail and extra.detail not in detail_parts:
+        detail_parts.append(extra.detail)
+    anomaly_flags = tuple(sorted(set(base.anomaly_flags + extra.anomaly_flags)))
+    return ProbeResult(
+        ok=base.ok and extra.ok,
+        status=extra.status or base.status,
+        content_type=extra.content_type or base.content_type,
+        detail="; ".join(part for part in detail_parts if part),
+        elapsed_ms=max(base.elapsed_ms, extra.elapsed_ms),
+        final_url=extra.final_url or base.final_url,
+        via_ffprobe=base.via_ffprobe or extra.via_ffprobe,
+        playlist_ms=extra.playlist_ms if extra.playlist_ms is not None else base.playlist_ms,
+        media_ms=extra.media_ms if extra.media_ms is not None else base.media_ms,
+        startup_score=max(base.startup_score, extra.startup_score),
+        live_score=max(base.live_score, extra.live_score),
+        content_score=min(base.content_score, extra.content_score),
+        history_local_score=max(base.history_local_score, extra.history_local_score),
+        history_cloud_score=max(base.history_cloud_score, extra.history_cloud_score),
+        anomaly_flags=anomaly_flags,
+    )
+
+
+def assess_playlist_progress(
+    playlist_url: str,
+    playlist_text: str,
+    headers: dict[str, str],
+    timeout: float,
+    sequence_delay: float,
+) -> tuple[int, tuple[str, ...], str, int]:
+    if playlist_is_ended(playlist_text):
+        return 0, ("ended-playlist",), "playlist looks like ended vod", 0
+
+    snapshot = parse_playlist_snapshot(playlist_text)
+    if not snapshot.segment_keys:
+        return 15, ("empty-playlist",), "playlist has no media segments", 0
+
+    wait_seconds = max(1.2, sequence_delay)
+    if snapshot.target_duration:
+        wait_seconds = min(wait_seconds, max(1.2, snapshot.target_duration / 2))
+    time.sleep(wait_seconds)
+
+    try:
+        follow_up, fetch_ms = timed_http_fetch(
+            playlist_url,
+            headers,
+            timeout,
+            max_bytes=TEXT_SAMPLE_LIMIT,
+        )
+    except (TimeoutError, URLError, OSError) as error:
+        return 25, ("recheck-timeout",), f"playlist recheck slow ({error})", 0
+
+    if not ok_status(follow_up.status):
+        return 20, ("recheck-http",), f"playlist recheck http {follow_up.status}", fetch_ms
+
+    follow_text = follow_up.body.decode("utf-8", errors="ignore")
+    if playlist_is_ended(follow_text):
+        return 0, ("ended-playlist",), "playlist recheck looks like ended vod", fetch_ms
+
+    follow_snapshot = parse_playlist_snapshot(follow_text)
+    if (
+        snapshot.media_sequence is not None
+        and follow_snapshot.media_sequence is not None
+        and follow_snapshot.media_sequence > snapshot.media_sequence
+    ):
+        return 100, (), "media sequence advanced", fetch_ms
+    if follow_snapshot.segment_keys != snapshot.segment_keys:
+        return 85, (), "playlist segments rotated", fetch_ms
+    if len(set(follow_snapshot.segment_keys)) <= 1:
+        return 25, ("repeating-segments",), "playlist repeats the same segment", fetch_ms
+    return 45, ("stale-playlist",), "playlist did not prove forward movement", fetch_ms
+
+
+def probe_hls_candidate(candidate: Candidate, timeout: float, sequence_delay: float) -> ProbeResult:
+    headers = candidate.request_headers()
+    start = time.perf_counter()
+    try:
+        top, top_ms = timed_http_fetch(candidate.url, headers, timeout, max_bytes=TEXT_SAMPLE_LIMIT)
+        kind = classify_response(top.content_type, top.final_url, top.body)
+        if not ok_status(top.status):
+            return ProbeResult(
+                ok=False,
+                status=top.status,
+                content_type=top.content_type,
+                detail="unexpected http status",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+                playlist_ms=top_ms,
+            )
+        if kind != "hls":
+            return ProbeResult(
+                ok=False,
+                status=top.status,
+                content_type=top.content_type,
+                detail="endpoint is not a validated live playlist",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+                playlist_ms=top_ms,
+            )
+
+        playlist_text = top.body.decode("utf-8", errors="ignore")
+        if playlist_is_ended(playlist_text):
+            return ProbeResult(
+                ok=False,
+                status=top.status,
+                content_type=top.content_type,
+                detail="playlist looks like ended vod, not live tv",
+                elapsed_ms=int((time.perf_counter() - start) * 1000),
+                final_url=top.final_url,
+                playlist_ms=top_ms,
+            )
+
+        child, is_master = choose_playlist_target(playlist_text)
+        detail = "playlist reachable"
+        final_url = top.final_url
+        media_ms: int | None = None
+        progress_url = top.final_url
+        progress_text = playlist_text
+        anomaly_flags: tuple[str, ...] = ()
+
+        if child:
+            child_url = normalize_url(urljoin(top.final_url, child))
+            try:
+                child_fetch, child_ms = timed_http_fetch(
+                    child_url,
+                    headers,
+                    timeout,
+                    max_bytes=TEXT_SAMPLE_LIMIT if is_master else MEDIA_SAMPLE_LIMIT,
+                    range_request=not is_master,
+                )
+            except (TimeoutError, URLError, OSError) as error:
+                return slow_playable_result(
+                    status=top.status,
+                    content_type=top.content_type,
+                    detail=f"playlist reachable; child fetch slow but may still be playable ({error})",
+                    elapsed_ms=int((time.perf_counter() - start) * 1000),
+                    final_url=child_url,
+                    playlist_ms=top_ms,
+                )
+
+            child_kind = classify_response(child_fetch.content_type, child_fetch.final_url, child_fetch.body)
+            final_url = child_fetch.final_url
+
+            if is_master and child_kind == "hls":
+                child_playlist_text = child_fetch.body.decode("utf-8", errors="ignore")
+                if playlist_is_ended(child_playlist_text):
+                    return ProbeResult(
+                        ok=False,
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail="variant playlist looks like ended vod, not live tv",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                        playlist_ms=top_ms,
+                        media_ms=child_ms,
+                    )
+                progress_url = child_fetch.final_url
+                progress_text = child_playlist_text
+                grandchild, _ = choose_playlist_target(child_playlist_text)
+                if not grandchild:
+                    media_ms = child_ms
+                    detail = "master playlist reachable"
+                else:
+                    segment_url = normalize_url(urljoin(child_fetch.final_url, grandchild))
+                    try:
+                        segment_fetch, segment_ms = timed_http_fetch(
+                            segment_url,
+                            headers,
+                            timeout,
+                            max_bytes=MEDIA_SAMPLE_LIMIT,
+                            range_request=True,
+                        )
+                    except (TimeoutError, URLError, OSError) as error:
+                        return slow_playable_result(
+                            status=child_fetch.status,
+                            content_type=child_fetch.content_type,
+                            detail=f"variant playlist reachable; segment slow but may still be playable ({error})",
+                            elapsed_ms=int((time.perf_counter() - start) * 1000),
+                            final_url=child_fetch.final_url,
+                            playlist_ms=top_ms,
+                            media_ms=child_ms,
+                        )
+                    ok = ok_status(segment_fetch.status) and bool(segment_fetch.body)
+                    if not ok:
+                        return ProbeResult(
+                            ok=False,
+                            status=segment_fetch.status,
+                            content_type=segment_fetch.content_type,
+                            detail="variant segment fetch failed",
+                            elapsed_ms=int((time.perf_counter() - start) * 1000),
+                            final_url=segment_fetch.final_url,
+                            playlist_ms=top_ms,
+                            media_ms=segment_ms,
+                        )
+                    detail = "variant segment reachable"
+                    final_url = segment_fetch.final_url
+                    media_ms = segment_ms
+            else:
+                if not is_master and not child_fetch.body and ok_status(child_fetch.status):
+                    return slow_playable_result(
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail="playlist reachable; segment response empty but may still be playable",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                        playlist_ms=top_ms,
+                        media_ms=child_ms,
+                    )
+                ok = ok_status(child_fetch.status) and bool(child_fetch.body)
+                if not ok:
+                    return ProbeResult(
+                        ok=False,
+                        status=child_fetch.status,
+                        content_type=child_fetch.content_type,
+                        detail="playlist segment fetch failed",
+                        elapsed_ms=int((time.perf_counter() - start) * 1000),
+                        final_url=child_fetch.final_url,
+                        playlist_ms=top_ms,
+                        media_ms=child_ms,
+                    )
+                detail = "playlist segment reachable"
+                media_ms = child_ms
+
+        live_score, progress_flags, progress_detail, _progress_ms = assess_playlist_progress(
+            progress_url,
+            progress_text,
+            headers,
+            timeout,
+            sequence_delay,
+        )
+        anomaly_flags = tuple(sorted(set(progress_flags)))
+        return ProbeResult(
+            ok=True,
+            status=top.status,
+            content_type=top.content_type,
+            detail=f"{detail}; {progress_detail}" if progress_detail else detail,
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=final_url,
+            playlist_ms=top_ms,
+            media_ms=media_ms,
+            startup_score=compute_startup_score(top_ms, media_ms),
+            live_score=live_score,
+            anomaly_flags=anomaly_flags,
+        )
+    except HTTPError as error:
+        return ProbeResult(
+            ok=False,
+            status=error.code,
+            content_type=error.headers.get("Content-Type") if error.headers else None,
+            detail=f"http error: {error.code}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=error.geturl() if hasattr(error, "geturl") else candidate.url,
+        )
+    except (TimeoutError, URLError, OSError) as error:
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=f"network error: {error}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=candidate.url,
+        )
+    except Exception as error:  # noqa: BLE001
+        return ProbeResult(
+            ok=False,
+            status=None,
+            content_type=None,
+            detail=f"probe error: {error}",
+            elapsed_ms=int((time.perf_counter() - start) * 1000),
+            final_url=candidate.url,
+        )
+
+
+def validate_live_playlist(candidate: Candidate, timeout: float, sequence_delay: float) -> ProbeResult | None:
+    if not url_looks_like_hls(candidate.url):
+        return None
+    return probe_hls_candidate(candidate, timeout, sequence_delay)
+
+
 def slow_playable_result(
     *,
     status: int | None,
@@ -1448,6 +1967,8 @@ def slow_playable_result(
     detail: str,
     elapsed_ms: int,
     final_url: str | None,
+    playlist_ms: int | None = None,
+    media_ms: int | None = None,
 ) -> ProbeResult:
     return ProbeResult(
         ok=True,
@@ -1456,6 +1977,11 @@ def slow_playable_result(
         detail=detail,
         elapsed_ms=elapsed_ms,
         final_url=final_url,
+        playlist_ms=playlist_ms,
+        media_ms=media_ms,
+        startup_score=compute_startup_score(playlist_ms, media_ms),
+        live_score=20,
+        anomaly_flags=("slow-source",),
     )
 
 
@@ -1498,6 +2024,25 @@ def http_fetch(
             final_url=response.geturl(),
             body=body,
         )
+
+
+def timed_http_fetch(
+    url: str,
+    headers: dict[str, str],
+    timeout: float,
+    *,
+    max_bytes: int,
+    range_request: bool = False,
+) -> tuple[FetchResult, int]:
+    started = time.perf_counter()
+    fetch = http_fetch(
+        url,
+        headers,
+        timeout,
+        max_bytes=max_bytes,
+        range_request=range_request,
+    )
+    return fetch, int((time.perf_counter() - started) * 1000)
 
 
 def ok_status(status: int | None) -> bool:
@@ -1600,10 +2145,20 @@ def run_ffprobe(candidate: Candidate, timeout: float) -> ProbeResult | None:
     )
 
 
-def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool) -> ProbeResult:
+def probe_candidate_once(
+    candidate: Candidate,
+    timeout: float,
+    use_ffprobe: bool,
+    sequence_delay: float,
+) -> ProbeResult:
     if use_ffprobe:
         ffprobe_result = run_ffprobe(candidate, timeout)
         if ffprobe_result and ffprobe_result.ok:
+            playlist_check = validate_live_playlist(candidate, timeout, sequence_delay)
+            if playlist_check and not playlist_check.ok:
+                return playlist_check
+            if playlist_check:
+                return merge_probe_results(ffprobe_result, playlist_check)
             return ffprobe_result
         if ffprobe_result and any(
             marker in ffprobe_result.detail.lower()
@@ -1611,10 +2166,13 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
         ):
             return ffprobe_result
 
+    if url_looks_like_hls(candidate.url):
+        return probe_hls_candidate(candidate, timeout, sequence_delay)
+
     headers = candidate.request_headers()
     start = time.perf_counter()
     try:
-        top = http_fetch(candidate.url, headers, timeout, max_bytes=TEXT_SAMPLE_LIMIT)
+        top, top_ms = timed_http_fetch(candidate.url, headers, timeout, max_bytes=TEXT_SAMPLE_LIMIT)
         kind = classify_response(top.content_type, top.final_url, top.body)
 
         if not ok_status(top.status):
@@ -1625,114 +2183,11 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                 detail="unexpected http status",
                 elapsed_ms=int((time.perf_counter() - start) * 1000),
                 final_url=top.final_url,
+                playlist_ms=top_ms,
             )
 
         if kind == "hls":
-            playlist_text = top.body.decode("utf-8", errors="ignore")
-            if playlist_is_ended(playlist_text):
-                return ProbeResult(
-                    ok=False,
-                    status=top.status,
-                    content_type=top.content_type,
-                    detail="playlist looks like ended vod, not live tv",
-                    elapsed_ms=int((time.perf_counter() - start) * 1000),
-                    final_url=top.final_url,
-                )
-            child, is_master = choose_playlist_target(playlist_text)
-            if not child:
-                return ProbeResult(
-                    ok=True,
-                    status=top.status,
-                    content_type=top.content_type,
-                    detail="playlist reachable",
-                    elapsed_ms=int((time.perf_counter() - start) * 1000),
-                    final_url=top.final_url,
-                )
-
-            child_url = normalize_url(urljoin(top.final_url, child))
-            try:
-                child_fetch = http_fetch(
-                    child_url,
-                    headers,
-                    timeout,
-                    max_bytes=TEXT_SAMPLE_LIMIT if is_master else MEDIA_SAMPLE_LIMIT,
-                    range_request=not is_master,
-                )
-            except (TimeoutError, URLError, OSError) as error:
-                return slow_playable_result(
-                    status=top.status,
-                    content_type=top.content_type,
-                    detail=f"playlist reachable; child fetch slow but may still be playable ({error})",
-                    elapsed_ms=int((time.perf_counter() - start) * 1000),
-                    final_url=child_url,
-                )
-            child_kind = classify_response(child_fetch.content_type, child_fetch.final_url, child_fetch.body)
-
-            if is_master and child_kind == "hls":
-                child_playlist_text = child_fetch.body.decode("utf-8", errors="ignore")
-                if playlist_is_ended(child_playlist_text):
-                    return ProbeResult(
-                        ok=False,
-                        status=child_fetch.status,
-                        content_type=child_fetch.content_type,
-                        detail="variant playlist looks like ended vod, not live tv",
-                        elapsed_ms=int((time.perf_counter() - start) * 1000),
-                        final_url=child_fetch.final_url,
-                    )
-                grandchild, _ = choose_playlist_target(child_playlist_text)
-                if not grandchild:
-                    return ProbeResult(
-                        ok=True,
-                        status=child_fetch.status,
-                        content_type=child_fetch.content_type,
-                        detail="master playlist reachable",
-                        elapsed_ms=int((time.perf_counter() - start) * 1000),
-                        final_url=child_fetch.final_url,
-                    )
-                segment_url = normalize_url(urljoin(child_fetch.final_url, grandchild))
-                try:
-                    segment_fetch = http_fetch(
-                        segment_url,
-                        headers,
-                        timeout,
-                        max_bytes=MEDIA_SAMPLE_LIMIT,
-                        range_request=True,
-                    )
-                except (TimeoutError, URLError, OSError) as error:
-                    return slow_playable_result(
-                        status=child_fetch.status,
-                        content_type=child_fetch.content_type,
-                        detail=f"variant playlist reachable; segment slow but may still be playable ({error})",
-                        elapsed_ms=int((time.perf_counter() - start) * 1000),
-                        final_url=child_fetch.final_url,
-                    )
-                ok = ok_status(segment_fetch.status) and bool(segment_fetch.body)
-                return ProbeResult(
-                    ok=ok,
-                    status=segment_fetch.status,
-                    content_type=segment_fetch.content_type,
-                    detail="variant segment reachable" if ok else "variant segment fetch failed",
-                    elapsed_ms=int((time.perf_counter() - start) * 1000),
-                    final_url=segment_fetch.final_url,
-                )
-
-            if not is_master and not child_fetch.body and ok_status(child_fetch.status):
-                return slow_playable_result(
-                    status=child_fetch.status,
-                    content_type=child_fetch.content_type,
-                    detail="playlist reachable; segment response empty but may still be playable",
-                    elapsed_ms=int((time.perf_counter() - start) * 1000),
-                    final_url=child_fetch.final_url,
-                )
-            ok = ok_status(child_fetch.status) and bool(child_fetch.body)
-            return ProbeResult(
-                ok=ok,
-                status=child_fetch.status,
-                content_type=child_fetch.content_type,
-                detail="playlist segment reachable" if ok else "playlist segment fetch failed",
-                elapsed_ms=int((time.perf_counter() - start) * 1000),
-                final_url=child_fetch.final_url,
-            )
+            return probe_hls_candidate(candidate, timeout, sequence_delay)
 
         if kind == "dash":
             ok = b"<mpd" in top.body[:TEXT_SAMPLE_LIMIT].lower()
@@ -1743,6 +2198,9 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                 detail="mpd manifest reachable" if ok else "dash manifest malformed",
                 elapsed_ms=int((time.perf_counter() - start) * 1000),
                 final_url=top.final_url,
+                playlist_ms=top_ms,
+                startup_score=compute_startup_score(top_ms, top_ms),
+                live_score=50 if ok else 0,
             )
 
         if kind == "media":
@@ -1756,6 +2214,7 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                     detail="static media file, not live tv",
                     elapsed_ms=int((time.perf_counter() - start) * 1000),
                     final_url=top.final_url,
+                    playlist_ms=top_ms,
                 )
             ok = bool(top.body)
             return ProbeResult(
@@ -1765,6 +2224,10 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                 detail="media endpoint reachable" if ok else "empty media response",
                 elapsed_ms=int((time.perf_counter() - start) * 1000),
                 final_url=top.final_url,
+                playlist_ms=top_ms,
+                media_ms=top_ms,
+                startup_score=compute_startup_score(top_ms, top_ms),
+                live_score=40 if ok else 0,
             )
 
         if kind == "generic":
@@ -1775,6 +2238,7 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
                 detail="generic http body is not a validated stream",
                 elapsed_ms=int((time.perf_counter() - start) * 1000),
                 final_url=top.final_url,
+                playlist_ms=top_ms,
             )
 
         return ProbeResult(
@@ -1784,6 +2248,7 @@ def probe_candidate_once(candidate: Candidate, timeout: float, use_ffprobe: bool
             detail="unknown response format",
             elapsed_ms=int((time.perf_counter() - start) * 1000),
             final_url=top.final_url,
+            playlist_ms=top_ms,
         )
     except HTTPError as error:
         return ProbeResult(
@@ -1820,18 +2285,19 @@ def probe_candidate(
     use_ffprobe: bool,
     retries: int,
     stability_checks: int,
+    sequence_delay: float,
 ) -> ProbeResult:
-    result = probe_candidate_once(candidate, timeout, use_ffprobe)
+    result = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
     retry_count = 0
     while not result.ok and retry_count < retries and should_retry_probe(result):
         retry_count += 1
-        result = probe_candidate_once(candidate, timeout, use_ffprobe)
+        result = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
 
     if not result.ok:
         return result
 
     for check_index in range(1, max(1, stability_checks)):
-        follow_up = probe_candidate_once(candidate, timeout, use_ffprobe)
+        follow_up = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
         if not follow_up.ok:
             if follow_up.status is None and "timed out" in follow_up.detail.lower():
                 return ProbeResult(
@@ -1842,6 +2308,14 @@ def probe_candidate(
                     elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
                     final_url=result.final_url,
                     via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+                    playlist_ms=result.playlist_ms,
+                    media_ms=result.media_ms,
+                    startup_score=result.startup_score,
+                    live_score=result.live_score,
+                    content_score=result.content_score,
+                    history_local_score=result.history_local_score,
+                    history_cloud_score=result.history_cloud_score,
+                    anomaly_flags=tuple(sorted(set(result.anomaly_flags + follow_up.anomaly_flags))),
                 )
             return ProbeResult(
                 ok=False,
@@ -1851,6 +2325,14 @@ def probe_candidate(
                 elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
                 final_url=follow_up.final_url,
                 via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+                playlist_ms=follow_up.playlist_ms if follow_up.playlist_ms is not None else result.playlist_ms,
+                media_ms=follow_up.media_ms if follow_up.media_ms is not None else result.media_ms,
+                startup_score=max(result.startup_score, follow_up.startup_score),
+                live_score=min(result.live_score, follow_up.live_score),
+                content_score=min(result.content_score, follow_up.content_score),
+                history_local_score=max(result.history_local_score, follow_up.history_local_score),
+                history_cloud_score=max(result.history_cloud_score, follow_up.history_cloud_score),
+                anomaly_flags=tuple(sorted(set(result.anomaly_flags + follow_up.anomaly_flags))),
             )
         result = ProbeResult(
             ok=True,
@@ -1860,8 +2342,136 @@ def probe_candidate(
             elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
             final_url=result.final_url,
             via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+            playlist_ms=result.playlist_ms if result.playlist_ms is not None else follow_up.playlist_ms,
+            media_ms=result.media_ms if result.media_ms is not None else follow_up.media_ms,
+            startup_score=max(result.startup_score, follow_up.startup_score),
+            live_score=min(result.live_score, follow_up.live_score) if follow_up.live_score else result.live_score,
+            content_score=min(result.content_score, follow_up.content_score),
+            history_local_score=max(result.history_local_score, follow_up.history_local_score),
+            history_cloud_score=max(result.history_cloud_score, follow_up.history_cloud_score),
+            anomaly_flags=tuple(sorted(set(result.anomaly_flags + follow_up.anomaly_flags))),
         )
     return result
+
+
+def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int, tuple[str, ...]]:
+    ffmpeg_path = shutil.which("ffmpeg")
+    if not ffmpeg_path:
+        return 50, ()
+
+    command = [
+        ffmpeg_path,
+        "-v",
+        "error",
+        "-i",
+        candidate.url,
+        "-an",
+        "-vf",
+        "fps=1/2,scale=16:16,format=gray",
+        "-frames:v",
+        "2",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "gray",
+        "-",
+    ]
+    if candidate.user_agent:
+        command[1:1] = ["-user_agent", candidate.user_agent]
+    if candidate.referrer:
+        command[1:1] = ["-headers", f"Referer: {candidate.referrer}\r\n"]
+
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 60, ("content-check-timeout",)
+    except OSError:
+        return 50, ()
+
+    if completed.returncode != 0 or not completed.stdout:
+        return 45, ("content-check-empty",)
+
+    frame_size = CONTENT_SAMPLE_SIZE
+    frames = [
+        completed.stdout[index : index + frame_size]
+        for index in range(0, len(completed.stdout), frame_size)
+        if len(completed.stdout[index : index + frame_size]) == frame_size
+    ]
+    if not frames:
+        return 45, ("content-check-empty",)
+
+    anomaly_flags: list[str] = []
+    brightness = [sum(frame) / frame_size for frame in frames]
+    if any(level < 8 for level in brightness):
+        anomaly_flags.append("black-frame")
+    if len(frames) >= 2 and frames[0] == frames[1]:
+        anomaly_flags.append("frozen-frames")
+
+    score = 100 - (35 * len(anomaly_flags))
+    return max(10, score), tuple(sorted(set(anomaly_flags)))
+
+
+def annotate_content_scores(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    timeout: float,
+    workers: int,
+) -> list[tuple[Candidate, ProbeResult]]:
+    if not verified_items:
+        return verified_items
+
+    annotated: list[tuple[Candidate, ProbeResult]] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, 8))) as executor:
+        future_to_item = {
+            executor.submit(run_ffmpeg_content_probe, candidate, timeout): (candidate, probe)
+            for candidate, probe in verified_items
+        }
+        for future in concurrent.futures.as_completed(future_to_item):
+            candidate, probe = future_to_item[future]
+            content_score, anomaly_flags = future.result()
+            combined_flags = tuple(sorted(set(probe.anomaly_flags + anomaly_flags)))
+            annotated.append(
+                (
+                    candidate,
+                    dataclasses.replace(
+                        probe,
+                        content_score=content_score,
+                        anomaly_flags=combined_flags,
+                    ),
+                )
+            )
+    annotated.sort(
+        key=lambda item: (
+            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+            item[0].channel_group or "",
+            item[0].title,
+            item[0].url,
+        )
+    )
+    return annotated
+
+
+def attach_history_scores(
+    items: list[tuple[Candidate, ProbeResult]],
+    history: HistoryStore,
+) -> list[tuple[Candidate, ProbeResult]]:
+    attached: list[tuple[Candidate, ProbeResult]] = []
+    for candidate, probe in items:
+        attached.append(
+            (
+                candidate,
+                dataclasses.replace(
+                    probe,
+                    history_local_score=history.score(candidate.url, "local"),
+                    history_cloud_score=history.score(candidate.url, "cloud"),
+                ),
+            )
+        )
+    return attached
 
 
 def format_group_title(candidate: Candidate) -> str | None:
@@ -1882,24 +2492,47 @@ def escape_attr(value: str) -> str:
     return value.replace('"', "'")
 
 
+def append_m3u_entry(
+    lines: list[str],
+    candidate: Candidate,
+    display_title: str,
+    group_title: str | None = None,
+) -> None:
+    attributes = []
+    if candidate.channel_id:
+        attributes.append(f'tvg-id="{escape_attr(candidate.channel_id)}"')
+    attributes.append(f'tvg-name="{escape_attr(display_title)}"')
+    if candidate.logo:
+        attributes.append(f'tvg-logo="{escape_attr(candidate.logo)}"')
+    rendered_group = group_title if group_title is not None else format_group_title(candidate)
+    if rendered_group:
+        attributes.append(f'group-title="{escape_attr(rendered_group)}"')
+    lines.append(f'#EXTINF:-1 {" ".join(attributes)},{display_title}')
+    if candidate.user_agent:
+        lines.append(f"#EXTVLCOPT:http-user-agent={candidate.user_agent}")
+    if candidate.referrer:
+        lines.append(f"#EXTVLCOPT:http-referrer={candidate.referrer}")
+    lines.append(candidate.url)
+
+
 def write_m3u(path: Path, verified_items: list[tuple[Candidate, ProbeResult]]) -> None:
     lines = ["#EXTM3U"]
     for candidate, _probe in verified_items:
-        attributes = []
-        if candidate.channel_id:
-            attributes.append(f'tvg-id="{escape_attr(candidate.channel_id)}"')
-        attributes.append(f'tvg-name="{escape_attr(candidate.title)}"')
-        if candidate.logo:
-            attributes.append(f'tvg-logo="{escape_attr(candidate.logo)}"')
-        group_title = format_group_title(candidate)
-        if group_title:
-            attributes.append(f'group-title="{escape_attr(group_title)}"')
-        lines.append(f'#EXTINF:-1 {" ".join(attributes)},{candidate.title}')
-        if candidate.user_agent:
-            lines.append(f"#EXTVLCOPT:http-user-agent={candidate.user_agent}")
-        if candidate.referrer:
-            lines.append(f"#EXTVLCOPT:http-referrer={candidate.referrer}")
-        lines.append(candidate.url)
+        append_m3u_entry(lines, candidate, candidate.title)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_backup_m3u(
+    path: Path,
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    backup_count: int,
+) -> None:
+    lines = ["#EXTM3U"]
+    for items in grouped_items:
+        for index, (candidate, _probe) in enumerate(items[: max(1, backup_count)]):
+            display_title = candidate.title if index == 0 else f"{candidate.title} 备用{index}"
+            append_m3u_entry(lines, candidate, display_title, format_group_title(candidate))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -1907,13 +2540,24 @@ def write_m3u(path: Path, verified_items: list[tuple[Candidate, ProbeResult]]) -
 def write_report(
     path: Path,
     verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
     failed_items: list[tuple[Candidate, ProbeResult]],
     keep_failures: bool,
+    probe_environment: str,
+    history_path: Path | None,
+    backup_count: int,
 ) -> None:
+    group_counts: dict[str, int] = {}
+    for candidate, _probe in verified_items:
+        group_name = candidate.channel_group or "未分组"
+        group_counts[group_name] = group_counts.get(group_name, 0) + 1
     payload = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "probe_environment": probe_environment,
+        "history_path": str(history_path) if history_path else None,
         "success_count": len(verified_items),
         "failure_count": len(failed_items),
+        "group_counts": group_counts,
         "verified": [
             {
                 "candidate": dataclasses.asdict(candidate),
@@ -1921,6 +2565,17 @@ def write_report(
             }
             for candidate, probe in verified_items
         ],
+        "backups": {
+            items[0][0].title: [
+                {
+                    "priority": index + 1,
+                    "candidate": dataclasses.asdict(candidate),
+                    "probe": dataclasses.asdict(probe),
+                }
+                for index, (candidate, probe) in enumerate(items[: max(1, backup_count)])
+            ]
+            for items in grouped_items
+        },
     }
     if keep_failures:
         payload["failed"] = [
@@ -2018,6 +2673,7 @@ def probe_all(
     use_ffprobe: bool,
     retries: int,
     stability_checks: int,
+    sequence_delay: float,
     verbose: bool,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[tuple[Candidate, ProbeResult]]]:
     verified: list[tuple[Candidate, ProbeResult]] = []
@@ -2032,6 +2688,7 @@ def probe_all(
                 use_ffprobe,
                 retries,
                 stability_checks,
+                sequence_delay,
             ): candidate
             for candidate in candidates
         }
@@ -2067,6 +2724,8 @@ def main() -> int:
     args = parse_args()
     cache_dir = Path(args.cache_dir) if args.cache_dir else None
     cache = CacheStore(cache_dir, ttl_seconds=args.cache_ttl)
+    history_path = Path(args.history) if args.history else None
+    history = HistoryStore(history_path)
 
     candidates = load_candidates(args, cache)
     log(f"loaded {len(candidates)} ranked candidates", verbose=args.verbose)
@@ -2078,14 +2737,36 @@ def main() -> int:
         use_ffprobe=args.ffprobe,
         retries=max(0, args.retries),
         stability_checks=max(1, args.stability_checks),
+        sequence_delay=max(0.5, args.live_sequence_delay),
         verbose=args.verbose,
     )
-    verified = collapse_verified_items(verified)
+    verified = annotate_content_scores(
+        verified,
+        timeout=max(1.0, args.content_check_timeout),
+        workers=args.workers,
+    )
+    for candidate, probe in [*verified, *failed]:
+        history.record(candidate, probe, args.probe_environment)
+    history.save()
+    verified = attach_history_scores(verified, history)
+    failed = attach_history_scores(failed, history)
+    verified, grouped_verified = collapse_verified_items(verified)
 
     out_path = Path(args.out)
+    backup_out_path = Path(args.backup_out)
     report_path = Path(args.report)
     write_m3u(out_path, verified)
-    write_report(report_path, verified, failed, keep_failures=args.keep_failures)
+    write_backup_m3u(backup_out_path, grouped_verified, max(1, args.backup_count))
+    write_report(
+        report_path,
+        verified,
+        grouped_verified,
+        failed,
+        keep_failures=args.keep_failures,
+        probe_environment=args.probe_environment,
+        history_path=history_path,
+        backup_count=max(1, args.backup_count),
+    )
 
     print(
         json.dumps(
@@ -2094,6 +2775,7 @@ def main() -> int:
                 "verified": len(verified),
                 "failed": len(failed),
                 "m3u": str(out_path),
+                "backup_m3u": str(backup_out_path),
                 "report": str(report_path),
             },
             ensure_ascii=False,
