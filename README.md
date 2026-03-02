@@ -103,7 +103,7 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 - `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-verified.m3u`
 
-仓库已配置 GitHub Actions 定时刷新，默认每 6 小时自动运行一次，也支持手动触发。
+仓库已配置 GitHub Actions 定时刷新，默认每 30 分钟自动运行一次，也支持手动触发。
 工作流会优先参考仓库里当前已发布的订阅结果，并在新结果频道数明显过低时拒绝覆盖，避免云端网络波动把可用列表刷坏。
 
 手动跑一次的方法：
