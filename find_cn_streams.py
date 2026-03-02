@@ -290,6 +290,10 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     "广东新闻": ("hls-gateway.vpstv.net/streams/708873.m3u8",),
     "广州影视": ("stream1.freetv.fun/yan-zhou-ying-shi-25.m3u8",),
 }
+KNOWN_SLOW_SOURCE_PATTERNS = (
+    "dassby.qqff.top:99/live/",
+    "58.57.40.22:9901/tsfile/live/",
+)
 MANUAL_PREFERRED_CANDIDATES = (
     {
         "channel_id": "DragonTV.cn",
@@ -870,6 +874,25 @@ def source_priority(source: str) -> int:
     return 0
 
 
+def source_is_known_slow(url: str) -> bool:
+    lowered = url.lower()
+    return any(pattern in lowered for pattern in KNOWN_SLOW_SOURCE_PATTERNS)
+
+
+def latency_rank(elapsed_ms: int) -> int:
+    if elapsed_ms <= 1200:
+        return 5
+    if elapsed_ms <= 2500:
+        return 4
+    if elapsed_ms <= 5000:
+        return 3
+    if elapsed_ms <= 9000:
+        return 2
+    if elapsed_ms <= 15000:
+        return 1
+    return 0
+
+
 def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int, int, int, int]:
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = int(any(pattern in candidate.url for pattern in preferred_patterns))
@@ -939,7 +962,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
-) -> tuple[int, int, int, int, int, int, int, int, int, int]:
+) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -949,13 +972,16 @@ def verified_item_rank(
             break
     probe_confidence = int("slow" not in probe.detail.lower())
     ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
+    fast_probe = latency_rank(probe.elapsed_ms)
     return (
-        source_priority(candidate.source),
-        preferred_rank,
         ffprobe_video,
+        probe_confidence,
+        fast_probe,
         int(not url_looks_like_vod(candidate.url)),
         live_url_rank(candidate.url),
-        probe_confidence,
+        int(not source_is_known_slow(candidate.url)),
+        source_priority(candidate.source),
+        preferred_rank,
         int(not host_is_ip_address(candidate.url)),
         int(candidate.url.startswith("https://")),
         quality_tier(candidate.quality),
