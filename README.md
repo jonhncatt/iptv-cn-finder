@@ -45,10 +45,11 @@ cd /Users/zhoudali/Desktop/iptv
 python3 find_cn_streams.py --verbose
 ```
 
-默认会生成两个文件：
+默认会生成几份输出文件：
 
 - `output/chinese-public-verified.m3u`
 - `output/chinese-public-with-backups.m3u`
+- `output/chinese-public-repair.m3u`
 - `output/chinese-public-report.json`
 
 脚本还会更新一份长期历史文件：
@@ -120,11 +121,13 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 - `m3u/chinese-public-verified.m3u`
 - `m3u/chinese-public-with-backups.m3u`
+- `m3u/chinese-public-repair.m3u`
 
 可直接用于 APTV 远程订阅：
 
 - `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-verified.m3u`
 - `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-with-backups.m3u`
+- `https://raw.githubusercontent.com/jonhncatt/iptv-cn-finder/main/m3u/chinese-public-repair.m3u`
 
 仓库已配置 GitHub Actions 定时刷新，默认每 30 分钟自动运行一次，也支持手动触发。
 工作流会以 `cloud` 环境身份运行，更新云端历史分数；同时优先参考仓库里当前已发布的订阅结果，并在新结果频道数明显过低时拒绝覆盖，避免云端网络波动把可用列表刷坏。

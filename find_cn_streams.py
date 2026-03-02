@@ -80,6 +80,7 @@ CURATED_PUBLIC_M3U_URLS = {
 }
 PUBLISHED_PLAYLIST_PATH = Path("m3u/chinese-public-verified.m3u")
 PUBLISHED_BACKUP_PLAYLIST_PATH = Path("m3u/chinese-public-with-backups.m3u")
+PUBLISHED_REPAIR_PLAYLIST_PATH = Path("m3u/chinese-public-repair.m3u")
 DEFAULT_HISTORY_PATH = Path("state/probe-history.json")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
@@ -770,6 +771,11 @@ def parse_args() -> argparse.Namespace:
         "--backup-out",
         default="output/chinese-public-with-backups.m3u",
         help="Output M3U path that keeps the primary source plus backups per channel.",
+    )
+    parser.add_argument(
+        "--repair-out",
+        default="output/chinese-public-repair.m3u",
+        help="Output M3U path that keeps only fallback sources for repair use.",
     )
     parser.add_argument(
         "--backup-count",
@@ -1720,7 +1726,7 @@ def assess_playlist_progress(
 
     wait_seconds = max(1.2, sequence_delay)
     if snapshot.target_duration:
-        wait_seconds = min(wait_seconds, max(1.2, snapshot.target_duration / 2))
+        wait_seconds = max(wait_seconds, min(5.5, max(2.5, snapshot.target_duration * 0.85)))
     time.sleep(wait_seconds)
 
     try:
@@ -1955,7 +1961,16 @@ def probe_hls_candidate(candidate: Candidate, timeout: float, sequence_delay: fl
 
 
 def validate_live_playlist(candidate: Candidate, timeout: float, sequence_delay: float) -> ProbeResult | None:
-    if not url_looks_like_hls(candidate.url):
+    headers = candidate.request_headers()
+    try:
+        top, _top_ms = timed_http_fetch(candidate.url, headers, timeout, max_bytes=TEXT_SAMPLE_LIMIT)
+    except (HTTPError, TimeoutError, URLError, OSError):
+        if url_looks_like_hls(candidate.url):
+            return probe_hls_candidate(candidate, timeout, sequence_delay)
+        return None
+
+    kind = classify_response(top.content_type, top.final_url, top.body)
+    if kind != "hls":
         return None
     return probe_hls_candidate(candidate, timeout, sequence_delay)
 
@@ -2537,6 +2552,21 @@ def write_backup_m3u(
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def write_repair_m3u(
+    path: Path,
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    backup_count: int,
+) -> None:
+    lines = ["#EXTM3U"]
+    for items in grouped_items:
+        for index, (candidate, _probe) in enumerate(items[1 : max(1, backup_count)]):
+            group_title = format_group_title(candidate)
+            repair_group = f"{group_title}抢修" if group_title else "抢修"
+            append_m3u_entry(lines, candidate, f"{candidate.title} 抢修{index + 1}", repair_group)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def write_report(
     path: Path,
     verified_items: list[tuple[Candidate, ProbeResult]],
@@ -2754,9 +2784,11 @@ def main() -> int:
 
     out_path = Path(args.out)
     backup_out_path = Path(args.backup_out)
+    repair_out_path = Path(args.repair_out)
     report_path = Path(args.report)
     write_m3u(out_path, verified)
     write_backup_m3u(backup_out_path, grouped_verified, max(1, args.backup_count))
+    write_repair_m3u(repair_out_path, grouped_verified, max(1, args.backup_count))
     write_report(
         report_path,
         verified,
@@ -2776,6 +2808,7 @@ def main() -> int:
                 "failed": len(failed),
                 "m3u": str(out_path),
                 "backup_m3u": str(backup_out_path),
+                "repair_m3u": str(repair_out_path),
                 "report": str(report_path),
             },
             ensure_ascii=False,
