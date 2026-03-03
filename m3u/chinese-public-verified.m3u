@@ -51,8 +51,8 @@ http://112.27.235.94:8000/hls/49/index.m3u8
 http://183.215.134.239:19901/tsfile/live/0122_1.m3u8?key=txiptv&playlive=1&authid=0
 #EXTINF:-1 tvg-id="JilinSatelliteTV.cn" tvg-name="吉林卫视" tvg-logo="https://tb.zbds.top/logo/吉林卫视.png" group-title="卫视",吉林卫视
 http://58.57.40.22:9901/tsfile/live/1050_1.m3u8
-#EXTINF:-1 tvg-id="SichuanSatelliteTV.cn" tvg-name="四川卫视" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/四川卫视.png" group-title="卫视",四川卫视
-http://38.75.136.137:98/gslb/dsdqpub/scwshd.m3u8?auth=testpub
+#EXTINF:-1 tvg-id="SichuanSatelliteTV.cn" tvg-name="四川卫视" tvg-logo="https://live.fanmingming.cn/tv/四川卫视.png" group-title="卫视",四川卫视
+http://112.27.235.94:8000/hls/35/index.m3u8
 #EXTINF:-1 tvg-id="TheGreaterBaySatelliteTV.cn" tvg-name="大湾区卫视" tvg-logo="https://live.fanmingming.cn/tv/大湾区卫视.png" group-title="卫视",大湾区卫视
 http://222.128.55.152:9080/live/dwq.m3u8
 #EXTINF:-1 tvg-id="TianjinSatelliteTV.cn" tvg-name="天津卫视" tvg-logo="https://live.fanmingming.cn/tv/天津卫视.png" group-title="卫视",天津卫视
@@ -110,14 +110,10 @@ http://101.35.240.114:88/live.php?id=%E4%BA%94%E6%98%9F%E4%BD%93%E8%82%B2
 http://8.138.7.223/tv/shtv.php?id=dycj
 #EXTINF:-1 tvg-id="ShanghaiDocumentary.local" tvg-name="纪实人文" group-title="上海台",纪实人文
 http://bp-resource-dfl.bestv.cn/155/3/video.m3u8
-#EXTINF:-1 tvg-id="HunanEntertainment.local" tvg-name="湖南娱乐" tvg-logo="http://tv.haoqu99.com/d/file/2015/0417/20150417125630263.jpg" group-title="湖南台",湖南娱乐
-http://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZyYXV0aF9lbmFibGU9b2ZmJmNkbmV4X2lkPXFxX3Bob25lX2xpdmUmY2hzPSZkZWY9MSZzPWE4ZDVlZTU4YjlhZTg5ODdiMWMwNjcwNTRmMDAxYzkzJnVpZD0mdXVpZD03ZGQwOGJmY2UyZTBjNTNjN2RkYzU4OWIzODFjNWUyZS02YTBlMjYzNyZ2PTImYXM9MCZlcz0xNzcyNTIzNTg3/HNYLMPP360.m3u8
 #EXTINF:-1 tvg-id="HunanDrama.local" tvg-name="湖南电视剧" group-title="湖南台",湖南电视剧
 https://stream1.freetv.fun/hu-nan-dian-shi-ju-2.m3u8
 #EXTINF:-1 tvg-id="HunanEconomy.local" tvg-name="湖南经视" group-title="湖南台",湖南经视
 https://stream1.freetv.fun/hu-nan-jing-shi-1.m3u8
-#EXTINF:-1 tvg-id="HunanCity.local" tvg-name="湖南都市" tvg-logo="https://live.fanmingming.com/tv/%E6%B9%96%E5%8D%97%E9%83%BD%E5%B8%82.png" group-title="湖南台",湖南都市
-http://phonehwei.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZyYXV0aF9lbmFibGU9b2ZmJmNkbmV4X2lkPWh3X3Bob25lJmNocz0mZGVmPTEmcz1kNGRiOGJlNjk1NDY2NTUxZDUzNGQwNjE2NmM0YjA5MCZ1aWQ9JnV1aWQ9ZjcwNjA2Y2Y2YzNlNDEyNTJiMGI3OGFhYTk0OTU3NWYtNmEwZTI2Mzcmdj0yJmFzPTAmZXM9MTc3MjUyMzU2Ng,,/HNDSMPP360.m3u8
 #EXTINF:-1 tvg-id="JinyingCartoon.local" tvg-name="金鹰卡通" tvg-logo="https://live.fanmingming.com/tv/%E9%87%91%E9%B9%B0%E5%8D%A1%E9%80%9A.png" group-title="湖南台",金鹰卡通
 http://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZyYXV0aF9lbmFibGU9b2ZmJmNkbmV4X2lkPXFxX3Bob25lX2xpdmUmY2hzPSZkZWY9MSZzPWI4ZTk1ZGM4ZGM5MGE4ZGFlZTJmZGY3YTM1NjhkNjRkJnVpZD0mdXVpZD01YTdkZGYzNDQ1MWIwMjg1Mzc0MjJjNTQzOGMwZGJiMy02YTBlMjYzNyZ2PTImYXM9MCZlcz0xNzcyNTQ1MjUy/JYKTMPP360.m3u8
 #EXTINF:-1 tvg-id="JinyingDocumentary.local" tvg-name="金鹰纪实" tvg-logo="http://tv.haoqu99.com/d/file/2015/0417/20150417125839242.jpg" group-title="湖南台",金鹰纪实
@@ -134,9 +130,9 @@ http://cdn2.163189.xyz/live/gdzj/stream.m3u8
 http://tencentplay.gztv.com/live/zonghes.m3u8?txSecret=c8dbe86d6f86eb1a21999ab479fd5667&txTime=18d3c4690e8
 #EXTINF:-1 tvg-id="LiaoningSports.local" tvg-name="辽宁体育" group-title="辽宁台",辽宁体育
 http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2/index.m3u8
-#EXTINF:-1 tvg-id="LiaoningPublic.local" tvg-name="辽宁公共" tvg-logo="https://live.fanmingming.cn/tv/辽宁公共.png" group-title="辽宁台",辽宁公共
-http://120.76.248.139/live/bfgd/4200000077.m3u8
-#EXTINF:-1 tvg-id="LiaoningMovie.local" tvg-name="辽宁影视剧" tvg-logo="https://live.fanmingming.cn/tv/辽宁影视剧.png" group-title="辽宁台",辽宁影视剧
-http://120.76.248.139/live/bfgd/4200000070.m3u8
+#EXTINF:-1 tvg-id="LiaoningPublic.local" tvg-name="辽宁公共" group-title="辽宁台",辽宁公共
+http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1/index.m3u8
+#EXTINF:-1 tvg-id="LiaoningMovie.local" tvg-name="辽宁影视剧" group-title="辽宁台",辽宁影视剧
+http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7/index.m3u8
 #EXTINF:-1 tvg-id="LiaoningMetro.local" tvg-name="辽宁都市" group-title="辽宁台",辽宁都市
 https://ls.qingting.fm/live/1099/64k.m3u8
