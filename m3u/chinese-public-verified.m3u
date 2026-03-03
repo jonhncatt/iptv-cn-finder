@@ -114,10 +114,10 @@ http://bp-resource-dfl.bestv.cn/155/3/video.m3u8
 https://stream1.freetv.fun/hu-nan-dian-shi-ju-2.m3u8
 #EXTINF:-1 tvg-id="HunanEconomy.local" tvg-name="湖南经视" group-title="湖南台",湖南经视
 https://stream1.freetv.fun/hu-nan-jing-shi-1.m3u8
+#EXTINF:-1 tvg-id="HunanCity.local" tvg-name="湖南都市" tvg-logo="https://live.fanmingming.com/tv/%E6%B9%96%E5%8D%97%E9%83%BD%E5%B8%82.png" group-title="湖南台",湖南都市
+http://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZjZG5leF9pZD1xcV9waG9uZV9saXZlJmNocz0mZGVmPTEmcz1mNzBmMGRkMjc1YThkZjUzZTZiNjBlNjBhNmZhZDkzMCZ1aWQ9JnV1aWQ9Mzc0YmYyOTQ1NjY2MTdiZDEwNTY4ODg2YTEwZTdjYzktNmEwZTI2Mzcmdj0yJmFzPTAmZXM9MTc3MjU1MzQ1MQ,,/HNDSMPP360.m3u8
 #EXTINF:-1 tvg-id="JinyingCartoon.local" tvg-name="金鹰卡通" tvg-logo="https://live.fanmingming.com/tv/%E9%87%91%E9%B9%B0%E5%8D%A1%E9%80%9A.png" group-title="湖南台",金鹰卡通
 http://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZyYXV0aF9lbmFibGU9b2ZmJmNkbmV4X2lkPXFxX3Bob25lX2xpdmUmY2hzPSZkZWY9MSZzPWI4ZTk1ZGM4ZGM5MGE4ZGFlZTJmZGY3YTM1NjhkNjRkJnVpZD0mdXVpZD01YTdkZGYzNDQ1MWIwMjg1Mzc0MjJjNTQzOGMwZGJiMy02YTBlMjYzNyZ2PTImYXM9MCZlcz0xNzcyNTQ1MjUy/JYKTMPP360.m3u8
-#EXTINF:-1 tvg-id="JinyingDocumentary.local" tvg-name="金鹰纪实" tvg-logo="http://tv.haoqu99.com/d/file/2015/0417/20150417125839242.jpg" group-title="湖南台",金鹰纪实
-https://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZjZG5leF9pZD1xcV9waG9uZV9saXZlJmNocz0mZGVmPTEmcz0xNDAxNmU3OWY3OGUzNTgxZDJkNjdjYjY2NjMzY2JmOSZ1aWQ9JnV1aWQ9NjA0YTJiYzE1ODljZjAwN2Q5NzU5NjZkOTY1YjRmYTktNmEwZTI2Mzcmdj0yJmFzPTAmZXM9MTc3MjUyNTg4Mg,,/JYJSMPP360.m3u8
 #EXTINF:-1 tvg-id="GuangdongSports.local" tvg-name="广东体育" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/广东体育.png" group-title="广东台",广东体育
 https://epg.pw/stream/7b470f9fc5c305db0c8622117b7b25ca00eb35ba3e93e865cf0ff9df5c736681.m3u8
 #EXTINF:-1 tvg-id="GuangdongNews.local" tvg-name="广东新闻" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/广东新闻.png" group-title="广东台",广东新闻
