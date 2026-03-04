@@ -109,6 +109,8 @@ http://101.35.240.114:88/live.php?id=%E4%BA%94%E6%98%9F%E4%BD%93%E8%82%B2
 http://8.138.7.223/tv/shtv.php?id=dycj
 #EXTINF:-1 tvg-id="ShanghaiDocumentary.local" tvg-name="纪实人文" group-title="上海台",纪实人文
 http://bp-resource-dfl.bestv.cn/155/3/video.m3u8
+#EXTINF:-1 tvg-id="HunanEntertainment.local" tvg-name="湖南娱乐" tvg-logo="http://tv.haoqu99.com/d/file/2015/0417/20150417125630263.jpg" group-title="湖南台",湖南娱乐
+http://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZjZG5leF9pZD1xcV9waG9uZV9saXZlJmNocz0mZGVmPTEmcz1hZTU5M2EyOTE0NTU3MzkyNjMzOThmZDA2MTBkZWQxYSZ1aWQ9JnV1aWQ9YjZlNmE1YzBmODMxMzBlNTRkNGU2YTMxNTI0ZDliMmEtNmEwZTI2Mzcmdj0yJmFzPTAmZXM9MTc3MjYxMTIxOQ,,/HNYLMPP360.m3u8
 #EXTINF:-1 tvg-id="HunanDrama.local" tvg-name="湖南电视剧" group-title="湖南台",湖南电视剧
 https://stream1.freetv.fun/hu-nan-dian-shi-ju-2.m3u8
 #EXTINF:-1 tvg-id="HunanEconomy.local" tvg-name="湖南经视" group-title="湖南台",湖南经视
@@ -131,9 +133,9 @@ http://cdn2.163189.xyz/live/gdzj/stream.m3u8
 http://tencentplay.gztv.com/live/zonghes.m3u8?txSecret=c8dbe86d6f86eb1a21999ab479fd5667&txTime=18d3c4690e8
 #EXTINF:-1 tvg-id="LiaoningSports.local" tvg-name="辽宁体育" group-title="辽宁台",辽宁体育
 http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2/index.m3u8
-#EXTINF:-1 tvg-id="LiaoningPublic.local" tvg-name="辽宁公共" tvg-logo="https://live.fanmingming.cn/tv/辽宁公共.png" group-title="辽宁台",辽宁公共
-http://120.76.248.139/live/bfgd/4200000077.m3u8
-#EXTINF:-1 tvg-id="LiaoningMovie.local" tvg-name="辽宁影视剧" tvg-logo="https://live.fanmingming.cn/tv/辽宁影视剧.png" group-title="辽宁台",辽宁影视剧
-http://120.76.248.139/live/bfgd/4200000070.m3u8
+#EXTINF:-1 tvg-id="LiaoningPublic.local" tvg-name="辽宁公共" group-title="辽宁台",辽宁公共
+http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1/index.m3u8
+#EXTINF:-1 tvg-id="LiaoningMovie.local" tvg-name="辽宁影视剧" group-title="辽宁台",辽宁影视剧
+http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%BD%B1%E8%A7%86%E5%89%A7/index.m3u8
 #EXTINF:-1 tvg-id="LiaoningMetro.local" tvg-name="辽宁都市" group-title="辽宁台",辽宁都市
 https://ls.qingting.fm/live/1099/64k.m3u8
