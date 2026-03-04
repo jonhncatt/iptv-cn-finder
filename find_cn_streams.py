@@ -302,6 +302,16 @@ KNOWN_SLOW_SOURCE_PATTERNS = (
     "dassby.qqff.top:99/live/",
     "58.57.40.22:9901/tsfile/live/",
 )
+PRIMARY_MIN_STARTUP_SCORE = 40
+PRIMARY_MIN_LIVE_SCORE = 45
+PRIMARY_MAX_ELAPSED_MS = 15000
+PRIMARY_BLOCKED_FLAGS = {
+    "black-frame",
+    "empty-playlist",
+    "frozen-frames",
+    "repeating-segments",
+    "slow-source",
+}
 MANUAL_PREFERRED_CANDIDATES = (
     {
         "channel_id": "DragonTV.cn",
@@ -1190,6 +1200,22 @@ def verified_item_rank(
     )
 
 
+def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult]) -> bool:
+    candidate, probe = item
+    flags = set(probe.anomaly_flags)
+    if flags & PRIMARY_BLOCKED_FLAGS:
+        return False
+    if source_is_known_slow(candidate.url):
+        return False
+    if probe.startup_score < PRIMARY_MIN_STARTUP_SCORE:
+        return False
+    if probe.live_score < PRIMARY_MIN_LIVE_SCORE:
+        return False
+    if probe.elapsed_ms > PRIMARY_MAX_ELAPSED_MS:
+        return False
+    return True
+
+
 def collapse_verified_items(
     verified_items: list[tuple[Candidate, ProbeResult]],
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
@@ -1210,7 +1236,36 @@ def collapse_verified_items(
             items[0][0].title,
         )
     )
-    return [items[0] for items in grouped], grouped
+
+    collapsed: list[tuple[Candidate, ProbeResult]] = []
+    selected_groups: list[list[tuple[Candidate, ProbeResult]]] = []
+    for items in grouped:
+        preferred = next((item for item in items if candidate_meets_primary_profile(item)), None)
+        if preferred is not None:
+            collapsed.append(preferred)
+            selected_groups.append(items)
+            continue
+
+        group_name = items[0][0].channel_group or ""
+        if group_name in {"央视", "卫视"}:
+            collapsed.append(items[0])
+            selected_groups.append(items)
+
+    collapsed.sort(
+        key=lambda item: (
+            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+            item[0].channel_group or "",
+            item[0].title,
+        )
+    )
+    selected_groups.sort(
+        key=lambda items: (
+            GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+            items[0][0].channel_group or "",
+            items[0][0].title,
+        )
+    )
+    return collapsed, selected_groups
 
 
 def best_candidate(existing: Candidate, challenger: Candidate) -> Candidate:
