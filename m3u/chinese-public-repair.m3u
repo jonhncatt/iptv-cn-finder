@@ -1,9 +1,8 @@
 #EXTM3U
 #EXTINF:-1 tvg-id="CCTV1.cn" tvg-name="CCTV-1 综合 抢修1" group-title="央视抢修",CCTV-1 综合 抢修1
 http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8
-#EXTINF:-1 tvg-id="CCTV1.cn" tvg-name="CCTV-1 综合 抢修2" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/CCTV1.png" group-title="央视抢修",CCTV-1 综合 抢修2
-#EXTVLCOPT:http-user-agent=AptvPlayer-UA
-http://101.35.240.114:88/live.php?id=CCTV1
+#EXTINF:-1 tvg-id="CCTV1.cn" tvg-name="CCTV-1 综合 抢修2" group-title="央视抢修",CCTV-1 综合 抢修2
+http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8
 #EXTINF:-1 tvg-id="CCTV10.cn" tvg-name="CCTV-10 科教 抢修1" tvg-logo="https://tb.zbds.top/logo/CCTV10.png" group-title="央视抢修",CCTV-10 科教 抢修1
 http://58.57.40.22:9901/tsfile/live/1010_1.m3u8
 #EXTINF:-1 tvg-id="CCTV11.cn" tvg-name="CCTV-11 戏曲 抢修1" tvg-logo="https://tb.zbds.top/logo/CCTV11.png" group-title="央视抢修",CCTV-11 戏曲 抢修1
@@ -13,7 +12,7 @@ http://58.57.40.22:9901/tsfile/live/1012_1.m3u8
 #EXTINF:-1 tvg-id="CCTV13.cn" tvg-name="CCTV-13 新闻 抢修1" group-title="央视抢修",CCTV-13 新闻 抢修1
 http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8
 #EXTINF:-1 tvg-id="CCTV13.cn" tvg-name="CCTV-13 新闻 抢修2" group-title="央视抢修",CCTV-13 新闻 抢修2
-http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8
+http://ldncctvwbcdtxy.liveplay.myqcloud.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8
 #EXTINF:-1 tvg-id="CCTV14.cn" tvg-name="CCTV-14 少儿 抢修1" tvg-logo="https://tb.zbds.top/logo/CCTV14.png" group-title="央视抢修",CCTV-14 少儿 抢修1
 http://58.57.40.22:9901/tsfile/live/1014_1.m3u8
 #EXTINF:-1 tvg-id="CCTV15.cn" tvg-name="CCTV-15 音乐 抢修1" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/CCTV15.png" group-title="央视抢修",CCTV-15 音乐 抢修1
@@ -32,7 +31,9 @@ http://58.57.40.22:9901/tsfile/live/1004_1.m3u8
 http://112.27.235.94:8000/hls/6/index.m3u8
 #EXTINF:-1 tvg-id="CCTV5Plus.cn" tvg-name="CCTV-5+ 体育赛事 抢修2" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/CCTV5+.png" group-title="央视抢修",CCTV-5+ 体育赛事 抢修2
 http://38.75.136.137:98/gslb/dsdqbv/cctv5p.m3u8?auth=test20251009
-#EXTINF:-1 tvg-id="CCTV6.cn" tvg-name="CCTV-6 电影 抢修1" tvg-logo="https://tb.zbds.top/logo/CCTV6.png" group-title="央视抢修",CCTV-6 电影 抢修1
+#EXTINF:-1 tvg-id="CCTV6.cn" tvg-name="CCTV-6 电影 抢修1" tvg-logo="https://live.fanmingming.cn/tv/CCTV6.png" group-title="央视抢修",CCTV-6 电影 抢修1
+http://8.138.7.223/tv/1905.php?id=LIVE3YPYZ30E7V1R0
+#EXTINF:-1 tvg-id="CCTV6.cn" tvg-name="CCTV-6 电影 抢修2" tvg-logo="https://tb.zbds.top/logo/CCTV6.png" group-title="央视抢修",CCTV-6 电影 抢修2
 http://58.57.40.22:9901/tsfile/live/1006_1.m3u8
 #EXTINF:-1 tvg-id="CCTV7.cn" tvg-name="CCTV-7 国防军事 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/CCTV7.png" group-title="央视抢修",CCTV-7 国防军事 抢修1
 http://112.27.235.94:8000/hls/8/index.m3u8
@@ -92,9 +93,12 @@ http://120.76.248.139/live/bfgd/4200000117.m3u8
 #EXTINF:-1 tvg-id="XinjiangSatelliteTV.cn" tvg-name="新疆卫视 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/新疆卫视.png" group-title="卫视抢修",新疆卫视 抢修1
 #EXTVLCOPT:http-user-agent=AptvPlayer-UA
 http://101.35.240.114:88/live.php?id=%E6%96%B0%E7%96%86%E5%8D%AB%E8%A7%86
-#EXTINF:-1 tvg-id="XinjiangSatelliteTV.cn" tvg-name="新疆卫视 抢修2" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/新疆卫视.png" group-title="卫视抢修",新疆卫视 抢修2
-http://goo.bkpcp.top/mg/xjws
-#EXTINF:-1 tvg-id="JiangsuSatelliteTV.cn" tvg-name="江苏卫视 抢修1" tvg-logo="https://tb.zbds.top/logo/江苏卫视.png" group-title="卫视抢修",江苏卫视 抢修1
+#EXTINF:-1 tvg-id="XinjiangSatelliteTV.cn" tvg-name="新疆卫视 抢修2" tvg-logo="https://live.fanmingming.com/tv/新疆卫视.png" group-title="卫视抢修",新疆卫视 抢修2
+https://slstplay.xjtvs.com.cn/xjtv1/xjtv1stream.m3u8?auth_key=1772834829-5-5-37e63bd9875a74fff020e480da798f36&aliyun_uuid=c91deb27-1984-42ba-988b-43e7fd38a3dd
+#EXTINF:-1 tvg-id="JiangsuSatelliteTV.cn" tvg-name="江苏卫视 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/江苏卫视4K.png" group-title="卫视抢修",江苏卫视 抢修1
+#EXTVLCOPT:http-user-agent=aliplayer
+http://8.138.7.223/tv/jsws4k.php
+#EXTINF:-1 tvg-id="JiangsuSatelliteTV.cn" tvg-name="江苏卫视 抢修2" tvg-logo="https://tb.zbds.top/logo/江苏卫视.png" group-title="卫视抢修",江苏卫视 抢修2
 http://58.57.40.22:9901/tsfile/live/1031_1.m3u8
 #EXTINF:-1 tvg-id="JiangxiSatelliteTV.cn" tvg-name="江西卫视 抢修1" tvg-logo="https://tb.zbds.top/logo/江西卫视.png" group-title="卫视抢修",江西卫视 抢修1
 http://58.57.40.22:9901/tsfile/live/1043_1.m3u8
@@ -109,8 +113,7 @@ http://113.96.132.20/tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_
 #EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/浙江卫视.png" group-title="卫视抢修",浙江卫视 抢修1
 http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8
 #EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 抢修2" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/浙江卫视.png" group-title="卫视抢修",浙江卫视 抢修2
-#EXTVLCOPT:http-user-agent=AptvPlayer-UA
-http://101.35.240.114:88/live.php?id=%E6%B5%99%E6%B1%9F%E5%8D%AB%E8%A7%86
+https://play-qukan.cztv.com/live/1746687519046362.m3u8
 #EXTINF:-1 tvg-id="HainanSatelliteTV.cn" tvg-name="海南卫视 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/海南卫视.png" group-title="卫视抢修",海南卫视 抢修1
 http://120.76.248.139/live/bfgd/4200000473.m3u8
 #EXTINF:-1 tvg-id="FujianStraitsTV.cn" tvg-name="海峡卫视 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/海峡卫视.png" group-title="卫视抢修",海峡卫视 抢修1
@@ -135,10 +138,10 @@ http://58.57.40.22:9901/tsfile/live/1056_1.m3u8
 http://38.75.136.137:98/gslb/dsdqpub/lnwshd.m3u8?auth=testpub
 #EXTINF:-1 tvg-id="LiaoningSatelliteTV.cn" tvg-name="辽宁卫视 抢修2" tvg-logo="https://tb.zbds.top/logo/辽宁卫视.png" group-title="卫视抢修",辽宁卫视 抢修2
 http://58.57.40.22:9901/tsfile/live/1035_1.m3u8
-#EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视 抢修1" tvg-logo="https://tb.zbds.top/logo/重庆卫视.png" group-title="卫视抢修",重庆卫视 抢修1
-http://36.32.174.67:60080/newlive/live/hls/34/live.m3u8
-#EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视 抢修2" tvg-logo="https://live.fanmingming.cn/tv/重庆卫视.png" group-title="卫视抢修",重庆卫视 抢修2
+#EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视 抢修1" tvg-logo="https://live.fanmingming.cn/tv/重庆卫视.png" group-title="卫视抢修",重庆卫视 抢修1
 http://112.27.235.94:8000/hls/36/index.m3u8
+#EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视 抢修2" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/重庆卫视.png" group-title="卫视抢修",重庆卫视 抢修2
+http://38.75.136.137:98/gslb/dsdqpub/cqwshd.m3u8?auth=testpub
 #EXTINF:-1 tvg-id="ShaanxiSatelliteTV.cn" tvg-name="陕西卫视 抢修1" tvg-logo="https://live.fanmingming.com/tv/陕西卫视.png" group-title="卫视抢修",陕西卫视 抢修1
 http://stream.snrtv.com/sxbc-star-osvT07.m3u8
 #EXTINF:-1 tvg-id="ShaanxiSatelliteTV.cn" tvg-name="陕西卫视 抢修2" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/陕西卫视.png" group-title="卫视抢修",陕西卫视 抢修2
@@ -165,10 +168,10 @@ http://php.jdshipin.com/PLTV/iptv.php?id=gdty
 http://r.jdshipin.com/sE5vO
 #EXTINF:-1 tvg-id="GuangdongPearl.local" tvg-name="广东珠江 抢修2" tvg-logo="https://tb.zbds.top/logo/广东珠江.png" group-title="广东台抢修",广东珠江 抢修2
 http://cdn2.132.us.kg/live/gdzj/stream.m3u8
-#EXTINF:-1 tvg-id="GuangzhouGeneral.local" tvg-name="广州综合 抢修1" tvg-logo="https://live.fanmingming.cn/tv/广州综合.png" group-title="广东台抢修",广州综合 抢修1
-http://tencentplay.gztv.com/live/zonghes.m3u8?txSecret=c8dbe86d6f86eb1a21999ab479fd5667&txTime=18d3c4690e8
-#EXTINF:-1 tvg-id="GuangzhouGeneral.local" tvg-name="广州综合 抢修2" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/广州综合.png" group-title="广东台抢修",广州综合 抢修2
+#EXTINF:-1 tvg-id="GuangzhouGeneral.local" tvg-name="广州综合 抢修1" tvg-logo="https://gitee.com/suxuang/logo/raw/master/mylogo/广州综合.png" group-title="广东台抢修",广州综合 抢修1
 http://r.jdshipin.com/iR6Gq
+#EXTINF:-1 tvg-id="GuangzhouGeneral.local" tvg-name="广州综合 抢修2" tvg-logo="https://live.fanmingming.cn/tv/广州综合.png" group-title="广东台抢修",广州综合 抢修2
+http://tencentplay.gztv.com/live/zonghes.m3u8?txSecret=c8dbe86d6f86eb1a21999ab479fd5667&txTime=18d3c4690e8
 #EXTINF:-1 tvg-id="LiaoningMetro.local" tvg-name="辽宁都市 抢修1" tvg-logo="https://live.fanmingming.cn/tv/辽宁都市.png" group-title="辽宁台抢修",辽宁都市 抢修1
 http://dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E9%83%BD%E5%B8%82/index.m3u8
 #EXTINF:-1 tvg-id="LiaoningMetro.local" tvg-name="辽宁都市 抢修2" tvg-logo="https://live.fanmingming.cn/tv/辽宁都市.png" group-title="辽宁台抢修",辽宁都市 抢修2
