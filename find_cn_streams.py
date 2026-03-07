@@ -302,11 +302,15 @@ KNOWN_SLOW_SOURCE_PATTERNS = (
     "dassby.qqff.top:99/live/",
     "58.57.40.22:9901/tsfile/live/",
 )
-PRIMARY_MIN_STARTUP_SCORE = 40
-PRIMARY_MIN_LIVE_SCORE = 45
-PRIMARY_MAX_ELAPSED_MS = 15000
+PRIMARY_MIN_STARTUP_SCORE = 42
+PRIMARY_MIN_LIVE_SCORE = 80
+PRIMARY_MAX_ELAPSED_MS = 12000
+RELAXED_MIN_STARTUP_SCORE = 40
+RELAXED_MIN_LIVE_SCORE = 45
+RELAXED_MAX_ELAPSED_MS = 15000
 PRIMARY_BLOCKED_FLAGS = {
     "black-frame",
+    "content-check-empty",
     "empty-playlist",
     "frozen-frames",
     "repeating-segments",
@@ -813,13 +817,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--timeout",
         type=float,
-        default=8.0,
+        default=12.0,
         help="Per-request timeout in seconds.",
     )
     parser.add_argument(
         "--workers",
         type=int,
-        default=min(32, max(8, (os.cpu_count() or 4) * 4)),
+        default=min(16, max(6, (os.cpu_count() or 4) * 2)),
         help="Concurrent probe workers.",
     )
     parser.add_argument(
@@ -852,7 +856,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retries",
         type=int,
-        default=1,
+        default=2,
         help="Retry transient network failures this many times.",
     )
     parser.add_argument(
@@ -1180,18 +1184,18 @@ def verified_item_rank(
     return (
         ffprobe_video,
         clean_content,
+        probe.live_score,
+        probe.startup_score,
+        probe.content_score,
+        int(not source_is_known_slow(candidate.url)),
+        probe_confidence,
+        fast_probe,
         preferred_rank,
         source_priority(candidate.source),
         int(probe.history_local_score * 100),
         int(probe.history_cloud_score * 100),
-        probe.live_score,
-        probe.content_score,
-        probe.startup_score,
-        probe_confidence,
-        fast_probe,
         int(not url_looks_like_vod(candidate.url)),
         live_url_rank(candidate.url),
-        int(not source_is_known_slow(candidate.url)),
         int(not host_is_ip_address(candidate.url)),
         int(candidate.url.startswith("https://")),
         quality_tier(candidate.quality),
@@ -1200,18 +1204,21 @@ def verified_item_rank(
     )
 
 
-def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult]) -> bool:
+def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, relaxed: bool = False) -> bool:
     candidate, probe = item
     flags = set(probe.anomaly_flags)
     if flags & PRIMARY_BLOCKED_FLAGS:
         return False
     if source_is_known_slow(candidate.url):
         return False
-    if probe.startup_score < PRIMARY_MIN_STARTUP_SCORE:
+    min_startup = RELAXED_MIN_STARTUP_SCORE if relaxed else PRIMARY_MIN_STARTUP_SCORE
+    min_live = RELAXED_MIN_LIVE_SCORE if relaxed else PRIMARY_MIN_LIVE_SCORE
+    max_elapsed = RELAXED_MAX_ELAPSED_MS if relaxed else PRIMARY_MAX_ELAPSED_MS
+    if probe.startup_score < min_startup:
         return False
-    if probe.live_score < PRIMARY_MIN_LIVE_SCORE:
+    if probe.live_score < min_live:
         return False
-    if probe.elapsed_ms > PRIMARY_MAX_ELAPSED_MS:
+    if probe.elapsed_ms > max_elapsed:
         return False
     return True
 
@@ -1246,8 +1253,14 @@ def collapse_verified_items(
             selected_groups.append(items)
             continue
 
+        preferred = next((item for item in items if candidate_meets_primary_profile(item, relaxed=True)), None)
+        if preferred is not None:
+            collapsed.append(preferred)
+            selected_groups.append(items)
+            continue
+
         group_name = items[0][0].channel_group or ""
-        if group_name in {"央视", "卫视"}:
+        if group_name in {"央视", "卫视"} and candidate_meets_primary_profile(items[0], relaxed=True):
             collapsed.append(items[0])
             selected_groups.append(items)
 

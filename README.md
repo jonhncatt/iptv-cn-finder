@@ -46,6 +46,12 @@ cd /Users/zhoudali/Desktop/iptv
 python3 find_cn_streams.py --verbose
 ```
 
+如果你更在意“结果更贴近实际观看”，推荐用这一组参数：
+
+```bash
+python3 find_cn_streams.py --ffprobe --timeout 14 --workers 12 --retries 2 --verbose
+```
+
 默认会生成几份输出文件：
 
 - `output/chinese-public-verified.m3u`

@@ -36,7 +36,7 @@ jobs:
 
       - name: Refresh verified playlist
         run: |
-          python3 find_cn_streams.py --ffprobe --probe-environment cloud --limit 0 --timeout 12 --workers 20 --keep-failures --verbose
+          python3 find_cn_streams.py --ffprobe --probe-environment cloud --limit 0 --timeout 14 --workers 12 --retries 2 --keep-failures --verbose
 
       - name: Guard published playlist quality
         run: |
