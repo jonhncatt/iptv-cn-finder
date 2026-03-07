@@ -52,9 +52,13 @@ jobs:
           PY
           )
           ratio_floor=$(( previous_count * MIN_CHANNEL_RATIO_PERCENT / 100 ))
-          required_count=$MIN_CHANNEL_COUNT
-          if [ "$ratio_floor" -gt "$required_count" ]; then
-            required_count=$ratio_floor
+          static_floor=$MIN_CHANNEL_COUNT
+          if [ "$previous_count" -gt 0 ] && [ "$previous_count" -lt "$static_floor" ]; then
+            static_floor=$previous_count
+          fi
+          required_count=$ratio_floor
+          if [ "$static_floor" -gt "$required_count" ]; then
+            required_count=$static_floor
           fi
           echo "previous_count=$previous_count"
           echo "generated_count=$generated_count"
