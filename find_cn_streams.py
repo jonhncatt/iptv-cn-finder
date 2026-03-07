@@ -63,11 +63,16 @@ M3U_CONTENT_TYPES = {
 PLAYABLE_CONTENT_PREFIXES = ("audio/", "video/")
 TEXT_SAMPLE_LIMIT = 65536
 MEDIA_SAMPLE_LIMIT = 4096
+BUFFER_SAMPLE_LIMIT = 256 * 1024
+BUFFER_SEGMENT_COUNT = 4
 CONTENT_SAMPLE_SIZE = 16 * 16
+CONTENT_SAMPLE_FRAMES = 6
+CONTENT_SAMPLE_WINDOW_SECONDS = 6.0
 PROBE_ENVIRONMENTS = ("local", "cloud")
 DEFAULT_PROBE_ENVIRONMENT = os.environ.get("IPTV_PROBE_ENV", "local")
 PLAYLIST_MEDIA_SEQUENCE_RE = re.compile(r"#EXT-X-MEDIA-SEQUENCE:(\d+)", re.IGNORECASE)
 PLAYLIST_TARGET_DURATION_RE = re.compile(r"#EXT-X-TARGETDURATION:(\d+)", re.IGNORECASE)
+FFMPEG_SPEED_RE = re.compile(r"\(([\d.]+)x\)")
 HAN_RE = re.compile(r"[\u3400-\u9FFF]")
 EXTINF_ATTR_RE = re.compile(r'([A-Za-z0-9_-]+)="([^"]*)"')
 IP_HOST_RE = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
@@ -304,9 +309,11 @@ KNOWN_SLOW_SOURCE_PATTERNS = (
 )
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
+PRIMARY_MIN_BUFFER_SCORE = 58
 PRIMARY_MAX_ELAPSED_MS = 12000
 RELAXED_MIN_STARTUP_SCORE = 40
 RELAXED_MIN_LIVE_SCORE = 45
+RELAXED_MIN_BUFFER_SCORE = 38
 RELAXED_MAX_ELAPSED_MS = 15000
 PRIMARY_BLOCKED_FLAGS = {
     "black-frame",
@@ -316,6 +323,10 @@ PRIMARY_BLOCKED_FLAGS = {
     "repeating-segments",
     "slow-source",
 }
+HISTORY_FALLBACK_GROUPS = {"央视", "卫视"}
+HISTORY_FALLBACK_MIN_SPEED = 1.8
+HISTORY_FALLBACK_MIN_STARTUP = 38
+HISTORY_FALLBACK_MIN_LIVE = 45
 MANUAL_PREFERRED_CANDIDATES = (
     {
         "channel_id": "DragonTV.cn",
@@ -578,6 +589,7 @@ class ProbeResult:
     media_ms: int | None = None
     startup_score: int = 0
     live_score: int = 0
+    buffer_score: int = 0
     content_score: int = 50
     history_local_score: float = 0.0
     history_cloud_score: float = 0.0
@@ -648,6 +660,7 @@ class HistoryStore:
             "media_total_ms": 0,
             "startup_score_total": 0,
             "live_score_total": 0,
+            "buffer_score_total": 0,
             "content_score_total": 0,
             "last_ok": False,
             "last_detail": "",
@@ -672,11 +685,17 @@ class HistoryStore:
         entry["source"] = candidate.source
         return entry
 
+    def _normalize_stats(self, stats: dict[str, Any]) -> dict[str, Any]:
+        defaults = self._default_stats()
+        for key, value in defaults.items():
+            stats.setdefault(key, value)
+        return stats
+
     def stats(self, url: str, environment: str) -> dict[str, Any]:
         entry = self.payload.get("streams", {}).get(url, {})
         envs = entry.get("environments", {})
         stats = envs.get(environment)
-        return stats if isinstance(stats, dict) else {}
+        return self._normalize_stats(stats) if isinstance(stats, dict) else {}
 
     def score(self, url: str, environment: str) -> float:
         stats = self.stats(url, environment)
@@ -688,6 +707,7 @@ class HistoryStore:
         avg_elapsed = int(stats.get("elapsed_total_ms", 0) or 0) / runs
         avg_startup = int(stats.get("startup_score_total", 0) or 0) / runs
         avg_live = int(stats.get("live_score_total", 0) or 0) / runs
+        avg_buffer = int(stats.get("buffer_score_total", 0) or 0) / runs
         avg_content = int(stats.get("content_score_total", 0) or 0) / runs
         anomaly_rate = int(stats.get("anomaly_hits", 0) or 0) / runs
         ffprobe_rate = int(stats.get("ffprobe_successes", 0) or 0) / runs
@@ -707,6 +727,7 @@ class HistoryStore:
             + speed_component
             + avg_startup * 0.12
             + avg_live * 0.18
+            + avg_buffer * 0.22
             + avg_content * 0.1
             - anomaly_rate * 15.0
         )
@@ -716,7 +737,7 @@ class HistoryStore:
         environment = environment if environment in PROBE_ENVIRONMENTS else "local"
         entry = self._entry(candidate)
         envs = entry.setdefault("environments", {})
-        stats = envs.setdefault(environment, self._default_stats())
+        stats = self._normalize_stats(envs.setdefault(environment, self._default_stats()))
         stats["runs"] += 1
         if probe.ok:
             stats["successes"] += 1
@@ -732,6 +753,7 @@ class HistoryStore:
             stats["media_total_ms"] += max(0, probe.media_ms)
         stats["startup_score_total"] += probe.startup_score
         stats["live_score_total"] += probe.live_score
+        stats["buffer_score_total"] += probe.buffer_score
         stats["content_score_total"] += probe.content_score
         stats["last_ok"] = probe.ok
         stats["last_detail"] = probe.detail
@@ -874,7 +896,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--content-check-timeout",
         type=float,
-        default=6.0,
+        default=14.0,
         help="Timeout for ffmpeg-based content anomaly detection on verified candidates.",
     )
     parser.add_argument(
@@ -1169,7 +1191,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
-) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]:
+) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -1184,6 +1206,7 @@ def verified_item_rank(
     return (
         ffprobe_video,
         clean_content,
+        probe.buffer_score,
         probe.live_score,
         probe.startup_score,
         probe.content_score,
@@ -1213,10 +1236,13 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
         return False
     min_startup = RELAXED_MIN_STARTUP_SCORE if relaxed else PRIMARY_MIN_STARTUP_SCORE
     min_live = RELAXED_MIN_LIVE_SCORE if relaxed else PRIMARY_MIN_LIVE_SCORE
+    min_buffer = RELAXED_MIN_BUFFER_SCORE if relaxed else PRIMARY_MIN_BUFFER_SCORE
     max_elapsed = RELAXED_MAX_ELAPSED_MS if relaxed else PRIMARY_MAX_ELAPSED_MS
     if probe.startup_score < min_startup:
         return False
     if probe.live_score < min_live:
+        return False
+    if probe.buffer_score < min_buffer:
         return False
     if probe.elapsed_ms > max_elapsed:
         return False
@@ -1246,17 +1272,24 @@ def collapse_verified_items(
 
     collapsed: list[tuple[Candidate, ProbeResult]] = []
     selected_groups: list[list[tuple[Candidate, ProbeResult]]] = []
+
+    def ordered_with_preferred(
+        items: list[tuple[Candidate, ProbeResult]],
+        preferred: tuple[Candidate, ProbeResult],
+    ) -> list[tuple[Candidate, ProbeResult]]:
+        return [preferred, *[item for item in items if item != preferred]]
+
     for items in grouped:
         preferred = next((item for item in items if candidate_meets_primary_profile(item)), None)
         if preferred is not None:
             collapsed.append(preferred)
-            selected_groups.append(items)
+            selected_groups.append(ordered_with_preferred(items, preferred))
             continue
 
         preferred = next((item for item in items if candidate_meets_primary_profile(item, relaxed=True)), None)
         if preferred is not None:
             collapsed.append(preferred)
-            selected_groups.append(items)
+            selected_groups.append(ordered_with_preferred(items, preferred))
             continue
 
         group_name = items[0][0].channel_group or ""
@@ -1771,6 +1804,7 @@ def merge_probe_results(base: ProbeResult, extra: ProbeResult) -> ProbeResult:
         media_ms=extra.media_ms if extra.media_ms is not None else base.media_ms,
         startup_score=max(base.startup_score, extra.startup_score),
         live_score=max(base.live_score, extra.live_score),
+        buffer_score=extra.buffer_score or base.buffer_score,
         content_score=min(base.content_score, extra.content_score),
         history_local_score=max(base.history_local_score, extra.history_local_score),
         history_cloud_score=max(base.history_cloud_score, extra.history_cloud_score),
@@ -1826,6 +1860,109 @@ def assess_playlist_progress(
     if len(set(follow_snapshot.segment_keys)) <= 1:
         return 25, ("repeating-segments",), "playlist repeats the same segment", fetch_ms
     return 45, ("stale-playlist",), "playlist did not prove forward movement", fetch_ms
+
+
+def compute_buffer_score(
+    target_duration: int | None,
+    segment_samples: list[tuple[int, int]],
+    failures: int,
+) -> int:
+    if not segment_samples:
+        return 20 if failures else 40
+
+    avg_ms = sum(fetch_ms for _bytes_read, fetch_ms in segment_samples) / len(segment_samples)
+    max_ms = max(fetch_ms for _bytes_read, fetch_ms in segment_samples)
+    min_ms = min(fetch_ms for _bytes_read, fetch_ms in segment_samples)
+    target_ms = max(3000, (target_duration or 6) * 1000)
+    ratio = avg_ms / target_ms
+    throughput_values = [
+        (bytes_read * 8) / max(fetch_ms, 1) / 1000
+        for bytes_read, fetch_ms in segment_samples
+        if bytes_read > 0
+    ]
+    avg_mbps = sum(throughput_values) / len(throughput_values) if throughput_values else 0.0
+    min_mbps = min(throughput_values) if throughput_values else 0.0
+
+    if min_mbps >= 8.0 and avg_mbps >= 10.0:
+        score = 100
+    elif min_mbps >= 5.0 and avg_mbps >= 6.5:
+        score = 92
+    elif min_mbps >= 3.0 and avg_mbps >= 4.0:
+        score = 84
+    elif min_mbps >= 2.0 and avg_mbps >= 2.6:
+        score = 74
+    elif min_mbps >= 1.2 and avg_mbps >= 1.8:
+        score = 60
+    else:
+        score = 36
+    if ratio <= 0.08:
+        score += 6
+    elif ratio <= 0.18:
+        score += 2
+    elif ratio > 0.65:
+        score -= 14
+    elif ratio > 0.45:
+        score -= 8
+    if max_ms - min_ms > target_ms * 0.35:
+        score -= 12
+    if throughput_values and max(throughput_values) - min(throughput_values) > 4.0:
+        score -= 8
+    score -= failures * 18
+    return max(0, min(100, int(score)))
+
+
+def assess_segment_bufferability(
+    playlist_url: str,
+    playlist_text: str,
+    headers: dict[str, str],
+    timeout: float,
+) -> tuple[int, tuple[str, ...], str, int | None]:
+    snapshot = parse_playlist_snapshot(playlist_text)
+    segments = list(playlist_segments(playlist_text))
+    if not segments:
+        return 15, ("empty-playlist",), "playlist has no segment list for buffer check", None
+
+    sample_segments = segments[-BUFFER_SEGMENT_COUNT:]
+    segment_samples: list[tuple[int, int]] = []
+    failures = 0
+    anomaly_flags: list[str] = []
+    for segment in sample_segments:
+        segment_url = normalize_url(urljoin(playlist_url, segment))
+        try:
+            segment_fetch, segment_ms = timed_http_fetch(
+                segment_url,
+                headers,
+                timeout,
+                max_bytes=BUFFER_SAMPLE_LIMIT,
+                range_request=True,
+            )
+        except (TimeoutError, URLError, OSError):
+            failures += 1
+            anomaly_flags.append("buffer-check-timeout")
+            continue
+        if not ok_status(segment_fetch.status) or not segment_fetch.body:
+            failures += 1
+            anomaly_flags.append("buffer-check-failed")
+            continue
+        segment_samples.append((len(segment_fetch.body), segment_ms))
+
+    buffer_score = compute_buffer_score(snapshot.target_duration, segment_samples, failures)
+    if not segment_samples:
+        return buffer_score, tuple(sorted(set(anomaly_flags))), "segment buffer check failed", None
+    avg_ms = int(sum(fetch_ms for _bytes_read, fetch_ms in segment_samples) / len(segment_samples))
+    avg_bytes = int(sum(bytes_read for bytes_read, _fetch_ms in segment_samples) / len(segment_samples))
+    avg_mbps = round((avg_bytes * 8) / max(avg_ms, 1) / 1000, 2)
+    target_ms = max(3000, (snapshot.target_duration or 6) * 1000)
+    margin = max(target_ms - avg_ms, 0)
+    detail = (
+        f"buffer margin {margin}ms over {len(segment_samples)} segment checks; "
+        f"avg {avg_mbps}Mbps over {avg_bytes // 1024}KB samples"
+    )
+    if failures:
+        detail = f"{detail}; {failures} segment checks failed"
+    if buffer_score < 50:
+        anomaly_flags.append("buffer-risk")
+    return buffer_score, tuple(sorted(set(anomaly_flags))), detail, avg_ms
 
 
 def probe_hls_candidate(candidate: Candidate, timeout: float, sequence_delay: float) -> ProbeResult:
@@ -1985,18 +2122,28 @@ def probe_hls_candidate(candidate: Candidate, timeout: float, sequence_delay: fl
             timeout,
             sequence_delay,
         )
-        anomaly_flags = tuple(sorted(set(progress_flags)))
+        buffer_score, buffer_flags, buffer_detail, sustained_media_ms = assess_segment_bufferability(
+            progress_url,
+            progress_text,
+            headers,
+            timeout,
+        )
+        anomaly_flags = tuple(sorted(set(progress_flags + buffer_flags)))
         return ProbeResult(
             ok=True,
             status=top.status,
             content_type=top.content_type,
-            detail=f"{detail}; {progress_detail}" if progress_detail else detail,
+            detail="; ".join(part for part in (detail, progress_detail, buffer_detail) if part),
             elapsed_ms=int((time.perf_counter() - start) * 1000),
             final_url=final_url,
             playlist_ms=top_ms,
-            media_ms=media_ms,
-            startup_score=compute_startup_score(top_ms, media_ms),
+            media_ms=sustained_media_ms if sustained_media_ms is not None else media_ms,
+            startup_score=compute_startup_score(
+                top_ms,
+                sustained_media_ms if sustained_media_ms is not None else media_ms,
+            ),
             live_score=live_score,
+            buffer_score=buffer_score,
             anomaly_flags=anomaly_flags,
         )
     except HTTPError as error:
@@ -2064,6 +2211,7 @@ def slow_playable_result(
         media_ms=media_ms,
         startup_score=compute_startup_score(playlist_ms, media_ms),
         live_score=20,
+        buffer_score=15,
         anomaly_flags=("slow-source",),
     )
 
@@ -2284,6 +2432,7 @@ def probe_candidate_once(
                 playlist_ms=top_ms,
                 startup_score=compute_startup_score(top_ms, top_ms),
                 live_score=50 if ok else 0,
+                buffer_score=40 if ok else 0,
             )
 
         if kind == "media":
@@ -2311,6 +2460,7 @@ def probe_candidate_once(
                 media_ms=top_ms,
                 startup_score=compute_startup_score(top_ms, top_ms),
                 live_score=40 if ok else 0,
+                buffer_score=30 if ok else 0,
             )
 
         if kind == "generic":
@@ -2395,6 +2545,7 @@ def probe_candidate(
                     media_ms=result.media_ms,
                     startup_score=result.startup_score,
                     live_score=result.live_score,
+                    buffer_score=result.buffer_score,
                     content_score=result.content_score,
                     history_local_score=result.history_local_score,
                     history_cloud_score=result.history_cloud_score,
@@ -2412,6 +2563,13 @@ def probe_candidate(
                 media_ms=follow_up.media_ms if follow_up.media_ms is not None else result.media_ms,
                 startup_score=max(result.startup_score, follow_up.startup_score),
                 live_score=min(result.live_score, follow_up.live_score),
+                buffer_score=min(
+                    value
+                    for value in (result.buffer_score, follow_up.buffer_score)
+                    if value
+                )
+                if any((result.buffer_score, follow_up.buffer_score))
+                else 0,
                 content_score=min(result.content_score, follow_up.content_score),
                 history_local_score=max(result.history_local_score, follow_up.history_local_score),
                 history_cloud_score=max(result.history_cloud_score, follow_up.history_cloud_score),
@@ -2429,6 +2587,13 @@ def probe_candidate(
             media_ms=result.media_ms if result.media_ms is not None else follow_up.media_ms,
             startup_score=max(result.startup_score, follow_up.startup_score),
             live_score=min(result.live_score, follow_up.live_score) if follow_up.live_score else result.live_score,
+            buffer_score=min(
+                value
+                for value in (result.buffer_score, follow_up.buffer_score)
+                if value
+            )
+            if any((result.buffer_score, follow_up.buffer_score))
+            else max(result.buffer_score, follow_up.buffer_score),
             content_score=min(result.content_score, follow_up.content_score),
             history_local_score=max(result.history_local_score, follow_up.history_local_score),
             history_cloud_score=max(result.history_cloud_score, follow_up.history_cloud_score),
@@ -2437,22 +2602,25 @@ def probe_candidate(
     return result
 
 
-def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int, tuple[str, ...]]:
+def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int, int, tuple[str, ...], str]:
     ffmpeg_path = shutil.which("ffmpeg")
     if not ffmpeg_path:
-        return 50, ()
+        return 50, 50, (), ""
 
     command = [
         ffmpeg_path,
+        "-nostdin",
         "-v",
         "error",
+        "-t",
+        str(int(CONTENT_SAMPLE_WINDOW_SECONDS) + 2),
         "-i",
         candidate.url,
         "-an",
         "-vf",
-        "fps=1/2,scale=16:16,format=gray",
+        "fps=1,scale=16:16,format=gray",
         "-frames:v",
-        "2",
+        str(CONTENT_SAMPLE_FRAMES),
         "-f",
         "rawvideo",
         "-pix_fmt",
@@ -2465,19 +2633,21 @@ def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int,
         command[1:1] = ["-headers", f"Referer: {candidate.referrer}\r\n"]
 
     try:
+        started = time.perf_counter()
         completed = subprocess.run(
             command,
             capture_output=True,
             timeout=timeout,
             check=False,
         )
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
     except subprocess.TimeoutExpired:
-        return 60, ("content-check-timeout",)
+        return 60, 20, ("content-check-timeout", "continuous-read-timeout"), "ffmpeg continuous read timed out"
     except OSError:
-        return 50, ()
+        return 50, 50, (), ""
 
     if completed.returncode != 0 or not completed.stdout:
-        return 45, ("content-check-empty",)
+        return 45, 28, ("content-check-empty", "continuous-read-short"), "ffmpeg did not produce enough video frames"
 
     frame_size = CONTENT_SAMPLE_SIZE
     frames = [
@@ -2486,17 +2656,44 @@ def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int,
         if len(completed.stdout[index : index + frame_size]) == frame_size
     ]
     if not frames:
-        return 45, ("content-check-empty",)
+        return 45, 28, ("content-check-empty", "continuous-read-short"), "ffmpeg returned no complete frames"
 
     anomaly_flags: list[str] = []
+    visual_flags: list[str] = []
     brightness = [sum(frame) / frame_size for frame in frames]
     if any(level < 8 for level in brightness):
         anomaly_flags.append("black-frame")
+        visual_flags.append("black-frame")
     if len(frames) >= 2 and frames[0] == frames[1]:
         anomaly_flags.append("frozen-frames")
+        visual_flags.append("frozen-frames")
 
-    score = 100 - (35 * len(anomaly_flags))
-    return max(10, score), tuple(sorted(set(anomaly_flags)))
+    sample_seconds = max(CONTENT_SAMPLE_WINDOW_SECONDS, float(len(frames)))
+    elapsed_seconds = max(elapsed_ms / 1000.0, 0.001)
+    read_speed = sample_seconds / elapsed_seconds
+    if len(frames) < max(3, CONTENT_SAMPLE_FRAMES - 1):
+        anomaly_flags.append("continuous-read-short")
+    if read_speed >= 2.0:
+        playback_score = 100
+    elif read_speed >= 1.5:
+        playback_score = 92
+    elif read_speed >= 1.2:
+        playback_score = 82
+    elif read_speed >= 1.0:
+        playback_score = 70
+    elif read_speed >= 0.85:
+        playback_score = 56
+    else:
+        playback_score = 34
+    if len(frames) < CONTENT_SAMPLE_FRAMES:
+        playback_score = min(playback_score, 52)
+    if "continuous-read-short" in anomaly_flags:
+        playback_score = min(playback_score, 46)
+    if playback_score < 55:
+        anomaly_flags.append("continuous-read-slow")
+    score = 100 - (35 * len(visual_flags))
+    detail = f"ffmpeg read {sample_seconds:.0f}s media in {elapsed_seconds:.1f}s ({read_speed:.2f}x)"
+    return max(10, score), max(10, playback_score), tuple(sorted(set(anomaly_flags))), detail
 
 
 def annotate_content_scores(
@@ -2508,20 +2705,38 @@ def annotate_content_scores(
         return verified_items
 
     annotated: list[tuple[Candidate, ProbeResult]] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, 8))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, 4))) as executor:
         future_to_item = {
             executor.submit(run_ffmpeg_content_probe, candidate, timeout): (candidate, probe)
             for candidate, probe in verified_items
         }
         for future in concurrent.futures.as_completed(future_to_item):
             candidate, probe = future_to_item[future]
-            content_score, anomaly_flags = future.result()
+            content_score, playback_score, anomaly_flags, playback_detail = future.result()
             combined_flags = tuple(sorted(set(probe.anomaly_flags + anomaly_flags)))
             annotated.append(
                 (
                     candidate,
                     dataclasses.replace(
                         probe,
+                        detail="; ".join(
+                            part
+                            for part in (probe.detail, playback_detail)
+                            if part
+                        ),
+                        buffer_score=(
+                            min(
+                                44,
+                                int(round(probe.buffer_score * 0.35 + playback_score * 0.65)),
+                            )
+                            if "continuous-read-timeout" in anomaly_flags
+                            else min(
+                                52,
+                                int(round(probe.buffer_score * 0.35 + playback_score * 0.65)),
+                            )
+                            if "continuous-read-short" in anomaly_flags
+                            else int(round(probe.buffer_score * 0.35 + playback_score * 0.65))
+                        ),
                         content_score=content_score,
                         anomaly_flags=combined_flags,
                     ),
@@ -2555,6 +2770,176 @@ def attach_history_scores(
             )
         )
     return attached
+
+
+def average_stat(stats: dict[str, Any], key: str) -> int:
+    runs = int(stats.get("runs", 0) or 0)
+    if runs <= 0:
+        return 0
+    return int(round((stats.get(key, 0) or 0) / runs))
+
+
+def history_read_speed(detail: str) -> float:
+    match = FFMPEG_SPEED_RE.search(detail or "")
+    return float(match.group(1)) if match else 0.0
+
+
+def history_speed_to_buffer_score(speed_x: float) -> int:
+    if speed_x >= 3.0:
+        return 98
+    if speed_x >= 2.4:
+        return 92
+    if speed_x >= 2.0:
+        return 86
+    if speed_x >= 1.7:
+        return 76
+    if speed_x >= 1.4:
+        return 66
+    if speed_x >= 1.1:
+        return 56
+    return 42
+
+
+def build_history_fallback_item(
+    candidate: Candidate,
+    history: HistoryStore,
+    probe_environment: str,
+) -> tuple[Candidate, ProbeResult] | None:
+    preferred_environment = probe_environment if probe_environment in PROBE_ENVIRONMENTS else "local"
+    stats = history.stats(candidate.url, preferred_environment)
+    if not stats and preferred_environment != "local":
+        stats = history.stats(candidate.url, "local")
+    if not stats or not stats.get("last_ok"):
+        return None
+
+    detail = str(stats.get("last_detail", "") or "")
+    lowered_detail = detail.lower()
+    if any(marker in lowered_detail for marker in ("timed out", "404", "403", "no video", "vod", "ended")):
+        return None
+
+    speed_x = history_read_speed(detail)
+    startup_score = average_stat(stats, "startup_score_total")
+    live_score = average_stat(stats, "live_score_total")
+    content_score = average_stat(stats, "content_score_total")
+    if speed_x < HISTORY_FALLBACK_MIN_SPEED:
+        return None
+    if startup_score < HISTORY_FALLBACK_MIN_STARTUP or live_score < HISTORY_FALLBACK_MIN_LIVE:
+        return None
+
+    anomaly_flags: tuple[str, ...] = ("stale-playlist",) if "stale-playlist" in lowered_detail else ()
+    probe = ProbeResult(
+        ok=True,
+        status=200,
+        content_type="history-fallback",
+        detail=f"history fallback; {detail}",
+        elapsed_ms=average_stat(stats, "elapsed_total_ms"),
+        final_url=candidate.url,
+        via_ffprobe="ffprobe" in lowered_detail,
+        playlist_ms=average_stat(stats, "playlist_total_ms"),
+        media_ms=average_stat(stats, "media_total_ms"),
+        startup_score=startup_score,
+        live_score=live_score,
+        buffer_score=history_speed_to_buffer_score(speed_x),
+        content_score=max(50, content_score),
+        history_local_score=history.score(candidate.url, "local"),
+        history_cloud_score=history.score(candidate.url, "cloud"),
+        anomaly_flags=anomaly_flags,
+    )
+    item = (candidate, probe)
+    return item if candidate_meets_primary_profile(item, relaxed=True) else None
+
+
+def inject_history_fallbacks(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    history: HistoryStore,
+    probe_environment: str,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    selected_titles = {candidate.title for candidate, _probe in verified_items}
+    fallback_candidates: list[Candidate] = []
+    for path in (PUBLISHED_BACKUP_PLAYLIST_PATH, PUBLISHED_PLAYLIST_PATH):
+        if not path.exists():
+            continue
+        fallback_candidates.extend(
+            load_extra_m3u_candidates(
+                load_m3u_file(path),
+                source_name=f"history-fallback:{path.name}",
+                include_nsfw=False,
+                min_quality=0,
+                allow_ip_hosts=True,
+            )
+        )
+    for url, entry in history.payload.get("streams", {}).items():
+        title = entry.get("title") or ""
+        group = entry.get("group")
+        if not title or title in selected_titles or group not in HISTORY_FALLBACK_GROUPS:
+            continue
+        fallback_candidates.append(
+            build_candidate(
+                source=f"history:{entry.get('source') or 'recorded'}",
+                url=url,
+                title=title,
+                channel_id=entry.get("channel_id"),
+                country="CN",
+                languages=("zho",),
+                group_title=group,
+                channel_group=group,
+            )
+        )
+    if not fallback_candidates:
+        return verified_items, grouped_items
+
+    fallback_by_title: dict[str, list[Candidate]] = {}
+    for candidate in dedupe_candidates(fallback_candidates):
+        if candidate.channel_group not in HISTORY_FALLBACK_GROUPS:
+            continue
+        if candidate.title in selected_titles:
+            continue
+        fallback_by_title.setdefault(candidate.title, []).append(candidate)
+
+    injected_items: list[tuple[Candidate, ProbeResult]] = []
+    injected_groups: list[list[tuple[Candidate, ProbeResult]]] = []
+    for title, candidates in fallback_by_title.items():
+        scored: list[tuple[tuple[float, float, float], tuple[Candidate, ProbeResult]]] = []
+        for candidate in candidates:
+            item = build_history_fallback_item(candidate, history, probe_environment)
+            if item is None:
+                continue
+            speed_x = history_read_speed(item[1].detail)
+            scored.append(
+                (
+                    (
+                        speed_x,
+                        item[1].history_local_score,
+                        item[1].history_cloud_score,
+                    ),
+                    item,
+                )
+            )
+        if not scored:
+            continue
+        scored.sort(key=lambda entry: entry[0], reverse=True)
+        selected_item = scored[0][1]
+        injected_items.append(selected_item)
+        injected_groups.append([selected_item])
+
+    combined_verified = [*verified_items, *injected_items]
+    combined_groups = [*grouped_items, *injected_groups]
+    combined_verified.sort(
+        key=lambda item: (
+            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+            item[0].channel_group or "",
+            item[0].title,
+        )
+    )
+    combined_groups.sort(
+        key=lambda items: (
+            GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+            items[0][0].channel_group or "",
+            items[0][0].title,
+        )
+    )
+    return combined_verified, combined_groups
 
 
 def format_group_title(candidate: Candidate) -> str | None:
@@ -2849,6 +3234,12 @@ def main() -> int:
     verified = attach_history_scores(verified, history)
     failed = attach_history_scores(failed, history)
     verified, grouped_verified = collapse_verified_items(verified)
+    verified, grouped_verified = inject_history_fallbacks(
+        verified,
+        grouped_verified,
+        history,
+        args.probe_environment,
+    )
 
     out_path = Path(args.out)
     backup_out_path = Path(args.backup_out)
