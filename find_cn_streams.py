@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
+import calendar
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
@@ -312,21 +313,25 @@ PRIMARY_MIN_LIVE_SCORE = 80
 PRIMARY_MIN_BUFFER_SCORE = 58
 PRIMARY_MAX_ELAPSED_MS = 12000
 RELAXED_MIN_STARTUP_SCORE = 40
-RELAXED_MIN_LIVE_SCORE = 45
-RELAXED_MIN_BUFFER_SCORE = 38
-RELAXED_MAX_ELAPSED_MS = 15000
+RELAXED_MIN_LIVE_SCORE = 60
+RELAXED_MIN_BUFFER_SCORE = 48
+RELAXED_MAX_ELAPSED_MS = 13000
 PRIMARY_BLOCKED_FLAGS = {
     "black-frame",
     "content-check-empty",
+    "continuous-read-short",
+    "continuous-read-slow",
+    "continuous-read-timeout",
     "empty-playlist",
     "frozen-frames",
     "repeating-segments",
     "slow-source",
 }
 HISTORY_FALLBACK_GROUPS = {"央视", "卫视"}
-HISTORY_FALLBACK_MIN_SPEED = 1.8
-HISTORY_FALLBACK_MIN_STARTUP = 38
-HISTORY_FALLBACK_MIN_LIVE = 45
+HISTORY_FALLBACK_MIN_SPEED = 2.1
+HISTORY_FALLBACK_MIN_STARTUP = 34
+HISTORY_FALLBACK_MIN_LIVE = 50
+HISTORY_FALLBACK_MAX_AGE_HOURS = 72
 MANUAL_PREFERRED_CANDIDATES = (
     {
         "channel_id": "DragonTV.cn",
@@ -1232,8 +1237,15 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
     flags = set(probe.anomaly_flags)
     if flags & PRIMARY_BLOCKED_FLAGS:
         return False
+    if "continuous-read-timeout" in flags:
+        return False
     if source_is_known_slow(candidate.url):
         return False
+    if candidate.channel_group in {"央视", "卫视"}:
+        if "stale-playlist" in flags and probe.live_score < 80:
+            return False
+        if "buffer-risk" in flags and probe.buffer_score < 65:
+            return False
     min_startup = RELAXED_MIN_STARTUP_SCORE if relaxed else PRIMARY_MIN_STARTUP_SCORE
     min_live = RELAXED_MIN_LIVE_SCORE if relaxed else PRIMARY_MIN_LIVE_SCORE
     min_buffer = RELAXED_MIN_BUFFER_SCORE if relaxed else PRIMARY_MIN_BUFFER_SCORE
@@ -2811,22 +2823,44 @@ def build_history_fallback_item(
         stats = history.stats(candidate.url, "local")
     if not stats or not stats.get("last_ok"):
         return None
+    runs = int(stats.get("runs", 0) or 0)
+    successes = int(stats.get("successes", 0) or 0)
+    if runs < 2 or successes / max(runs, 1) < 0.6:
+        return None
 
     detail = str(stats.get("last_detail", "") or "")
     lowered_detail = detail.lower()
     if any(marker in lowered_detail for marker in ("timed out", "404", "403", "no video", "vod", "ended")):
         return None
+    if "stale-playlist" in lowered_detail:
+        return None
+    if "media sequence advanced" not in lowered_detail:
+        return None
 
     speed_x = history_read_speed(detail)
-    startup_score = average_stat(stats, "startup_score_total")
-    live_score = average_stat(stats, "live_score_total")
+    startup_score = max(
+        average_stat(stats, "startup_score_total"),
+        36 if speed_x >= HISTORY_FALLBACK_MIN_SPEED else 0,
+    )
+    live_score = max(
+        average_stat(stats, "live_score_total"),
+        95 if "media sequence advanced" in lowered_detail else 0,
+    )
     content_score = average_stat(stats, "content_score_total")
+    last_updated = str(stats.get("last_updated") or "")
+    if last_updated:
+        try:
+            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
+        except ValueError:
+            return None
+        if time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
+            return None
     if speed_x < HISTORY_FALLBACK_MIN_SPEED:
         return None
     if startup_score < HISTORY_FALLBACK_MIN_STARTUP or live_score < HISTORY_FALLBACK_MIN_LIVE:
         return None
 
-    anomaly_flags: tuple[str, ...] = ("stale-playlist",) if "stale-playlist" in lowered_detail else ()
+    anomaly_flags: tuple[str, ...] = ()
     probe = ProbeResult(
         ok=True,
         status=200,
@@ -2837,8 +2871,8 @@ def build_history_fallback_item(
         via_ffprobe="ffprobe" in lowered_detail,
         playlist_ms=average_stat(stats, "playlist_total_ms"),
         media_ms=average_stat(stats, "media_total_ms"),
-        startup_score=startup_score,
-        live_score=live_score,
+        startup_score=max(HISTORY_FALLBACK_MIN_STARTUP, startup_score),
+        live_score=max(HISTORY_FALLBACK_MIN_LIVE, live_score),
         buffer_score=history_speed_to_buffer_score(speed_x),
         content_score=max(50, content_score),
         history_local_score=history.score(candidate.url, "local"),
@@ -2867,23 +2901,6 @@ def inject_history_fallbacks(
                 include_nsfw=False,
                 min_quality=0,
                 allow_ip_hosts=True,
-            )
-        )
-    for url, entry in history.payload.get("streams", {}).items():
-        title = entry.get("title") or ""
-        group = entry.get("group")
-        if not title or title in selected_titles or group not in HISTORY_FALLBACK_GROUPS:
-            continue
-        fallback_candidates.append(
-            build_candidate(
-                source=f"history:{entry.get('source') or 'recorded'}",
-                url=url,
-                title=title,
-                channel_id=entry.get("channel_id"),
-                country="CN",
-                languages=("zho",),
-                group_title=group,
-                channel_group=group,
             )
         )
     if not fallback_candidates:
