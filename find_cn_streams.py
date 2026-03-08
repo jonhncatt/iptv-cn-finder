@@ -84,6 +84,12 @@ CURATED_PUBLIC_M3U_URLS = {
     "zbds": "https://live.zbds.top/tv/iptv4.m3u",
     "chinaiptv": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8",
 }
+DEEP_DISCOVERY_M3U_URLS = {
+    "fanmingming-ipv4": "https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv4.m3u",
+    "fanmingming-ipv6": "https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u",
+    "freetv-random": "https://raw.githubusercontent.com/joevess/IPTV/main/IPTV.m3u",
+    "iptvindex-zh": "https://raw.githubusercontent.com/Kimentanm/aptv/master/assets/feeds/tv.m3u",
+}
 PUBLISHED_PLAYLIST_PATH = Path("m3u/chinese-public-verified.m3u")
 PUBLISHED_BACKUP_PLAYLIST_PATH = Path("m3u/chinese-public-with-backups.m3u")
 PUBLISHED_REPAIR_PLAYLIST_PATH = Path("m3u/chinese-public-repair.m3u")
@@ -321,7 +327,6 @@ PRIMARY_BLOCKED_FLAGS = {
     "content-check-empty",
     "continuous-read-short",
     "continuous-read-slow",
-    "continuous-read-timeout",
     "empty-playlist",
     "frozen-frames",
     "repeating-segments",
@@ -782,8 +787,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         action="append",
-        choices=("iptv-org", "cctv-official", "curated-public", "published", "manual-preferred"),
-        default=["iptv-org", "cctv-official", "curated-public", "published", "manual-preferred"],
+        choices=(
+            "iptv-org",
+            "cctv-official",
+            "curated-public",
+            "deep-discovery",
+            "published",
+            "manual-preferred",
+        ),
+        default=[
+            "iptv-org",
+            "cctv-official",
+            "curated-public",
+            "deep-discovery",
+            "published",
+            "manual-preferred",
+        ],
         help="Candidate source provider. Repeat to add more providers.",
     )
     parser.add_argument(
@@ -1238,7 +1257,10 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
     if flags & PRIMARY_BLOCKED_FLAGS:
         return False
     if "continuous-read-timeout" in flags:
-        return False
+        if probe.buffer_score < 70:
+            return False
+        if probe.live_score < 85:
+            return False
     if source_is_known_slow(candidate.url):
         return False
     if candidate.channel_group in {"央视", "卫视"}:
@@ -1692,7 +1714,10 @@ def load_curated_public_candidates(
 ) -> list[Candidate]:
     candidates: list[Candidate] = []
     for name, url in CURATED_PUBLIC_M3U_URLS.items():
-        text = fetch_text(url, cache, timeout=timeout)
+        try:
+            text = fetch_text(url, cache, timeout=timeout)
+        except Exception:  # noqa: BLE001
+            continue
         candidates.extend(
             load_extra_m3u_candidates(
                 text,
@@ -1700,6 +1725,31 @@ def load_curated_public_candidates(
                 include_nsfw=include_nsfw,
                 min_quality=min_quality,
                 allow_ip_hosts=True,
+            )
+        )
+    return dedupe_candidates(candidates)
+
+
+def load_deep_discovery_candidates(
+    cache: CacheStore,
+    timeout: float,
+    include_nsfw: bool,
+    min_quality: int,
+    allow_ip_hosts: bool,
+) -> list[Candidate]:
+    candidates: list[Candidate] = []
+    for name, url in DEEP_DISCOVERY_M3U_URLS.items():
+        try:
+            text = fetch_text(url, cache, timeout=timeout)
+        except Exception:  # noqa: BLE001
+            continue
+        candidates.extend(
+            load_extra_m3u_candidates(
+                text,
+                source_name=f"deep:{name}",
+                include_nsfw=include_nsfw,
+                min_quality=min_quality,
+                allow_ip_hosts=allow_ip_hosts,
             )
         )
     return dedupe_candidates(candidates)
@@ -2880,7 +2930,7 @@ def build_history_fallback_item(
         anomaly_flags=anomaly_flags,
     )
     item = (candidate, probe)
-    return item if candidate_meets_primary_profile(item, relaxed=True) else None
+    return item if candidate_meets_primary_profile(item) else None
 
 
 def inject_history_fallbacks(
@@ -3123,6 +3173,17 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
             )
         )
 
+    if "deep-discovery" in providers:
+        candidates.extend(
+            load_deep_discovery_candidates(
+                cache=cache,
+                timeout=args.timeout,
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=args.allow_ip_hosts,
+            )
+        )
+
     if "published" in providers:
         candidates.extend(
             load_published_candidates(
@@ -3136,7 +3197,10 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
         candidates.extend(load_manual_preferred_candidates())
 
     for remote_url in args.remote_m3u:
-        text = fetch_text(remote_url, cache, timeout=args.timeout)
+        try:
+            text = fetch_text(remote_url, cache, timeout=args.timeout)
+        except Exception:  # noqa: BLE001
+            continue
         candidates.extend(
             load_extra_m3u_candidates(
                 text,
