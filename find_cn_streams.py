@@ -93,6 +93,7 @@ DEEP_DISCOVERY_M3U_URLS = {
 PUBLISHED_PLAYLIST_PATH = Path("m3u/chinese-public-verified.m3u")
 PUBLISHED_BACKUP_PLAYLIST_PATH = Path("m3u/chinese-public-with-backups.m3u")
 PUBLISHED_REPAIR_PLAYLIST_PATH = Path("m3u/chinese-public-repair.m3u")
+LEGACY_BASELINE_PLAYLIST_PATH = Path("m3u/chinese-public-verified-legacy-413cc62.m3u")
 DEFAULT_HISTORY_PATH = Path("state/probe-history.json")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
@@ -262,6 +263,24 @@ DIRECT_FILE_URL_HINTS = (
     ".mp4",
 )
 PREFERRED_URL_PATTERNS_BY_TITLE = {
+    "CCTV-1 综合": (
+        "ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+        "ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+        "ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+    ),
+    "CCTV-13 新闻": (
+        "ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+        "ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+        "ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+    ),
+    "CCTV-5 体育": (
+        "101.35.240.114:88/live.php?id=CCTV5",
+        "112.27.235.94:8000/hls/5",
+    ),
+    "CCTV-5+ 体育赛事": (
+        "101.35.240.114:88/live.php?id=CCTV5p",
+        "112.27.235.94:8000/hls/6",
+    ),
     "东方卫视": (
         "38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8",
         "112.27.235.94:8000/hls/28",
@@ -342,6 +361,7 @@ CCTV_CORE_RECOVERY_URLS = {
         "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
     ),
 }
+STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
 PRIMARY_MIN_BUFFER_SCORE = 58
@@ -361,11 +381,33 @@ PRIMARY_BLOCKED_FLAGS = {
     "slow-source",
 }
 HISTORY_FALLBACK_GROUPS = {"央视", "卫视"}
-HISTORY_FALLBACK_MIN_SPEED = 2.1
+HISTORY_FALLBACK_MIN_SPEED = 1.3
 HISTORY_FALLBACK_MIN_STARTUP = 34
 HISTORY_FALLBACK_MIN_LIVE = 50
 HISTORY_FALLBACK_MAX_AGE_HOURS = 72
 MANUAL_PREFERRED_CANDIDATES = (
+    {
+        "channel_id": "CCTV1.cn",
+        "title": "CCTV-1 综合",
+        "url": "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+    },
+    {
+        "channel_id": "CCTV13.cn",
+        "title": "CCTV-13 新闻",
+        "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+    },
+    {
+        "channel_id": "CCTV5.cn",
+        "title": "CCTV-5 体育",
+        "url": "http://101.35.240.114:88/live.php?id=CCTV5",
+        "user_agent": "AptvPlayer-UA",
+    },
+    {
+        "channel_id": "CCTV5Plus.cn",
+        "title": "CCTV-5+ 体育赛事",
+        "url": "http://101.35.240.114:88/live.php?id=CCTV5p",
+        "user_agent": "AptvPlayer-UA",
+    },
     {
         "channel_id": "DragonTV.cn",
         "title": "东方卫视",
@@ -821,6 +863,7 @@ def parse_args() -> argparse.Namespace:
             "curated-public",
             "deep-discovery",
             "published",
+            "legacy-baseline",
             "manual-preferred",
         ),
         default=[
@@ -829,6 +872,7 @@ def parse_args() -> argparse.Namespace:
             "curated-public",
             "deep-discovery",
             "published",
+            "legacy-baseline",
             "manual-preferred",
         ],
         help="Candidate source provider. Repeat to add more providers.",
@@ -1146,12 +1190,14 @@ CHANNEL_ALIAS_TO_ID = {
 def source_priority(source: str) -> int:
     if source == "manual-preferred":
         return 4
-    if source == "published":
+    if source == "legacy-baseline":
         return 3
-    if source.startswith("local:"):
+    if source == "published":
         return 2
-    if source.startswith("remote:"):
+    if source.startswith("local:"):
         return 1
+    if source.startswith("remote:"):
+        return 0
     return 0
 
 
@@ -1320,16 +1366,12 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
             return False
         if "buffer-risk" in flags and probe.buffer_score < 65:
             return False
-    if candidate.channel_group == "央视":
-        if candidate_uses_custom_headers(candidate):
+    if candidate.channel_group == "央视" and candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
+        if "stability-timeout" in flags:
             return False
-        if url_has_volatile_signature(candidate.url):
+        if probe.live_score < 80:
             return False
-        if probe.live_score < 88:
-            return False
-        if probe.buffer_score < 68:
-            return False
-        if probe.content_score < 70:
+        if probe.buffer_score < 58:
             return False
     min_startup = RELAXED_MIN_STARTUP_SCORE if relaxed else PRIMARY_MIN_STARTUP_SCORE
     min_live = RELAXED_MIN_LIVE_SCORE if relaxed else PRIMARY_MIN_LIVE_SCORE
@@ -1834,6 +1876,22 @@ def load_published_candidates(
     )
 
 
+def load_legacy_baseline_candidates(
+    include_nsfw: bool,
+    min_quality: int,
+    allow_ip_hosts: bool,
+) -> list[Candidate]:
+    if not LEGACY_BASELINE_PLAYLIST_PATH.exists():
+        return []
+    return load_extra_m3u_candidates(
+        load_m3u_file(LEGACY_BASELINE_PLAYLIST_PATH),
+        source_name="legacy-baseline",
+        include_nsfw=include_nsfw,
+        min_quality=min_quality,
+        allow_ip_hosts=allow_ip_hosts,
+    )
+
+
 def load_manual_preferred_candidates() -> list[Candidate]:
     candidates: list[Candidate] = []
     for item in MANUAL_PREFERRED_CANDIDATES:
@@ -1849,7 +1907,9 @@ def load_manual_preferred_candidates() -> list[Candidate]:
                 channel_id=channel_id,
                 country="CN",
                 languages=("zho",),
-                quality="1080p",
+                quality=item.get("quality") or "1080p",
+                user_agent=item.get("user_agent"),
+                referrer=item.get("referrer"),
                 group_title=channel_group,
                 channel_group=channel_group,
             )
@@ -2655,14 +2715,14 @@ def probe_candidate(
         return result
 
     required_checks = max(1, stability_checks)
-    if candidate.channel_group == "央视":
+    if candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
         required_checks = max(required_checks, 3)
 
     for check_index in range(1, required_checks):
         follow_up = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
         if not follow_up.ok:
             if follow_up.status is None and "timed out" in follow_up.detail.lower():
-                if candidate.channel_group == "央视":
+                if candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
                     return ProbeResult(
                         ok=False,
                         status=follow_up.status,
@@ -3061,7 +3121,7 @@ def inject_history_fallbacks(
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     selected_titles = {candidate.title for candidate, _probe in verified_items}
     fallback_candidates: list[Candidate] = []
-    for path in (PUBLISHED_BACKUP_PLAYLIST_PATH, PUBLISHED_PLAYLIST_PATH):
+    for path in (PUBLISHED_BACKUP_PLAYLIST_PATH, PUBLISHED_PLAYLIST_PATH, LEGACY_BASELINE_PLAYLIST_PATH):
         if not path.exists():
             continue
         fallback_candidates.extend(
@@ -3392,6 +3452,15 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
     if "published" in providers:
         candidates.extend(
             load_published_candidates(
+                include_nsfw=args.include_nsfw,
+                min_quality=args.min_quality,
+                allow_ip_hosts=True,
+            )
+        )
+
+    if "legacy-baseline" in providers:
+        candidates.extend(
+            load_legacy_baseline_candidates(
                 include_nsfw=args.include_nsfw,
                 min_quality=args.min_quality,
                 allow_ip_hosts=True,
