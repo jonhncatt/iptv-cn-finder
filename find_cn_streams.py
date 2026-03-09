@@ -314,6 +314,34 @@ KNOWN_SLOW_SOURCE_PATTERNS = (
     "dassby.qqff.top:99/live/",
     "58.57.40.22:9901/tsfile/live/",
 )
+VOLATILE_QUERY_KEYS = {
+    "_upt",
+    "auth_key",
+    "expires",
+    "expire",
+    "expiry",
+    "migutoken",
+    "signature",
+    "sign",
+    "token",
+    "txsecret",
+    "txtime",
+    "wssecret",
+    "wstime",
+    "yid",
+}
+CCTV_CORE_RECOVERY_URLS = {
+    "CCTV1.cn": (
+        "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+        "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+        "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+    ),
+    "CCTV13.cn": (
+        "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+        "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+        "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+    ),
+}
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
 PRIMARY_MIN_BUFFER_SCORE = 58
@@ -1132,6 +1160,26 @@ def source_is_known_slow(url: str) -> bool:
     return any(pattern in lowered for pattern in KNOWN_SLOW_SOURCE_PATTERNS)
 
 
+def url_has_volatile_signature(url: str) -> bool:
+    query = urlsplit(url).query
+    if not query:
+        return False
+    for key, value in parse_qsl(query, keep_blank_values=True):
+        lowered_key = key.strip().lower()
+        if not lowered_key:
+            continue
+        if lowered_key in VOLATILE_QUERY_KEYS:
+            return True
+        lowered_value = value.strip().lower()
+        if lowered_value and len(lowered_value) >= 64 and any(ch in lowered_value for ch in ("=", "-", "_", ".")):
+            return True
+    return False
+
+
+def candidate_uses_custom_headers(candidate: Candidate) -> bool:
+    return bool(candidate.user_agent or candidate.referrer)
+
+
 def latency_rank(elapsed_ms: int) -> int:
     if elapsed_ms <= 1200:
         return 5
@@ -1215,7 +1263,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
-) -> tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]:
+) -> tuple[int, ...]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = 0
@@ -1227,9 +1275,13 @@ def verified_item_rank(
     ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
     fast_probe = latency_rank(probe.elapsed_ms)
     clean_content = int(not any(flag in probe.anomaly_flags for flag in ("black-frame", "frozen-frames", "ended-playlist")))
+    custom_header_free = int(not candidate_uses_custom_headers(candidate))
+    non_volatile_url = int(not url_has_volatile_signature(candidate.url))
     return (
         ffprobe_video,
         clean_content,
+        custom_header_free,
+        non_volatile_url,
         probe.buffer_score,
         probe.live_score,
         probe.startup_score,
@@ -1267,6 +1319,17 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
         if "stale-playlist" in flags and probe.live_score < 80:
             return False
         if "buffer-risk" in flags and probe.buffer_score < 65:
+            return False
+    if candidate.channel_group == "央视":
+        if candidate_uses_custom_headers(candidate):
+            return False
+        if url_has_volatile_signature(candidate.url):
+            return False
+        if probe.live_score < 88:
+            return False
+        if probe.buffer_score < 68:
+            return False
+        if probe.content_score < 70:
             return False
     min_startup = RELAXED_MIN_STARTUP_SCORE if relaxed else PRIMARY_MIN_STARTUP_SCORE
     min_live = RELAXED_MIN_LIVE_SCORE if relaxed else PRIMARY_MIN_LIVE_SCORE
@@ -2591,10 +2654,39 @@ def probe_candidate(
     if not result.ok:
         return result
 
-    for check_index in range(1, max(1, stability_checks)):
+    required_checks = max(1, stability_checks)
+    if candidate.channel_group == "央视":
+        required_checks = max(required_checks, 3)
+
+    for check_index in range(1, required_checks):
         follow_up = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
         if not follow_up.ok:
             if follow_up.status is None and "timed out" in follow_up.detail.lower():
+                if candidate.channel_group == "央视":
+                    return ProbeResult(
+                        ok=False,
+                        status=follow_up.status,
+                        content_type=follow_up.content_type,
+                        detail=f"stability check {check_index + 1} timed out",
+                        elapsed_ms=max(result.elapsed_ms, follow_up.elapsed_ms),
+                        final_url=follow_up.final_url or result.final_url,
+                        via_ffprobe=result.via_ffprobe or follow_up.via_ffprobe,
+                        playlist_ms=follow_up.playlist_ms if follow_up.playlist_ms is not None else result.playlist_ms,
+                        media_ms=follow_up.media_ms if follow_up.media_ms is not None else result.media_ms,
+                        startup_score=max(result.startup_score, follow_up.startup_score),
+                        live_score=min(result.live_score, follow_up.live_score),
+                        buffer_score=min(
+                            value
+                            for value in (result.buffer_score, follow_up.buffer_score)
+                            if value
+                        )
+                        if any((result.buffer_score, follow_up.buffer_score))
+                        else 0,
+                        content_score=min(result.content_score, follow_up.content_score),
+                        history_local_score=max(result.history_local_score, follow_up.history_local_score),
+                        history_cloud_score=max(result.history_cloud_score, follow_up.history_cloud_score),
+                        anomaly_flags=tuple(sorted(set(result.anomaly_flags + follow_up.anomaly_flags + ("stability-timeout",)))),
+                    )
                 return ProbeResult(
                     ok=True,
                     status=result.status,
@@ -2758,6 +2850,34 @@ def run_ffmpeg_content_probe(candidate: Candidate, timeout: float) -> tuple[int,
     return max(10, score), max(10, playback_score), tuple(sorted(set(anomaly_flags))), detail
 
 
+def annotate_probe_with_content(candidate: Candidate, probe: ProbeResult, timeout: float) -> ProbeResult:
+    content_score, playback_score, anomaly_flags, playback_detail = run_ffmpeg_content_probe(candidate, timeout)
+    combined_flags = tuple(sorted(set(probe.anomaly_flags + anomaly_flags)))
+    return dataclasses.replace(
+        probe,
+        detail="; ".join(
+            part
+            for part in (probe.detail, playback_detail)
+            if part
+        ),
+        buffer_score=(
+            min(
+                44,
+                int(round(probe.buffer_score * 0.35 + playback_score * 0.65)),
+            )
+            if "continuous-read-timeout" in anomaly_flags
+            else min(
+                52,
+                int(round(probe.buffer_score * 0.35 + playback_score * 0.65)),
+            )
+            if "continuous-read-short" in anomaly_flags
+            else int(round(probe.buffer_score * 0.35 + playback_score * 0.65))
+        ),
+        content_score=content_score,
+        anomaly_flags=combined_flags,
+    )
+
+
 def annotate_content_scores(
     verified_items: list[tuple[Candidate, ProbeResult]],
     timeout: float,
@@ -2786,6 +2906,8 @@ def annotate_content_scores(
                             for part in (probe.detail, playback_detail)
                             if part
                         ),
+                        content_score=content_score,
+                        anomaly_flags=combined_flags,
                         buffer_score=(
                             min(
                                 44,
@@ -2799,8 +2921,6 @@ def annotate_content_scores(
                             if "continuous-read-short" in anomaly_flags
                             else int(round(probe.buffer_score * 0.35 + playback_score * 0.65))
                         ),
-                        content_score=content_score,
-                        anomaly_flags=combined_flags,
                     ),
                 )
             )
@@ -3007,6 +3127,91 @@ def inject_history_fallbacks(
         )
     )
     return combined_verified, combined_groups
+
+
+def recover_core_cctv_channels(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    *,
+    timeout: float,
+    use_ffprobe: bool,
+    retries: int,
+    sequence_delay: float,
+    content_timeout: float,
+    history: HistoryStore,
+    probe_environment: str,
+    verbose: bool,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    selected_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
+    changed = False
+    for channel_id, urls in CCTV_CORE_RECOVERY_URLS.items():
+        if channel_id in selected_channel_ids:
+            continue
+        title = CCTV_CHANNEL_LABELS.get(channel_id)
+        if not title:
+            continue
+        channel_group = target_channel_group(channel_id)
+        if not channel_group:
+            continue
+        passed: list[tuple[Candidate, ProbeResult]] = []
+        for url in urls:
+            candidate = build_candidate(
+                source="cctv-recovery",
+                url=url,
+                title=title,
+                channel_id=channel_id,
+                country="CN",
+                languages=("zho",),
+                group_title=channel_group,
+                website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+                channel_group=channel_group,
+            )
+            probe = probe_candidate(
+                candidate,
+                timeout=timeout,
+                use_ffprobe=use_ffprobe,
+                retries=retries,
+                stability_checks=3,
+                sequence_delay=sequence_delay,
+            )
+            if not probe.ok:
+                continue
+            probe = annotate_probe_with_content(candidate, probe, timeout=max(1.0, content_timeout))
+            history.record(candidate, probe, probe_environment)
+            probe = dataclasses.replace(
+                probe,
+                history_local_score=history.score(candidate.url, "local"),
+                history_cloud_score=history.score(candidate.url, "cloud"),
+            )
+            item = (candidate, probe)
+            if candidate_meets_primary_profile(item):
+                passed.append(item)
+        if not passed:
+            continue
+        passed.sort(key=verified_item_rank, reverse=True)
+        selected_item = passed[0]
+        verified_items.append(selected_item)
+        grouped_items.append([selected_item, *[item for item in passed[1:] if item != selected_item]])
+        selected_channel_ids.add(channel_id)
+        changed = True
+        log(f"recovered core cctv channel: {title}", verbose=verbose)
+
+    if changed:
+        verified_items.sort(
+            key=lambda item: (
+                GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+                item[0].channel_group or "",
+                item[0].title,
+            )
+        )
+        grouped_items.sort(
+            key=lambda items: (
+                GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+                items[0][0].channel_group or "",
+                items[0][0].title,
+            )
+        )
+    return verified_items, grouped_items
 
 
 def format_group_title(candidate: Candidate) -> str | None:
@@ -3321,6 +3526,19 @@ def main() -> int:
         history,
         args.probe_environment,
     )
+    verified, grouped_verified = recover_core_cctv_channels(
+        verified,
+        grouped_verified,
+        timeout=args.timeout,
+        use_ffprobe=args.ffprobe,
+        retries=max(0, args.retries),
+        sequence_delay=max(0.5, args.live_sequence_delay),
+        content_timeout=max(1.0, args.content_check_timeout),
+        history=history,
+        probe_environment=args.probe_environment,
+        verbose=args.verbose,
+    )
+    history.save()
 
     out_path = Path(args.out)
     backup_out_path = Path(args.backup_out)
