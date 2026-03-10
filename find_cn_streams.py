@@ -985,13 +985,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--timeout",
         type=float,
-        default=12.0,
+        default=6.0,
         help="Per-request timeout in seconds.",
     )
     parser.add_argument(
         "--workers",
         type=int,
-        default=min(16, max(6, (os.cpu_count() or 4) * 2)),
+        default=4,
         help="Concurrent probe workers.",
     )
     parser.add_argument(
@@ -1024,13 +1024,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retries",
         type=int,
-        default=2,
+        default=0,
         help="Retry transient network failures this many times.",
     )
     parser.add_argument(
         "--stability-checks",
         type=int,
-        default=2,
+        default=1,
         help="Require this many successful probe passes for a channel to be kept.",
     )
     parser.add_argument(
@@ -1042,7 +1042,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--content-check-timeout",
         type=float,
-        default=14.0,
+        default=10.0,
         help="Timeout for ffmpeg-based content anomaly detection on verified candidates.",
     )
     parser.add_argument(
