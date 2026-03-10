@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -333,6 +334,9 @@ KNOWN_SLOW_SOURCE_PATTERNS = (
     "dassby.qqff.top:99/live/",
     "58.57.40.22:9901/tsfile/live/",
 )
+PROBE_BLOCKED_HOSTS = {
+    "101.35.240.114",
+}
 VOLATILE_QUERY_KEYS = {
     "_upt",
     "auth_key",
@@ -360,6 +364,15 @@ CCTV_CORE_RECOVERY_URLS = {
         "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
         "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
     ),
+    "CCTV5.cn": (
+        "http://112.27.235.94:8000/hls/5/index.m3u8",
+    ),
+    "CCTV5Plus.cn": (
+        "http://112.27.235.94:8000/hls/6/index.m3u8",
+    ),
+    "CCTV6.cn": (
+        "http://112.27.235.94:8000/hls/7/index.m3u8",
+    ),
 }
 SATELLITE_CORE_RECOVERY_URLS = {
     "DragonTV.cn": (
@@ -374,6 +387,7 @@ SATELLITE_CORE_RECOVERY_URLS = {
     ),
 }
 STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
+CCTV_HEADER_COMPAT_CHANNEL_IDS = {"CCTV3.cn", "CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
 PRIMARY_MIN_BUFFER_SCORE = 58
@@ -415,10 +429,35 @@ MANUAL_PREFERRED_CANDIDATES = (
         "user_agent": "AptvPlayer-UA",
     },
     {
+        "channel_id": "CCTV5.cn",
+        "title": "CCTV-5 体育",
+        "url": "http://112.27.235.94:8000/hls/5/index.m3u8",
+    },
+    {
         "channel_id": "CCTV5Plus.cn",
         "title": "CCTV-5+ 体育赛事",
         "url": "http://101.35.240.114:88/live.php?id=CCTV5p",
         "user_agent": "AptvPlayer-UA",
+    },
+    {
+        "channel_id": "CCTV5Plus.cn",
+        "title": "CCTV-5+ 体育赛事",
+        "url": "http://112.27.235.94:8000/hls/6/index.m3u8",
+    },
+    {
+        "channel_id": "CCTV3.cn",
+        "title": "CCTV-3 综艺",
+        "url": "http://112.27.235.94:8000/hls/3/index.m3u8",
+    },
+    {
+        "channel_id": "CCTV6.cn",
+        "title": "CCTV-6 电影",
+        "url": "http://112.27.235.94:8000/hls/7/index.m3u8",
+    },
+    {
+        "channel_id": "CCTV8.cn",
+        "title": "CCTV-8 电视剧",
+        "url": "http://112.27.235.94:8000/hls/9/index.m3u8",
     },
     {
         "channel_id": "DragonTV.cn",
@@ -882,7 +921,6 @@ def parse_args() -> argparse.Namespace:
             "iptv-org",
             "cctv-official",
             "curated-public",
-            "deep-discovery",
             "published",
             "legacy-baseline",
             "manual-preferred",
@@ -941,7 +979,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--limit",
         type=int,
-        default=300,
+        default=260,
         help="Maximum number of ranked candidates to probe. Use 0 for exhaustive mode.",
     )
     parser.add_argument(
@@ -1364,9 +1402,27 @@ def verified_item_rank(
 def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, relaxed: bool = False) -> bool:
     candidate, probe = item
     flags = set(probe.anomaly_flags)
+    is_cctv_header_compat = (
+        candidate.channel_group == "央视"
+        and candidate.channel_id in CCTV_HEADER_COMPAT_CHANNEL_IDS
+        and not candidate_uses_custom_headers(candidate)
+    )
     if flags & PRIMARY_BLOCKED_FLAGS:
         return False
-    if "continuous-read-timeout" in flags:
+    if (
+        candidate.channel_group in {"卫视", "湖南台", "广东台"}
+        and probe.content_score < 90
+        and not (candidate.channel_group == "卫视" and candidate.channel_id in SATELLITE_CORE_RECOVERY_URLS)
+    ):
+        return False
+    if candidate.channel_group == "上海台":
+        if candidate_uses_custom_headers(candidate):
+            return False
+        if probe.live_score < 90:
+            return False
+        if probe.buffer_score < 70:
+            return False
+    if "continuous-read-timeout" in flags and not is_cctv_header_compat:
         if probe.buffer_score < 70:
             return False
         if probe.live_score < 85:
@@ -1378,6 +1434,17 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
             return False
         if "buffer-risk" in flags and probe.buffer_score < 65:
             return False
+    if is_cctv_header_compat:
+        if (
+            "stale-playlist" not in flags
+            and "ended-playlist" not in flags
+            and probe.startup_score >= 38
+            and probe.live_score >= 95
+            and probe.content_score >= 60
+            and probe.elapsed_ms <= 13500
+            and probe.history_local_score >= 0.65
+        ):
+            return True
     if candidate.channel_group == "央视" and candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
         if "stability-timeout" in flags:
             return False
@@ -1472,6 +1539,9 @@ def best_candidate(existing: Candidate, challenger: Candidate) -> Candidate:
 def dedupe_candidates(candidates: Iterable[Candidate]) -> list[Candidate]:
     deduped: dict[str, Candidate] = {}
     for candidate in candidates:
+        host = (urlsplit(candidate.url).hostname or "").lower()
+        if host in PROBE_BLOCKED_HOSTS:
+            continue
         deduped[candidate.url] = (
             best_candidate(deduped[candidate.url], candidate)
             if candidate.url in deduped
@@ -3125,6 +3195,73 @@ def build_history_fallback_item(
     return item if candidate_meets_primary_profile(item) else None
 
 
+def build_core_cctv_history_item(
+    candidate: Candidate,
+    history: HistoryStore,
+    probe_environment: str,
+) -> tuple[Candidate, ProbeResult] | None:
+    preferred_environment = probe_environment if probe_environment in PROBE_ENVIRONMENTS else "local"
+    stats = history.stats(candidate.url, preferred_environment)
+    if not stats and preferred_environment != "local":
+        stats = history.stats(candidate.url, "local")
+    if not stats or not stats.get("last_ok"):
+        return None
+
+    runs = int(stats.get("runs", 0) or 0)
+    successes = int(stats.get("successes", 0) or 0)
+    if runs < 3 or successes / max(runs, 1) < 0.55:
+        return None
+
+    detail = str(stats.get("last_detail", "") or "")
+    lowered_detail = detail.lower()
+    if any(marker in lowered_detail for marker in ("404", "403", "no video", "vod", "ended")):
+        return None
+
+    last_updated = str(stats.get("last_updated") or "")
+    if last_updated:
+        try:
+            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
+        except ValueError:
+            return None
+        if time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
+            return None
+
+    startup_score = max(34, average_stat(stats, "startup_score_total"))
+    live_score = max(
+        average_stat(stats, "live_score_total"),
+        90 if "media sequence advanced" in lowered_detail else 0,
+    )
+    buffer_score = max(
+        35,
+        average_stat(stats, "buffer_score_total"),
+        history_speed_to_buffer_score(history_read_speed(detail)),
+    )
+    content_score = max(55, average_stat(stats, "content_score_total"))
+    if startup_score < 34 or live_score < 85:
+        return None
+
+    probe = ProbeResult(
+        ok=True,
+        status=200,
+        content_type="core-history-fallback",
+        detail=f"core history fallback; {detail}",
+        elapsed_ms=average_stat(stats, "elapsed_total_ms"),
+        final_url=candidate.url,
+        via_ffprobe="ffprobe" in lowered_detail,
+        playlist_ms=average_stat(stats, "playlist_total_ms"),
+        media_ms=average_stat(stats, "media_total_ms"),
+        startup_score=startup_score,
+        live_score=live_score,
+        buffer_score=buffer_score,
+        content_score=content_score,
+        history_local_score=history.score(candidate.url, "local"),
+        history_cloud_score=history.score(candidate.url, "cloud"),
+        anomaly_flags=(),
+    )
+    item = (candidate, probe)
+    return item if candidate_meets_primary_profile(item, relaxed=True) else None
+
+
 def inject_history_fallbacks(
     verified_items: list[tuple[Candidate, ProbeResult]],
     grouped_items: list[list[tuple[Candidate, ProbeResult]]],
@@ -3226,6 +3363,7 @@ def recover_core_cctv_channels(
         if not channel_group:
             continue
         passed: list[tuple[Candidate, ProbeResult]] = []
+        stability_checks = 3 if channel_id in STRICT_CCTV_CHANNEL_IDS else 1
         for url in urls:
             candidate = build_candidate(
                 source="cctv-recovery",
@@ -3243,7 +3381,7 @@ def recover_core_cctv_channels(
                 timeout=timeout,
                 use_ffprobe=use_ffprobe,
                 retries=retries,
-                stability_checks=3,
+                stability_checks=stability_checks,
                 sequence_delay=sequence_delay,
             )
             if not probe.ok:
@@ -3258,6 +3396,27 @@ def recover_core_cctv_channels(
             item = (candidate, probe)
             if candidate_meets_primary_profile(item):
                 passed.append(item)
+        if not passed:
+            if channel_id in CCTV_HEADER_COMPAT_CHANNEL_IDS:
+                history_fallbacks: list[tuple[Candidate, ProbeResult]] = []
+                for url in urls:
+                    candidate = build_candidate(
+                        source="cctv-core-history",
+                        url=url,
+                        title=title,
+                        channel_id=channel_id,
+                        country="CN",
+                        languages=("zho",),
+                        group_title=channel_group,
+                        website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+                        channel_group=channel_group,
+                    )
+                    item = build_core_cctv_history_item(candidate, history, probe_environment)
+                    if item is not None:
+                        history_fallbacks.append(item)
+                if history_fallbacks:
+                    history_fallbacks.sort(key=verified_item_rank, reverse=True)
+                    passed = history_fallbacks
         if not passed:
             continue
         passed.sort(key=verified_item_rank, reverse=True)
@@ -3656,6 +3815,7 @@ def probe_all(
 
 def main() -> int:
     args = parse_args()
+    socket.setdefaulttimeout(max(1.0, args.timeout))
     cache_dir = Path(args.cache_dir) if args.cache_dir else None
     cache = CacheStore(cache_dir, ttl_seconds=args.cache_ttl)
     history_path = Path(args.history) if args.history else None
