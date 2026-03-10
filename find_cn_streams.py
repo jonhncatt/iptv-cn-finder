@@ -361,6 +361,18 @@ CCTV_CORE_RECOVERY_URLS = {
         "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
     ),
 }
+SATELLITE_CORE_RECOVERY_URLS = {
+    "DragonTV.cn": (
+        "http://bp-resource-dfl.bestv.cn/148/3/video.m3u8",
+        "https://bp-resource-dfl.bestv.cn/148/3/video.m3u8",
+        "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
+    ),
+    "ZhejiangSatelliteTV.cn": (
+        "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+        "https://play-qukan.cztv.com/live/1746687519046362.m3u8",
+        "http://112.27.235.94:8000/hls/28/index.m3u8",
+    ),
+}
 STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
@@ -3274,6 +3286,90 @@ def recover_core_cctv_channels(
     return verified_items, grouped_items
 
 
+def recover_core_satellite_channels(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    *,
+    timeout: float,
+    use_ffprobe: bool,
+    retries: int,
+    sequence_delay: float,
+    content_timeout: float,
+    history: HistoryStore,
+    probe_environment: str,
+    verbose: bool,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    selected_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
+    changed = False
+    for channel_id, urls in SATELLITE_CORE_RECOVERY_URLS.items():
+        if channel_id in selected_channel_ids:
+            continue
+        title = SATELLITE_CHANNEL_LABELS.get(channel_id)
+        if not title:
+            continue
+        channel_group = target_channel_group(channel_id)
+        if channel_group != "卫视":
+            continue
+        passed: list[tuple[Candidate, ProbeResult]] = []
+        for url in urls:
+            candidate = build_candidate(
+                source="satellite-recovery",
+                url=url,
+                title=title,
+                channel_id=channel_id,
+                country="CN",
+                languages=("zho",),
+                group_title=channel_group,
+                channel_group=channel_group,
+            )
+            probe = probe_candidate(
+                candidate,
+                timeout=timeout,
+                use_ffprobe=use_ffprobe,
+                retries=retries,
+                stability_checks=2,
+                sequence_delay=sequence_delay,
+            )
+            if not probe.ok:
+                continue
+            probe = annotate_probe_with_content(candidate, probe, timeout=max(1.0, content_timeout))
+            history.record(candidate, probe, probe_environment)
+            probe = dataclasses.replace(
+                probe,
+                history_local_score=history.score(candidate.url, "local"),
+                history_cloud_score=history.score(candidate.url, "cloud"),
+            )
+            item = (candidate, probe)
+            if candidate_meets_primary_profile(item, relaxed=True):
+                passed.append(item)
+        if not passed:
+            continue
+        passed.sort(key=verified_item_rank, reverse=True)
+        selected_item = passed[0]
+        verified_items.append(selected_item)
+        grouped_items.append([selected_item, *[item for item in passed[1:] if item != selected_item]])
+        selected_channel_ids.add(channel_id)
+        changed = True
+        log(f"recovered core satellite channel: {title}", verbose=verbose)
+
+    if changed:
+        verified_items.sort(
+            key=lambda item: (
+                GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+                item[0].channel_group or "",
+                item[0].title,
+            )
+        )
+        grouped_items.sort(
+            key=lambda items: (
+                GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+                items[0][0].channel_group or "",
+                items[0][0].title,
+            )
+        )
+    return verified_items, grouped_items
+
+
 def format_group_title(candidate: Candidate) -> str | None:
     if candidate.group_title in {"央视", "卫视"}:
         return candidate.group_title
@@ -3596,6 +3692,18 @@ def main() -> int:
         args.probe_environment,
     )
     verified, grouped_verified = recover_core_cctv_channels(
+        verified,
+        grouped_verified,
+        timeout=args.timeout,
+        use_ffprobe=args.ffprobe,
+        retries=max(0, args.retries),
+        sequence_delay=max(0.5, args.live_sequence_delay),
+        content_timeout=max(1.0, args.content_check_timeout),
+        history=history,
+        probe_environment=args.probe_environment,
+        verbose=args.verbose,
+    )
+    verified, grouped_verified = recover_core_satellite_channels(
         verified,
         grouped_verified,
         timeout=args.timeout,
