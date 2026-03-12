@@ -96,10 +96,13 @@ PUBLISHED_BACKUP_PLAYLIST_PATH = Path("m3u/chinese-public-with-backups.m3u")
 PUBLISHED_REPAIR_PLAYLIST_PATH = Path("m3u/chinese-public-repair.m3u")
 LEGACY_BASELINE_PLAYLIST_PATH = Path("m3u/chinese-public-verified-legacy-413cc62.m3u")
 DEFAULT_HISTORY_PATH = Path("state/probe-history.json")
+DEFAULT_FEEDBACK_PATH = Path("state/manual-feedback.json")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
     "cdn.jsdelivr.net/gh/namegenliang/fast-github-access",
 )
+ULTRA_HD_MARKERS = ("4k", "8k", "uhd", "超高清")
+ULTRA_HD_CHANNEL_IDS = {"CCTV4K.cn", "CCTV8K.cn"}
 CCTV_OFFICIAL_WEBSITES = {
     "CCTV1.cn": "https://tv.cctv.com/live/cctv1/",
     "CCTV13.cn": "https://tv.cctv.com/live/cctv13/",
@@ -303,9 +306,13 @@ PREFERRED_URL_PATTERNS_BY_TITLE = {
     "东南卫视": ("112.27.235.94:8000/hls/38",),
     "辽宁卫视": ("112.27.235.94:8000/hls/47",),
     "浙江卫视": (
-        "112.27.235.94:8000/hls/28",
-        "ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+        "112.27.235.94:8000/hls/29",
         "play-qukan.cztv.com",
+        "ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+    ),
+    "CCTV-8 电视剧": (
+        "112.27.235.94:8000/hls/9",
+        "101.35.240.114:88/live.php?id=CCTV8",
     ),
     "辽宁体育": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E4%BD%93%E8%82%B2",),
     "辽宁公共": ("dassby.qqff.top:99/live/%E8%BE%BD%E5%AE%81%E5%85%AC%E5%85%B1",),
@@ -373,6 +380,10 @@ CCTV_CORE_RECOVERY_URLS = {
     "CCTV6.cn": (
         "http://112.27.235.94:8000/hls/7/index.m3u8",
     ),
+    "CCTV8.cn": (
+        "http://112.27.235.94:8000/hls/9/index.m3u8",
+        "http://101.35.240.114:88/live.php?id=CCTV8",
+    ),
 }
 SATELLITE_CORE_RECOVERY_URLS = {
     "DragonTV.cn": (
@@ -383,7 +394,7 @@ SATELLITE_CORE_RECOVERY_URLS = {
     "ZhejiangSatelliteTV.cn": (
         "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
         "https://play-qukan.cztv.com/live/1746687519046362.m3u8",
-        "http://112.27.235.94:8000/hls/28/index.m3u8",
+        "http://112.27.235.94:8000/hls/29/index.m3u8",
     ),
 }
 STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
@@ -405,6 +416,14 @@ PRIMARY_BLOCKED_FLAGS = {
     "frozen-frames",
     "repeating-segments",
     "slow-source",
+}
+FEEDBACK_BLOCKED_FLAGS = {
+    "black-frame",
+    "content-check-empty",
+    "empty-playlist",
+    "ended-playlist",
+    "frozen-frames",
+    "repeating-segments",
 }
 HISTORY_FALLBACK_GROUPS = {"央视", "卫视"}
 HISTORY_FALLBACK_MIN_SPEED = 1.3
@@ -492,7 +511,7 @@ MANUAL_PREFERRED_CANDIDATES = (
     {
         "channel_id": "ZhejiangSatelliteTV.cn",
         "title": "浙江卫视",
-        "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
+        "url": "http://112.27.235.94:8000/hls/29/index.m3u8",
     },
     {
         "channel_id": "LiaoningSports.local",
@@ -898,6 +917,116 @@ class HistoryStore:
         self.path.write_text(json.dumps(self.payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def stable_stream_key(url: str) -> str:
+    normalized = normalize_url(url)
+    if not normalized:
+        return normalized
+    try:
+        parts = urlsplit(normalized)
+    except ValueError:
+        return normalized
+    if not parts.scheme or not parts.netloc:
+        return normalized
+    try:
+        filtered_query = urlencode(
+            [
+                (key, value)
+                for key, value in parse_qsl(parts.query, keep_blank_values=True)
+                if key.strip().lower() not in VOLATILE_QUERY_KEYS
+            ],
+            doseq=True,
+        )
+    except ValueError:
+        filtered_query = parts.query
+    return urlunsplit(
+        (
+            (parts.scheme or "").lower(),
+            (parts.netloc or "").lower(),
+            parts.path or "/",
+            filtered_query,
+            "",
+        )
+    )
+
+
+class FeedbackStore:
+    def __init__(self, path: Path | None) -> None:
+        self.path = path
+        self.payload: dict[str, Any] = {
+            "version": 1,
+            "updated_at": None,
+            "channels": {},
+        }
+        if self.path and self.path.exists():
+            try:
+                loaded = json.loads(self.path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                loaded = None
+            if isinstance(loaded, dict) and isinstance(loaded.get("channels"), dict):
+                self.payload = loaded
+        self._preferred_keys_by_channel: dict[str, tuple[str, ...]] = {}
+        self._preferred_urls_by_channel: dict[str, tuple[str, ...]] = {}
+        self._blocked_keys_by_channel: dict[str, frozenset[str]] = {}
+        self._rebuild_index()
+
+    def _rebuild_index(self) -> None:
+        self._preferred_keys_by_channel = {}
+        self._preferred_urls_by_channel = {}
+        self._blocked_keys_by_channel = {}
+        for channel_id, config in (self.payload.get("channels") or {}).items():
+            if not isinstance(channel_id, str) or not isinstance(config, dict):
+                continue
+            preferred_urls: list[str] = []
+            preferred_keys: list[str] = []
+            blocked_keys: set[str] = set()
+            for entry in config.get("preferred") or ():
+                url = entry if isinstance(entry, str) else (entry or {}).get("url")
+                normalized_url = normalize_url(str(url or ""))
+                key = stable_stream_key(normalized_url)
+                if normalized_url and key:
+                    preferred_urls.append(normalized_url)
+                    preferred_keys.append(key)
+            for entry in config.get("blocked") or ():
+                url = entry if isinstance(entry, str) else (entry or {}).get("url")
+                key = stable_stream_key(str(url or ""))
+                if key:
+                    blocked_keys.add(key)
+            self._preferred_urls_by_channel[channel_id] = tuple(preferred_urls)
+            self._preferred_keys_by_channel[channel_id] = tuple(preferred_keys)
+            self._blocked_keys_by_channel[channel_id] = frozenset(blocked_keys)
+
+    def preferred_rank(self, candidate: Candidate) -> int:
+        if not candidate.channel_id:
+            return 0
+        preferred_keys = self._preferred_keys_by_channel.get(candidate.channel_id, ())
+        if not preferred_keys:
+            return 0
+        key = stable_stream_key(candidate.url)
+        for index, preferred_key in enumerate(preferred_keys):
+            if preferred_key == key:
+                return len(preferred_keys) - index
+        return 0
+
+    def is_blocked(self, candidate: Candidate) -> bool:
+        if not candidate.channel_id:
+            return False
+        blocked_keys = self._blocked_keys_by_channel.get(candidate.channel_id, frozenset())
+        return stable_stream_key(candidate.url) in blocked_keys if blocked_keys else False
+
+    def preferred_urls(self, channel_id: str) -> tuple[str, ...]:
+        return self._preferred_urls_by_channel.get(channel_id, ())
+
+    def preferred_channel_ids(self) -> tuple[str, ...]:
+        return tuple(channel_id for channel_id, urls in self._preferred_urls_by_channel.items() if urls)
+
+    def save(self) -> None:
+        if not self.path:
+            return
+        self.payload["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -971,6 +1100,11 @@ def parse_args() -> argparse.Namespace:
         help="Persistent JSON history used for long-term stability scoring.",
     )
     parser.add_argument(
+        "--feedback",
+        default=str(DEFAULT_FEEDBACK_PATH),
+        help="Persistent JSON feedback file used to pin or block specific sources.",
+    )
+    parser.add_argument(
         "--probe-environment",
         choices=PROBE_ENVIRONMENTS,
         default=DEFAULT_PROBE_ENVIRONMENT if DEFAULT_PROBE_ENVIRONMENT in PROBE_ENVIRONMENTS else "local",
@@ -981,6 +1115,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=260,
         help="Maximum number of ranked candidates to probe. Use 0 for exhaustive mode.",
+    )
+    parser.add_argument(
+        "--channel",
+        action="append",
+        default=[],
+        help="Only probe these target channels. Repeat or comma-separate values like CCTV-1, 东方卫视, 辽宁卫视.",
     )
     parser.add_argument(
         "--timeout",
@@ -1187,6 +1327,17 @@ def host_is_ip_address(url: str) -> bool:
     return bool(IP_HOST_RE.fullmatch(hostname))
 
 
+def text_marks_ultra_hd_variant(*texts: str | None) -> bool:
+    searchable = " ".join(text.lower() for text in texts if text)
+    return any(marker in searchable for marker in ULTRA_HD_MARKERS)
+
+
+def matched_channel_looks_like_ultra_hd_variant(channel_id: str | None, *texts: str | None) -> bool:
+    if not channel_id or channel_id in ULTRA_HD_CHANNEL_IDS:
+        return False
+    return text_marks_ultra_hd_variant(*texts)
+
+
 def canonicalize_channel_alias(text: str | None) -> str:
     if not text:
         return ""
@@ -1290,9 +1441,13 @@ def latency_rank(elapsed_ms: int) -> int:
     return 0
 
 
-def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, int, int, int, int]:
+def candidate_rank(
+    candidate: Candidate,
+    feedback: FeedbackStore | None = None,
+) -> tuple[int, int, int, int, int, int, int, int, int, int, int]:
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
     preferred_rank = int(any(pattern in candidate.url for pattern in preferred_patterns))
+    feedback_rank = feedback.preferred_rank(candidate) if feedback else 0
     live_rank = live_url_rank(candidate.url)
     non_vod_rank = int(not url_looks_like_vod(candidate.url))
     language_match = int(bool(set(candidate.languages) & CHINESE_LANGUAGE_CODES))
@@ -1301,6 +1456,7 @@ def candidate_rank(candidate: Candidate) -> tuple[int, int, int, int, int, int, 
     domain_match = int(not host_is_ip_address(candidate.url))
     https_match = int(candidate.url.startswith("https://"))
     return (
+        feedback_rank,
         source_priority(candidate.source),
         preferred_rank,
         non_vod_rank,
@@ -1359,6 +1515,7 @@ def choose_display_title(
 
 def verified_item_rank(
     item: tuple[Candidate, ProbeResult],
+    feedback: FeedbackStore | None = None,
 ) -> tuple[int, ...]:
     candidate, probe = item
     preferred_patterns = PREFERRED_URL_PATTERNS_BY_TITLE.get(candidate.title, ())
@@ -1367,6 +1524,7 @@ def verified_item_rank(
         if pattern in candidate.url:
             preferred_rank = len(preferred_patterns) - index
             break
+    feedback_rank = feedback.preferred_rank(candidate) if feedback else 0
     probe_confidence = int("slow" not in probe.detail.lower())
     ffprobe_video = int(probe.via_ffprobe and "video" in probe.detail.lower())
     fast_probe = latency_rank(probe.elapsed_ms)
@@ -1374,6 +1532,7 @@ def verified_item_rank(
     custom_header_free = int(not candidate_uses_custom_headers(candidate))
     non_volatile_url = int(not url_has_volatile_signature(candidate.url))
     return (
+        feedback_rank,
         ffprobe_video,
         clean_content,
         custom_header_free,
@@ -1467,8 +1626,25 @@ def candidate_meets_primary_profile(item: tuple[Candidate, ProbeResult], *, rela
     return True
 
 
+def candidate_meets_feedback_profile(item: tuple[Candidate, ProbeResult]) -> bool:
+    _candidate, probe = item
+    flags = set(probe.anomaly_flags)
+    if flags & FEEDBACK_BLOCKED_FLAGS:
+        return False
+    if probe.startup_score < 35:
+        return False
+    if probe.live_score < 35:
+        return False
+    if probe.buffer_score < 24:
+        return False
+    if probe.content_score < 45:
+        return False
+    return True
+
+
 def collapse_verified_items(
     verified_items: list[tuple[Candidate, ProbeResult]],
+    feedback: FeedbackStore | None = None,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     by_title: dict[str, list[tuple[Candidate, ProbeResult]]] = {}
     for item in verified_items:
@@ -1477,7 +1653,7 @@ def collapse_verified_items(
 
     grouped = []
     for items in by_title.values():
-        items.sort(key=verified_item_rank, reverse=True)
+        items.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
         grouped.append(items)
 
     grouped.sort(
@@ -1510,6 +1686,20 @@ def collapse_verified_items(
             selected_groups.append(ordered_with_preferred(items, preferred))
             continue
 
+        if feedback is not None:
+            preferred = next(
+                (
+                    item
+                    for item in items
+                    if feedback.preferred_rank(item[0]) > 0 and candidate_meets_feedback_profile(item)
+                ),
+                None,
+            )
+            if preferred is not None:
+                collapsed.append(preferred)
+                selected_groups.append(ordered_with_preferred(items, preferred))
+                continue
+
         group_name = items[0][0].channel_group or ""
         if group_name in {"央视", "卫视"} and candidate_meets_primary_profile(items[0], relaxed=True):
             collapsed.append(items[0])
@@ -1532,18 +1722,29 @@ def collapse_verified_items(
     return collapsed, selected_groups
 
 
-def best_candidate(existing: Candidate, challenger: Candidate) -> Candidate:
-    return challenger if candidate_rank(challenger) > candidate_rank(existing) else existing
+def best_candidate(
+    existing: Candidate,
+    challenger: Candidate,
+    feedback: FeedbackStore | None = None,
+) -> Candidate:
+    return (
+        challenger
+        if candidate_rank(challenger, feedback) > candidate_rank(existing, feedback)
+        else existing
+    )
 
 
-def dedupe_candidates(candidates: Iterable[Candidate]) -> list[Candidate]:
+def dedupe_candidates(
+    candidates: Iterable[Candidate],
+    feedback: FeedbackStore | None = None,
+) -> list[Candidate]:
     deduped: dict[str, Candidate] = {}
     for candidate in candidates:
         host = (urlsplit(candidate.url).hostname or "").lower()
         if host in PROBE_BLOCKED_HOSTS:
             continue
         deduped[candidate.url] = (
-            best_candidate(deduped[candidate.url], candidate)
+            best_candidate(deduped[candidate.url], candidate, feedback)
             if candidate.url in deduped
             else candidate
         )
@@ -1630,6 +1831,12 @@ def load_iptv_org_candidates(
                 continue
 
         channel_id = (channel or {}).get("id")
+        if matched_channel_looks_like_ultra_hd_variant(
+            channel_id,
+            stream.get("title"),
+            (channel or {}).get("name"),
+        ):
+            continue
         title = choose_display_title(channel_id, stream.get("title"), channel)
         languages = safe_tuple((feed or {}).get("languages"))
         country = (channel or {}).get("country")
@@ -1862,6 +2069,17 @@ def load_extra_m3u_candidates(
             context=group_title,
         )
         if not channel_id:
+            pending_attrs = {}
+            pending_title = ""
+            pending_user_agent = None
+            pending_referrer = None
+            continue
+        if matched_channel_looks_like_ultra_hd_variant(
+            channel_id,
+            raw_title,
+            pending_attrs.get("tvg-name"),
+            pending_attrs.get("tvg-id"),
+        ):
             pending_attrs = {}
             pending_title = ""
             pending_user_agent = None
@@ -3267,6 +3485,8 @@ def inject_history_fallbacks(
     grouped_items: list[list[tuple[Candidate, ProbeResult]]],
     history: HistoryStore,
     probe_environment: str,
+    feedback: FeedbackStore | None = None,
+    selected_channel_ids: set[str] | None = None,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     selected_titles = {candidate.title for candidate, _probe in verified_items}
     fallback_candidates: list[Candidate] = []
@@ -3286,8 +3506,12 @@ def inject_history_fallbacks(
         return verified_items, grouped_items
 
     fallback_by_title: dict[str, list[Candidate]] = {}
-    for candidate in dedupe_candidates(fallback_candidates):
+    for candidate in dedupe_candidates(fallback_candidates, feedback):
         if candidate.channel_group not in HISTORY_FALLBACK_GROUPS:
+            continue
+        if selected_channel_ids and candidate.channel_id not in selected_channel_ids:
+            continue
+        if feedback and feedback.is_blocked(candidate):
             continue
         if candidate.title in selected_titles:
             continue
@@ -3305,6 +3529,7 @@ def inject_history_fallbacks(
             scored.append(
                 (
                     (
+                        float(feedback.preferred_rank(candidate) if feedback else 0),
                         speed_x,
                         item[1].history_local_score,
                         item[1].history_cloud_score,
@@ -3349,12 +3574,16 @@ def recover_core_cctv_channels(
     content_timeout: float,
     history: HistoryStore,
     probe_environment: str,
-    verbose: bool,
+    feedback: FeedbackStore | None = None,
+    selected_channel_ids: set[str] | None = None,
+    verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
-    selected_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
+    present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
     changed = False
     for channel_id, urls in CCTV_CORE_RECOVERY_URLS.items():
-        if channel_id in selected_channel_ids:
+        if selected_channel_ids and channel_id not in selected_channel_ids:
+            continue
+        if channel_id in present_channel_ids:
             continue
         title = CCTV_CHANNEL_LABELS.get(channel_id)
         if not title:
@@ -3376,6 +3605,8 @@ def recover_core_cctv_channels(
                 website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
                 channel_group=channel_group,
             )
+            if feedback and feedback.is_blocked(candidate):
+                continue
             probe = probe_candidate(
                 candidate,
                 timeout=timeout,
@@ -3411,19 +3642,21 @@ def recover_core_cctv_channels(
                         website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
                         channel_group=channel_group,
                     )
+                    if feedback and feedback.is_blocked(candidate):
+                        continue
                     item = build_core_cctv_history_item(candidate, history, probe_environment)
                     if item is not None:
                         history_fallbacks.append(item)
                 if history_fallbacks:
-                    history_fallbacks.sort(key=verified_item_rank, reverse=True)
+                    history_fallbacks.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
                     passed = history_fallbacks
         if not passed:
             continue
-        passed.sort(key=verified_item_rank, reverse=True)
+        passed.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
         selected_item = passed[0]
         verified_items.append(selected_item)
         grouped_items.append([selected_item, *[item for item in passed[1:] if item != selected_item]])
-        selected_channel_ids.add(channel_id)
+        present_channel_ids.add(channel_id)
         changed = True
         log(f"recovered core cctv channel: {title}", verbose=verbose)
 
@@ -3456,12 +3689,16 @@ def recover_core_satellite_channels(
     content_timeout: float,
     history: HistoryStore,
     probe_environment: str,
-    verbose: bool,
+    feedback: FeedbackStore | None = None,
+    selected_channel_ids: set[str] | None = None,
+    verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
-    selected_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
+    present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
     changed = False
     for channel_id, urls in SATELLITE_CORE_RECOVERY_URLS.items():
-        if channel_id in selected_channel_ids:
+        if selected_channel_ids and channel_id not in selected_channel_ids:
+            continue
+        if channel_id in present_channel_ids:
             continue
         title = SATELLITE_CHANNEL_LABELS.get(channel_id)
         if not title:
@@ -3481,6 +3718,8 @@ def recover_core_satellite_channels(
                 group_title=channel_group,
                 channel_group=channel_group,
             )
+            if feedback and feedback.is_blocked(candidate):
+                continue
             probe = probe_candidate(
                 candidate,
                 timeout=timeout,
@@ -3503,13 +3742,103 @@ def recover_core_satellite_channels(
                 passed.append(item)
         if not passed:
             continue
-        passed.sort(key=verified_item_rank, reverse=True)
+        passed.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
         selected_item = passed[0]
         verified_items.append(selected_item)
         grouped_items.append([selected_item, *[item for item in passed[1:] if item != selected_item]])
-        selected_channel_ids.add(channel_id)
+        present_channel_ids.add(channel_id)
         changed = True
         log(f"recovered core satellite channel: {title}", verbose=verbose)
+
+    if changed:
+        verified_items.sort(
+            key=lambda item: (
+                GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+                item[0].channel_group or "",
+                item[0].title,
+            )
+        )
+        grouped_items.sort(
+            key=lambda items: (
+                GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+                items[0][0].channel_group or "",
+                items[0][0].title,
+            )
+        )
+    return verified_items, grouped_items
+
+
+def recover_feedback_channels(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    *,
+    timeout: float,
+    use_ffprobe: bool,
+    retries: int,
+    stability_checks: int,
+    sequence_delay: float,
+    content_timeout: float,
+    history: HistoryStore,
+    probe_environment: str,
+    feedback: FeedbackStore,
+    selected_channel_ids: set[str] | None = None,
+    verbose: bool = False,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
+    changed = False
+    for channel_id in feedback.preferred_channel_ids():
+        if selected_channel_ids and channel_id not in selected_channel_ids:
+            continue
+        if channel_id in present_channel_ids:
+            continue
+        title = TARGET_CHANNEL_LABELS.get(channel_id)
+        channel_group = target_channel_group(channel_id)
+        if not title or not channel_group:
+            continue
+        passed: list[tuple[Candidate, ProbeResult]] = []
+        for url in feedback.preferred_urls(channel_id):
+            candidate = build_candidate(
+                source="feedback-preferred",
+                url=url,
+                title=title,
+                channel_id=channel_id,
+                country="CN",
+                languages=("zho",),
+                group_title=channel_group,
+                website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+                channel_group=channel_group,
+            )
+            if feedback.is_blocked(candidate):
+                continue
+            probe = probe_candidate(
+                candidate,
+                timeout=timeout,
+                use_ffprobe=use_ffprobe,
+                retries=retries,
+                stability_checks=max(1, stability_checks),
+                sequence_delay=sequence_delay,
+            )
+            if not probe.ok:
+                continue
+            probe = annotate_probe_with_content(candidate, probe, timeout=max(1.0, content_timeout))
+            history.record(candidate, probe, probe_environment)
+            probe = dataclasses.replace(
+                probe,
+                history_local_score=history.score(candidate.url, "local"),
+                history_cloud_score=history.score(candidate.url, "cloud"),
+            )
+            item = (candidate, probe)
+            if candidate_meets_feedback_profile(item) or candidate_meets_primary_profile(item, relaxed=True):
+                passed.append(item)
+        if not passed:
+            continue
+        passed.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
+        selected_item = passed[0]
+        verified_items.append(selected_item)
+        grouped_items.append([selected_item, *[item for item in passed[1:] if item != selected_item]])
+        present_channel_ids.add(channel_id)
+        changed = True
+        log(f"recovered feedback-preferred channel: {title}", verbose=verbose)
 
     if changed:
         verified_items.sort(
@@ -3615,6 +3944,8 @@ def write_report(
     keep_failures: bool,
     probe_environment: str,
     history_path: Path | None,
+    feedback_path: Path | None,
+    requested_channel_ids: tuple[str, ...],
     backup_count: int,
 ) -> None:
     group_counts: dict[str, int] = {}
@@ -3625,6 +3956,8 @@ def write_report(
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "probe_environment": probe_environment,
         "history_path": str(history_path) if history_path else None,
+        "feedback_path": str(feedback_path) if feedback_path else None,
+        "requested_channels": [TARGET_CHANNEL_LABELS.get(channel_id, channel_id) for channel_id in requested_channel_ids],
         "success_count": len(verified_items),
         "failure_count": len(failed_items),
         "group_counts": group_counts,
@@ -3659,7 +3992,12 @@ def write_report(
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candidate]:
+def load_candidates(
+    args: argparse.Namespace,
+    cache: CacheStore,
+    feedback: FeedbackStore | None = None,
+    selected_channel_ids: set[str] | None = None,
+) -> list[Candidate]:
     candidates: list[Candidate] = []
     providers = list(dict.fromkeys(args.provider))
 
@@ -3752,8 +4090,11 @@ def load_candidates(args: argparse.Namespace, cache: CacheStore) -> list[Candida
             )
         )
 
-    deduped = dedupe_candidates(candidates)
-    deduped.sort(key=candidate_rank, reverse=True)
+    deduped = dedupe_candidates(candidates, feedback)
+    deduped = [candidate for candidate in deduped if not feedback or not feedback.is_blocked(candidate)]
+    if selected_channel_ids:
+        deduped = [candidate for candidate in deduped if candidate.channel_id in selected_channel_ids]
+    deduped.sort(key=lambda candidate: candidate_rank(candidate, feedback), reverse=True)
     if args.limit > 0:
         deduped = deduped[: args.limit]
     return deduped
@@ -3767,7 +4108,8 @@ def probe_all(
     retries: int,
     stability_checks: int,
     sequence_delay: float,
-    verbose: bool,
+    feedback: FeedbackStore | None = None,
+    verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[tuple[Candidate, ProbeResult]]]:
     verified: list[tuple[Candidate, ProbeResult]] = []
     failed: list[tuple[Candidate, ProbeResult]] = []
@@ -3803,14 +4145,34 @@ def probe_all(
                 )
 
     verified.sort(
-        key=lambda item: (candidate_rank(item[0]), -item[1].elapsed_ms),
+        key=lambda item: (candidate_rank(item[0], feedback), -item[1].elapsed_ms),
         reverse=True,
     )
     failed.sort(
-        key=lambda item: (candidate_rank(item[0]), -item[1].elapsed_ms),
+        key=lambda item: (candidate_rank(item[0], feedback), -item[1].elapsed_ms),
         reverse=True,
     )
     return verified, failed
+
+
+def iter_channel_filters(raw_filters: Iterable[str]) -> Iterable[str]:
+    for raw_value in raw_filters:
+        for part in re.split(r"[,，]", raw_value or ""):
+            value = part.strip()
+            if value:
+                yield value
+
+
+def resolve_channel_filters(raw_filters: Iterable[str]) -> tuple[set[str], list[str]]:
+    selected_channel_ids: set[str] = set()
+    unresolved: list[str] = []
+    for value in iter_channel_filters(raw_filters):
+        channel_id = match_target_channel_id(value, context=value)
+        if channel_id:
+            selected_channel_ids.add(channel_id)
+        else:
+            unresolved.append(value)
+    return selected_channel_ids, unresolved
 
 
 def main() -> int:
@@ -3820,8 +4182,19 @@ def main() -> int:
     cache = CacheStore(cache_dir, ttl_seconds=args.cache_ttl)
     history_path = Path(args.history) if args.history else None
     history = HistoryStore(history_path)
+    feedback_path = Path(args.feedback) if args.feedback else None
+    feedback = FeedbackStore(feedback_path)
+    feedback.save()
+    requested_channel_ids, unresolved_filters = resolve_channel_filters(args.channel)
+    if unresolved_filters:
+        raise SystemExit(f"unknown channel filters: {', '.join(unresolved_filters)}")
 
-    candidates = load_candidates(args, cache)
+    candidates = load_candidates(
+        args,
+        cache,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
+    )
     log(f"loaded {len(candidates)} ranked candidates", verbose=args.verbose)
 
     verified, failed = probe_all(
@@ -3832,6 +4205,7 @@ def main() -> int:
         retries=max(0, args.retries),
         stability_checks=max(1, args.stability_checks),
         sequence_delay=max(0.5, args.live_sequence_delay),
+        feedback=feedback,
         verbose=args.verbose,
     )
     verified = annotate_content_scores(
@@ -3844,12 +4218,14 @@ def main() -> int:
     history.save()
     verified = attach_history_scores(verified, history)
     failed = attach_history_scores(failed, history)
-    verified, grouped_verified = collapse_verified_items(verified)
+    verified, grouped_verified = collapse_verified_items(verified, feedback)
     verified, grouped_verified = inject_history_fallbacks(
         verified,
         grouped_verified,
         history,
         args.probe_environment,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
     )
     verified, grouped_verified = recover_core_cctv_channels(
         verified,
@@ -3861,6 +4237,8 @@ def main() -> int:
         content_timeout=max(1.0, args.content_check_timeout),
         history=history,
         probe_environment=args.probe_environment,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
         verbose=args.verbose,
     )
     verified, grouped_verified = recover_core_satellite_channels(
@@ -3873,6 +4251,23 @@ def main() -> int:
         content_timeout=max(1.0, args.content_check_timeout),
         history=history,
         probe_environment=args.probe_environment,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
+        verbose=args.verbose,
+    )
+    verified, grouped_verified = recover_feedback_channels(
+        verified,
+        grouped_verified,
+        timeout=args.timeout,
+        use_ffprobe=args.ffprobe,
+        retries=max(0, args.retries),
+        stability_checks=max(1, args.stability_checks),
+        sequence_delay=max(0.5, args.live_sequence_delay),
+        content_timeout=max(1.0, args.content_check_timeout),
+        history=history,
+        probe_environment=args.probe_environment,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
         verbose=args.verbose,
     )
     history.save()
@@ -3892,6 +4287,8 @@ def main() -> int:
         keep_failures=args.keep_failures,
         probe_environment=args.probe_environment,
         history_path=history_path,
+        feedback_path=feedback_path,
+        requested_channel_ids=tuple(sorted(requested_channel_ids)),
         backup_count=max(1, args.backup_count),
     )
 

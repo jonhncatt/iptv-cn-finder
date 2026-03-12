@@ -28,6 +28,8 @@
 - 记录首开速度、片段速度、内容异常分数，优先保留更快更稳的源
 - 额外做连续片段抓取和缓冲余量评分，避免只看首开快却长看卡顿
 - 用 `ffmpeg` 做短时连续读流，优先剔除“首开快但长看会缓冲”的源
+- 支持人工反馈文件，能把某条源锁成优先主源，或把串台/错误源直接拉黑
+- 支持只扫描指定频道，适合单独修 `CCTV-1`、`东方卫视` 这类问题
 - 额外生成一份“主源 + 备用源”的备份播放列表
 - 主列表会优先保留低卡顿源，明显慢源会降级到备用或抢修订阅
 - 历史回填只补“近期且高稳定”的源，避免旧失效源回流到主列表
@@ -66,6 +68,7 @@ python3 find_cn_streams.py --ffprobe --timeout 14 --workers 12 --retries 2 --ver
 脚本还会更新一份长期历史文件：
 
 - `state/probe-history.json`
+- `state/manual-feedback.json`
 
 默认策略会做稳定性检查，并优先保留更可靠的候选源。
 脚本默认不偏好裸 IP 源，但当前也会保留一部分已经实测可用的手工优选源。
@@ -102,6 +105,18 @@ python3 find_cn_streams.py --ffprobe --limit 150 --verbose
 python3 find_cn_streams.py --ffprobe --probe-environment local --verbose
 ```
 
+只扫几个指定频道：
+
+```bash
+python3 find_cn_streams.py --ffprobe --channel "东方卫视" --channel "浙江卫视" --channel "CCTV-8" --verbose
+```
+
+也可以逗号分隔写在一条参数里：
+
+```bash
+python3 find_cn_streams.py --channel "CCTV-6, CCTV-8, 辽宁卫视" --verbose
+```
+
 合并你自己的本地 `m3u` 一起筛：
 
 ```bash
@@ -125,6 +140,33 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 - 保存长期稳定性记忆
 - 同一条源会分别累计 `local` 和 `cloud` 两套分数
+
+`state/manual-feedback.json`
+
+- 保存人工锁定和人工拉黑规则
+- `preferred` 里的链接会被排到最前面，尽量保持不变
+- `blocked` 里的链接会直接跳过，适合处理串台、4K 误标、长看总缓存这类问题
+- 文件按 `channel_id` 组织，直接手改 JSON 即可
+
+示例：
+
+```json
+{
+  "channels": {
+    "ZhejiangSatelliteTV.cn": {
+      "title": "浙江卫视",
+      "preferred": [
+        { "url": "http://112.27.235.94:8000/hls/29/index.m3u8" }
+      ],
+      "blocked": [
+        { "url": "http://112.27.235.94:8000/hls/28/index.m3u8" }
+      ]
+    }
+  }
+}
+```
+
+如果你是直接把反馈告诉我，也可以只说“哪个频道、哪条 URL 要锁定/拉黑”，我会把它写进这个文件。
 
 ## GitHub 订阅
 

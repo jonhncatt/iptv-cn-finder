@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-12T00:36:33Z",
+  "channels": {
+    "DragonTV.cn": {
+      "title": "东方卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
+          "note": "浙江卫视误指到的这条应归东方卫视，优先作为常规东方卫视候选。"
+        },
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
+          "note": "优先常规东方卫视源，避开 4K 或非实时变体。"
+        }
+      ],
+      "blocked": []
+    },
+    "ZhejiangSatelliteTV.cn": {
+      "title": "浙江卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/29/index.m3u8",
+          "note": "用户反馈浙江卫视要优先保持为正牌浙江卫视。"
+        }
+      ],
+      "blocked": [
+        {
+          "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
+          "reason": "用户反馈这条实际播放东方卫视，不应再作为浙江卫视。"
+        }
+      ]
+    },
+    "LiaoningSatelliteTV.cn": {
+      "title": "辽宁卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/47/index.m3u8",
+          "note": "用户要求辽宁卫视保持可用。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV6.cn": {
+      "title": "CCTV-6 电影",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/7/index.m3u8",
+          "note": "在当前主源被反馈为长期缓存后，先固定到次优但更一致的备选。"
+        }
+      ],
+      "blocked": [
+        {
+          "url": "http://101.35.240.114:88/live.php?id=CCTV6",
+          "reason": "用户反馈当前主源长看容易缓存。"
+        }
+      ]
+    },
+    "CCTV8.cn": {
+      "title": "CCTV-8 电视剧",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/9/index.m3u8",
+          "note": "用户要求保留 CCTV-8。"
+        }
+      ],
+      "blocked": []
+    }
+  }
+}
