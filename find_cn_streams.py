@@ -15,7 +15,7 @@ import sys
 import time
 import calendar
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Collection, Iterable
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, quote, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
@@ -1018,6 +1018,14 @@ class FeedbackStore:
 
     def preferred_channel_ids(self) -> tuple[str, ...]:
         return tuple(channel_id for channel_id, urls in self._preferred_urls_by_channel.items() if urls)
+
+    def frozen_channel_ids(self, selected_channel_ids: Collection[str] | None = None) -> tuple[str, ...]:
+        selected = set(selected_channel_ids or ())
+        return tuple(
+            channel_id
+            for channel_id, urls in self._preferred_urls_by_channel.items()
+            if urls and channel_id not in selected
+        )
 
     def save(self) -> None:
         if not self.path:
@@ -3997,6 +4005,7 @@ def load_candidates(
     cache: CacheStore,
     feedback: FeedbackStore | None = None,
     selected_channel_ids: set[str] | None = None,
+    frozen_channel_ids: Collection[str] | None = None,
 ) -> list[Candidate]:
     candidates: list[Candidate] = []
     providers = list(dict.fromkeys(args.provider))
@@ -4094,6 +4103,9 @@ def load_candidates(
     deduped = [candidate for candidate in deduped if not feedback or not feedback.is_blocked(candidate)]
     if selected_channel_ids:
         deduped = [candidate for candidate in deduped if candidate.channel_id in selected_channel_ids]
+    if frozen_channel_ids:
+        frozen_channel_id_set = set(frozen_channel_ids)
+        deduped = [candidate for candidate in deduped if candidate.channel_id not in frozen_channel_id_set]
     deduped.sort(key=lambda candidate: candidate_rank(candidate, feedback), reverse=True)
     if args.limit > 0:
         deduped = deduped[: args.limit]
@@ -4175,6 +4187,74 @@ def resolve_channel_filters(raw_filters: Iterable[str]) -> tuple[set[str], list[
     return selected_channel_ids, unresolved
 
 
+def build_locked_feedback_group(
+    channel_id: str,
+    feedback: FeedbackStore,
+) -> list[tuple[Candidate, ProbeResult]]:
+    title = TARGET_CHANNEL_LABELS.get(channel_id, channel_id)
+    channel_group = target_channel_group(channel_id)
+    items: list[tuple[Candidate, ProbeResult]] = []
+    for url in feedback.preferred_urls(channel_id):
+        candidate = Candidate(
+            source="feedback-locked",
+            url=url,
+            title=title,
+            channel_id=channel_id,
+            country="CN",
+            languages=("zho",),
+            group_title=channel_group,
+            website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+            channel_group=channel_group,
+        )
+        probe = ProbeResult(
+            ok=True,
+            status=200,
+            content_type="application/x-mpegurl",
+            detail="manually locked source; probe skipped",
+            elapsed_ms=0,
+            final_url=url,
+            startup_score=100,
+            live_score=100,
+            buffer_score=100,
+            content_score=100,
+        )
+        items.append((candidate, probe))
+    return items
+
+
+def inject_locked_feedback_channels(
+    verified: list[tuple[Candidate, ProbeResult]],
+    grouped_verified: list[list[tuple[Candidate, ProbeResult]]],
+    feedback: FeedbackStore | None = None,
+    frozen_channel_ids: Collection[str] | None = None,
+    verbose: bool = False,
+) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
+    frozen_ids = tuple(dict.fromkeys(frozen_channel_ids or ()))
+    if not feedback or not frozen_ids:
+        return verified, grouped_verified
+
+    frozen_set = set(frozen_ids)
+    verified = [item for item in verified if item[0].channel_id not in frozen_set]
+    grouped_verified = [
+        items
+        for items in grouped_verified
+        if items and items[0][0].channel_id not in frozen_set
+    ]
+
+    for channel_id in frozen_ids:
+        locked_group = build_locked_feedback_group(channel_id, feedback)
+        if not locked_group:
+            continue
+        grouped_verified.append(locked_group)
+        verified.append(locked_group[0])
+        log(
+            f"kept locked feedback channel without probing: {locked_group[0][0].title}",
+            verbose=verbose,
+        )
+
+    return verified, grouped_verified
+
+
 def main() -> int:
     args = parse_args()
     socket.setdefaulttimeout(max(1.0, args.timeout))
@@ -4188,12 +4268,14 @@ def main() -> int:
     requested_channel_ids, unresolved_filters = resolve_channel_filters(args.channel)
     if unresolved_filters:
         raise SystemExit(f"unknown channel filters: {', '.join(unresolved_filters)}")
+    frozen_channel_ids = feedback.frozen_channel_ids() if not requested_channel_ids else ()
 
     candidates = load_candidates(
         args,
         cache,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
+        frozen_channel_ids=frozen_channel_ids,
     )
     log(f"loaded {len(candidates)} ranked candidates", verbose=args.verbose)
 
@@ -4219,6 +4301,13 @@ def main() -> int:
     verified = attach_history_scores(verified, history)
     failed = attach_history_scores(failed, history)
     verified, grouped_verified = collapse_verified_items(verified, feedback)
+    verified, grouped_verified = inject_locked_feedback_channels(
+        verified,
+        grouped_verified,
+        feedback=feedback,
+        frozen_channel_ids=frozen_channel_ids,
+        verbose=args.verbose,
+    )
     verified, grouped_verified = inject_history_fallbacks(
         verified,
         grouped_verified,

@@ -145,6 +145,7 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 - 保存人工锁定和人工拉黑规则
 - `preferred` 里的链接会被排到最前面，尽量保持不变
+- 已锁定频道在常规扫描里会直接跳过，不再重新探测，避免优秀源被覆盖
 - `blocked` 里的链接会直接跳过，适合处理串台、4K 误标、长看总缓存这类问题
 - 文件按 `channel_id` 组织，直接手改 JSON 即可
 
@@ -167,6 +168,7 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 ```
 
 如果你是直接把反馈告诉我，也可以只说“哪个频道、哪条 URL 要锁定/拉黑”，我会把它写进这个文件。
+如果某个已经锁定的频道后来又出问题，再单独用 `--channel` 扫它即可，不需要重扫整张表。
 
 ## GitHub 订阅
 

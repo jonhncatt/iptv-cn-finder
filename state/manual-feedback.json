@@ -1,17 +1,57 @@
 {
   "version": 1,
-  "updated_at": "2026-03-12T00:36:33Z",
+  "updated_at": "2026-03-12T01:02:55Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
       "preferred": [
         {
           "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
-          "note": "浙江卫视误指到的这条应归东方卫视，优先作为常规东方卫视候选。"
+          "note": "用户确认当前东方卫视主源播放正确且稳定，优先保留。"
         },
         {
           "url": "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
-          "note": "优先常规东方卫视源，避开 4K 或非实时变体。"
+          "note": "保留稳定备选，避开 4K 或非实时变体。"
+        }
+      ],
+      "blocked": []
+    },
+    "BeijingSatelliteTV.cn": {
+      "title": "北京卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/bjwshd.m3u8?auth=testpub",
+          "note": "用户确认北京卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "YanbianSatelliteTV.cn": {
+      "title": "延边卫视",
+      "preferred": [
+        {
+          "url": "https://srs.iyb983.cn/video/CYS/index.m3u8",
+          "note": "用户确认延边卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "HebeiSatelliteTV.cn": {
+      "title": "河北卫视",
+      "preferred": [
+        {
+          "url": "http://event.pull.hebtv.com/jishi/weishi_tingyun.m3u8",
+          "note": "用户确认河北卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "HenanSatelliteTV.cn": {
+      "title": "河南卫视",
+      "preferred": [
+        {
+          "url": "http://1.94.31.214/php/hntv.php?id=hnws",
+          "note": "用户确认河南卫视当前主源稳定，后续优先保留。"
         }
       ],
       "blocked": []
@@ -21,7 +61,7 @@
       "preferred": [
         {
           "url": "http://112.27.235.94:8000/hls/29/index.m3u8",
-          "note": "用户反馈浙江卫视要优先保持为正牌浙江卫视。"
+          "note": "用户确认浙江卫视当前主源播放正确，后续优先保留。"
         }
       ],
       "blocked": [
@@ -31,12 +71,105 @@
         }
       ]
     },
+    "HainanSatelliteTV.cn": {
+      "title": "海南卫视",
+      "preferred": [
+        {
+          "url": "http://nn.7x9d.cn/%E5%9C%B0%E6%96%B9%E5%8F%B08563/%E6%B5%B7%E5%8D%97.php?id=hnws",
+          "note": "用户确认海南卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "FujianStraitsTV.cn": {
+      "title": "海峡卫视",
+      "preferred": [
+        {
+          "url": "https://live1-fuyun.fjtv.net/haixiapd/hd/live.m3u8?_upt=e3eeff051773279249",
+          "note": "用户确认海峡卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "HunanSatelliteTV.cn": {
+      "title": "湖南卫视",
+      "preferred": [
+        {
+          "url": "http://hlsal-ldvt.qing.mgtv.com/nn_live/nn_x64/Y2RuZXhfaWQ9YWxfaGxzX2xkdnQmZT02OTE0NjA0JnY9MSZpZD1ITldTWkdTVCZzPTcwN2RiYTc2YzJjNmJmMTQ4MmUyZGYzOWU2NWM3YWFi/HNWSZGST.m3u8",
+          "note": "用户确认湖南卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "FujianSoutheastTV.cn": {
+      "title": "东南卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/38/index.m3u8",
+          "note": "用户反馈原主源有版权或播放限制，切换到可直接读取的常规备选。"
+        }
+      ],
+      "blocked": [
+        {
+          "url": "https://live1-fuyun.fjtv.net/dnpd/hd/live.m3u8?_upt=02b4ba791773276935",
+          "reason": "用户反馈当前东南卫视主源存在版权限制，实际不可看。"
+        }
+      ]
+    },
     "LiaoningSatelliteTV.cn": {
       "title": "辽宁卫视",
       "preferred": [
         {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/lnwshd.m3u8?auth=testpub",
+          "note": "用户反馈当前主源总要缓存，优先切到连续读取更稳定的备选。"
+        },
+        {
           "url": "http://112.27.235.94:8000/hls/47/index.m3u8",
-          "note": "用户要求辽宁卫视保持可用。"
+          "note": "保留原主源作为次选，避免更稳备选临时失效时直接缺台。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV1.cn": {
+      "title": "CCTV-1 综合",
+      "preferred": [
+        {
+          "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+          "note": "用户反馈当前主 CDN 变体仍无法正常看，先切到另一条已通过验证的官方 CDN。"
+        }
+      ],
+      "blocked": [
+        {
+          "url": "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+          "reason": "用户反馈当前 CCTV-1 主源仍不可看，暂时拉黑这条 CDN 变体。"
+        }
+      ]
+    },
+    "CCTV13.cn": {
+      "title": "CCTV-13 新闻",
+      "preferred": [
+        {
+          "url": "http://ldncctvwbcdtxy.liveplay.myqcloud.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "note": "局部扫描发现新的官方腾讯云变体，可通过稳定性校验，优先使用。"
+        }
+      ],
+      "blocked": [
+        {
+          "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "reason": "用户反馈当前 CCTV-13 主源不可看，暂时拉黑。"
+        }
+      ]
+    },
+    "CCTV5Plus.cn": {
+      "title": "CCTV-5+ 体育赛事",
+      "preferred": [
+        {
+          "url": "http://74.91.26.218:82/live/cctv5p.m3u8",
+          "note": "局部扫描发现更稳的可读源，优先替换原先缓存较多的 hls/6。"
+        },
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqbv/cctv5p.m3u8?auth=test20251009",
+          "note": "保留第二候选，连续读取表现优于原主源。"
         }
       ],
       "blocked": []
@@ -46,25 +179,15 @@
       "preferred": [
         {
           "url": "http://112.27.235.94:8000/hls/7/index.m3u8",
-          "note": "在当前主源被反馈为长期缓存后，先固定到次优但更一致的备选。"
+          "note": "用户确认这次 CCTV-6 主源表现很好，继续固定保留。"
         }
       ],
       "blocked": [
         {
           "url": "http://101.35.240.114:88/live.php?id=CCTV6",
-          "reason": "用户反馈当前主源长看容易缓存。"
+          "reason": "用户反馈旧主源长看容易缓存。"
         }
       ]
-    },
-    "CCTV8.cn": {
-      "title": "CCTV-8 电视剧",
-      "preferred": [
-        {
-          "url": "http://112.27.235.94:8000/hls/9/index.m3u8",
-          "note": "用户要求保留 CCTV-8。"
-        }
-      ],
-      "blocked": []
     }
   }
 }
