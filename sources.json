@@ -1,4 +1,7 @@
 {
+  "_notes": {
+    "deep_focus": "专注 CCTV 体育/影视覆盖，推荐配合 --sports-relaxed 使用。JSON 不支持注释，这里用字段备注。"
+  },
   "curated": {
     "suxuang": "https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
     "guovin": "https://raw.githubusercontent.com/Guovin/TV/gd/output/result.m3u",
@@ -20,12 +23,22 @@
     "frankwuzp-cn": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-cn.m3u",
     "frankwuzp-cmcc": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-cmcc.m3u",
     "frankwuzp-gd": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-gd.m3u",
+    "frankwuzp-2204": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-2204.m3u",
+    "frankwuzp-2202": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-2202.m3u",
+    "frankwuzp-2112": "https://raw.githubusercontent.com/frankwuzp/iptv-cn/main/tv-ipv4-2112.m3u",
+    "lylehust-sxyd": "https://raw.githubusercontent.com/lylehust/Chinese-IPTV/master/TV-SXYD.m3u",
     "free-tv-china": "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlists/playlist_china.m3u8",
     "qwerttvv-unicom": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Unicom.m3u",
     "qwerttvv-unicom-scan-a": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Unicom-Scan-A.m3u",
+    "qwerttvv-unicom-scan-b": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Unicom-Scan-B.m3u",
+    "qwerttvv-unicom-multicast": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Unicom-Multicast.m3u",
     "qwerttvv-mobile": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Mobile.m3u",
     "qwerttvv-mobile-scan-a": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Mobile-Scan-A.m3u",
+    "qwerttvv-mobile-multicast": "https://raw.githubusercontent.com/qwerttvv/Beijing-IPTV/master/IPTV-Mobile-Multicast.m3u",
+    "iptv-org-streams-cn": "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/cn.m3u",
     "iptv-org-countries-cn": "https://iptv-org.github.io/iptv/countries/cn.m3u",
-    "iptv-org-languages-zho": "https://iptv-org.github.io/iptv/languages/zho.m3u"
+    "iptv-org-languages-zho": "https://iptv-org.github.io/iptv/languages/zho.m3u",
+    "chinaiptv-cntv1-all": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV1_ALL.m3u8",
+    "chinaiptv-cntv2-guonei": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV2_GuoNei.m3u8"
   }
 }

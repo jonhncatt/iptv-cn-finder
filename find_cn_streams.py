@@ -401,10 +401,11 @@ SATELLITE_CORE_RECOVERY_URLS = {
 STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
 CCTV_HEADER_COMPAT_CHANNEL_IDS = {"CCTV3.cn", "CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
 SPORTS_RELAXED_CHANNEL_IDS = {"CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
+SPORTS_DIAGNOSE_CHANNEL_IDS = {"CCTV5.cn", "CCTV6.cn", "CCTV8.cn"}
 SPORTS_HISTORY_TARGET_COUNT = 2
-SPORTS_HISTORY_MAX_INJECT = 5
-SPORTS_HISTORY_MIN_SCORE = 60.0
-SPORTS_HISTORY_MAX_AGE_HOURS = 24 * 7
+SPORTS_HISTORY_MAX_INJECT = 10
+SPORTS_HISTORY_MIN_SCORE = 50.0
+SPORTS_HISTORY_MAX_AGE_DAYS = 30
 SPORTS_RELAXED_TIMEOUT = 40.0
 SPORTS_RELAXED_MIN_RETRIES = 2
 SPORTS_RELAXED_STABILITY_CHECKS = 2
@@ -823,6 +824,7 @@ class HistoryStore:
             "content_score_total": 0,
             "last_ok": False,
             "last_detail": "",
+            "last_seen": None,
             "last_updated": None,
         }
 
@@ -916,7 +918,9 @@ class HistoryStore:
         stats["content_score_total"] += probe.content_score
         stats["last_ok"] = probe.ok
         stats["last_detail"] = probe.detail
-        stats["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        stats["last_seen"] = now_iso
+        stats["last_updated"] = now_iso
 
     def save(self) -> None:
         if not self.path:
@@ -1259,12 +1263,35 @@ def parse_args() -> argparse.Namespace:
         help="Keep failed entries in the JSON report.",
     )
     parser.add_argument(
+        "--history-threshold",
+        type=float,
+        default=SPORTS_HISTORY_MIN_SCORE,
+        help="Minimum history score for sports emergency fallback sources.",
+    )
+    parser.add_argument(
+        "--history-max-inject",
+        type=int,
+        default=SPORTS_HISTORY_MAX_INJECT,
+        help="Maximum emergency history sources to inject per sports channel.",
+    )
+    parser.add_argument(
+        "--history-max-age-days",
+        type=int,
+        default=SPORTS_HISTORY_MAX_AGE_DAYS,
+        help="Only consider sports history entries seen within this many days.",
+    )
+    parser.add_argument(
         "--sports-relaxed",
         action="store_true",
         help=(
             "Relax probe thresholds for CCTV-5/5+/6/8: timeout up to 40s, "
             "at least 2 retries, and stability checks capped at 2."
         ),
+    )
+    parser.add_argument(
+        "--diagnose-sports",
+        action="store_true",
+        help="Only probe CCTV-5/6/8 and print top failure reason statistics.",
     )
     parser.add_argument(
         "--verbose",
@@ -3442,6 +3469,20 @@ def history_read_speed(detail: str) -> float:
     return float(match.group(1)) if match else 0.0
 
 
+def parse_history_timestamp(value: str | None) -> int | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return calendar.timegm(time.strptime(text, "%Y-%m-%dT%H:%M:%SZ"))
+    except ValueError:
+        return None
+
+
+def history_last_seen_epoch(stats: dict[str, Any]) -> int | None:
+    return parse_history_timestamp(stats.get("last_seen")) or parse_history_timestamp(stats.get("last_updated"))
+
+
 def history_speed_to_buffer_score(speed_x: float) -> int:
     if speed_x >= 3.0:
         return 98
@@ -3493,14 +3534,9 @@ def build_history_fallback_item(
         95 if "media sequence advanced" in lowered_detail else 0,
     )
     content_score = average_stat(stats, "content_score_total")
-    last_updated = str(stats.get("last_updated") or "")
-    if last_updated:
-        try:
-            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
-        except ValueError:
-            return None
-        if time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
-            return None
+    updated_epoch = history_last_seen_epoch(stats)
+    if updated_epoch is not None and time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
+        return None
     if speed_x < HISTORY_FALLBACK_MIN_SPEED:
         return None
     if startup_score < HISTORY_FALLBACK_MIN_STARTUP or live_score < HISTORY_FALLBACK_MIN_LIVE:
@@ -3551,14 +3587,9 @@ def build_core_cctv_history_item(
     if any(marker in lowered_detail for marker in ("404", "403", "no video", "vod", "ended")):
         return None
 
-    last_updated = str(stats.get("last_updated") or "")
-    if last_updated:
-        try:
-            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
-        except ValueError:
-            return None
-        if time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
-            return None
+    updated_epoch = history_last_seen_epoch(stats)
+    if updated_epoch is not None and time.time() - updated_epoch > HISTORY_FALLBACK_MAX_AGE_HOURS * 3600:
+        return None
 
     startup_score = max(34, average_stat(stats, "startup_score_total"))
     live_score = max(
@@ -3607,7 +3638,7 @@ def build_sports_history_item(
     candidate: Candidate,
     history: HistoryStore,
     probe_environment: str,
-) -> tuple[Candidate, ProbeResult] | None:
+) -> tuple[tuple[Candidate, ProbeResult], int] | None:
     preferred_environment = probe_environment if probe_environment in PROBE_ENVIRONMENTS else "local"
     stats = history.stats(candidate.url, preferred_environment)
     if not stats and preferred_environment != "local":
@@ -3625,14 +3656,9 @@ def build_sports_history_item(
     if any(marker in lowered_detail for marker in ("404", "403", "no video", "vod", "ended")):
         return None
 
-    last_updated = str(stats.get("last_updated") or "")
-    if last_updated:
-        try:
-            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
-        except ValueError:
-            return None
-        if time.time() - updated_epoch > SPORTS_HISTORY_MAX_AGE_HOURS * 3600:
-            return None
+    last_seen_epoch = history_last_seen_epoch(stats)
+    if last_seen_epoch is None:
+        return None
 
     startup_score = max(30, average_stat(stats, "startup_score_total"))
     live_score = max(
@@ -3650,25 +3676,28 @@ def build_sports_history_item(
         return None
 
     return (
-        candidate,
-        ProbeResult(
-            ok=True,
-            status=200,
-            content_type="from_history",
-            detail=f"from_history; {detail}",
-            elapsed_ms=average_stat(stats, "elapsed_total_ms"),
-            final_url=candidate.url,
-            via_ffprobe="ffprobe" in lowered_detail,
-            playlist_ms=average_stat(stats, "playlist_total_ms"),
-            media_ms=average_stat(stats, "media_total_ms"),
-            startup_score=startup_score,
-            live_score=live_score,
-            buffer_score=buffer_score,
-            content_score=content_score,
-            history_local_score=history.score(candidate.url, "local"),
-            history_cloud_score=history.score(candidate.url, "cloud"),
-            anomaly_flags=(),
+        (
+            candidate,
+            ProbeResult(
+                ok=True,
+                status=200,
+                content_type="from_history",
+                detail=f"from_history; {detail}",
+                elapsed_ms=average_stat(stats, "elapsed_total_ms"),
+                final_url=candidate.url,
+                via_ffprobe="ffprobe" in lowered_detail,
+                playlist_ms=average_stat(stats, "playlist_total_ms"),
+                media_ms=average_stat(stats, "media_total_ms"),
+                startup_score=startup_score,
+                live_score=live_score,
+                buffer_score=buffer_score,
+                content_score=content_score,
+                history_local_score=history.score(candidate.url, "local"),
+                history_cloud_score=history.score(candidate.url, "cloud"),
+                anomaly_flags=(),
+            ),
         ),
+        last_seen_epoch,
     )
 
 
@@ -3678,6 +3707,9 @@ def inject_sports_history_fallbacks(
     *,
     history: HistoryStore,
     probe_environment: str,
+    history_threshold: float,
+    max_inject: int,
+    max_age_days: int,
     feedback: FeedbackStore | None = None,
     selected_channel_ids: set[str] | None = None,
     verbose: bool = False,
@@ -3717,7 +3749,7 @@ def inject_sports_history_fallbacks(
         if not channel_group:
             continue
 
-        history_items: list[tuple[float, tuple[Candidate, ProbeResult]]] = []
+        history_items: list[tuple[float, int, tuple[Candidate, ProbeResult]]] = []
         for raw_url, entry in streams.items():
             if not isinstance(entry, dict) or entry.get("channel_id") != channel_id:
                 continue
@@ -3728,7 +3760,7 @@ def inject_sports_history_fallbacks(
             if host in PROBE_BLOCKED_HOSTS:
                 continue
             score = preferred_history_score(history, url, probe_environment)
-            if score < SPORTS_HISTORY_MIN_SCORE:
+            if score < history_threshold:
                 continue
             candidate = build_candidate(
                 source="from_history",
@@ -3743,22 +3775,29 @@ def inject_sports_history_fallbacks(
             )
             if feedback and feedback.is_blocked(candidate):
                 continue
-            item = build_sports_history_item(candidate, history, probe_environment)
-            if item is None:
+            built = build_sports_history_item(candidate, history, probe_environment)
+            if built is None:
                 continue
-            history_items.append((score, item))
+            item, last_seen_epoch = built
+            if max_age_days > 0 and time.time() - last_seen_epoch > max_age_days * 24 * 3600:
+                continue
+            history_items.append((score, last_seen_epoch, item))
 
         if not history_items:
-            log(f"sports history fallback skipped: {title} (no score>=60 source)", verbose=verbose)
+            log(f"sports history fallback skipped: {title} (no score>={history_threshold:.1f} source)", verbose=verbose)
             continue
 
         existing_urls = {item[0].url for item in existing_group}
         history_items.sort(
-            key=lambda entry: (entry[0], verified_item_rank(entry[1], feedback)),
+            key=lambda entry: (
+                entry[1],
+                entry[0],
+                verified_item_rank(entry[2], feedback),
+            ),
             reverse=True,
         )
         injected_count = 0
-        for score, item in history_items:
+        for score, last_seen_epoch, item in history_items:
             candidate = item[0]
             if candidate.url in existing_urls:
                 continue
@@ -3771,9 +3810,10 @@ def inject_sports_history_fallbacks(
                     "title": title,
                     "url": candidate.url,
                     "history_score": round(score, 2),
+                    "last_seen": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(last_seen_epoch)),
                 }
             )
-            if injected_count >= SPORTS_HISTORY_MAX_INJECT:
+            if injected_count >= max(1, max_inject):
                 break
 
         if injected_count <= 0:
@@ -4220,6 +4260,8 @@ def append_m3u_entry(
     display_title: str,
     group_title: str | None = None,
 ) -> None:
+    if candidate.source == "from_history" and "历史保底" not in display_title:
+        display_title = f"{display_title} (历史保底)"
     attributes = []
     if candidate.channel_id:
         attributes.append(f'tvg-id="{escape_attr(candidate.channel_id)}"')
@@ -4227,6 +4269,8 @@ def append_m3u_entry(
     if candidate.logo:
         attributes.append(f'tvg-logo="{escape_attr(candidate.logo)}"')
     rendered_group = group_title if group_title is not None else format_group_title(candidate)
+    if candidate.source == "from_history":
+        rendered_group = "历史应急"
     if rendered_group:
         attributes.append(f'group-title="{escape_attr(rendered_group)}"')
     lines.append(f'#EXTINF:-1 {" ".join(attributes)},{display_title}')
@@ -4287,6 +4331,7 @@ def write_report(
     backup_count: int,
     fallback_used: bool,
     emergency_sources: list[dict[str, Any]],
+    sports_diagnose: dict[str, Any] | None = None,
 ) -> None:
     group_counts: dict[str, int] = {}
     for candidate, _probe in verified_items:
@@ -4330,6 +4375,8 @@ def write_report(
             }
             for candidate, probe in failed_items
         ]
+    if sports_diagnose:
+        payload["sports_diagnose"] = sports_diagnose
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -4515,6 +4562,45 @@ def probe_all(
     return verified, failed
 
 
+def classify_failure_reason(probe: ProbeResult) -> str:
+    detail = (probe.detail or "").lower()
+    if probe.status == 429:
+        return "HTTP 429 限流"
+    if probe.status == 503:
+        return "HTTP 503 服务不可用"
+    if probe.status is not None:
+        return f"HTTP {probe.status}"
+    if "timed out" in detail:
+        return "超时"
+    if "nodename nor servname" in detail or "name or service not known" in detail:
+        return "DNS 解析失败"
+    if "no route to host" in detail:
+        return "路由不可达"
+    if "connection refused" in detail:
+        return "连接被拒绝"
+    return "其他网络错误"
+
+
+def summarize_failure_reasons(
+    failed_items: Iterable[tuple[Candidate, ProbeResult]],
+    channel_ids: Collection[str],
+) -> list[tuple[str, int]]:
+    counts: dict[str, int] = {}
+    targets = set(channel_ids)
+    for candidate, probe in failed_items:
+        if candidate.channel_id not in targets:
+            continue
+        reason = classify_failure_reason(probe)
+        counts[reason] = counts.get(reason, 0) + 1
+    return sorted(counts.items(), key=lambda item: item[1], reverse=True)
+
+
+def render_failure_summary(summary: list[tuple[str, int]], limit: int = 3) -> str:
+    if not summary:
+        return "无明显失败模式"
+    return "、".join(f"{reason} {count}次" for reason, count in summary[: max(1, limit)])
+
+
 def iter_channel_filters(raw_filters: Iterable[str]) -> Iterable[str]:
     for raw_value in raw_filters:
         for part in re.split(r"[,，]", raw_value or ""):
@@ -4622,9 +4708,13 @@ def main() -> int:
     requested_channel_ids, unresolved_filters = resolve_channel_filters(args.channel)
     if unresolved_filters:
         raise SystemExit(f"unknown channel filters: {', '.join(unresolved_filters)}")
+    if args.diagnose_sports:
+        requested_channel_ids = set(SPORTS_DIAGNOSE_CHANNEL_IDS)
+        log("diagnose-sports enabled: forcing channels to CCTV-5/CCTV-6/CCTV-8", verbose=True)
     frozen_channel_ids = feedback.frozen_channel_ids() if not requested_channel_ids else ()
     fallback_used = False
     emergency_sources: list[dict[str, Any]] = []
+    sports_diagnose_payload: dict[str, Any] | None = None
 
     candidates = load_candidates(
         args,
@@ -4654,6 +4744,20 @@ def main() -> int:
         timeout=max(1.0, args.content_check_timeout),
         workers=args.workers,
     )
+    sports_failure_summary = summarize_failure_reasons(failed, SPORTS_DIAGNOSE_CHANNEL_IDS)
+    if args.diagnose_sports:
+        print(
+            f"sports diagnose top failures: {render_failure_summary(sports_failure_summary, limit=5)}",
+            file=sys.stderr,
+        )
+        sports_diagnose_payload = {
+            "enabled": True,
+            "target_channels": [CCTV_CHANNEL_LABELS[channel_id] for channel_id in sorted(SPORTS_DIAGNOSE_CHANNEL_IDS)],
+            "top_failures": [
+                {"reason": reason, "count": count}
+                for reason, count in sports_failure_summary[:5]
+            ],
+        }
     for candidate, probe in [*verified, *failed]:
         history.record(candidate, probe, args.probe_environment)
     history.save()
@@ -4726,6 +4830,9 @@ def main() -> int:
         grouped_verified,
         history=history,
         probe_environment=args.probe_environment,
+        history_threshold=max(0.0, min(100.0, float(args.history_threshold))),
+        max_inject=max(1, int(args.history_max_inject)),
+        max_age_days=max(1, int(args.history_max_age_days)),
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
         verbose=args.verbose,
@@ -4733,6 +4840,18 @@ def main() -> int:
     if sports_fallback_used:
         fallback_used = True
         emergency_sources.extend(sports_emergency_sources)
+    sports_verified_channel_ids = {
+        candidate.channel_id
+        for candidate, _probe in verified
+        if candidate.channel_id in SPORTS_DIAGNOSE_CHANNEL_IDS
+    }
+    if args.verbose and len(sports_verified_channel_ids) < 2:
+        log(
+            "CCTV-5/6/8 存活率低（"
+            f"{len(sports_verified_channel_ids)}/3；失败主因：{render_failure_summary(sports_failure_summary)}）。"
+            "建议：1. 用 --sports-relaxed 重跑；2. 检查日本网络/VPN；3. 手动 feedback 锁定好源。",
+            verbose=True,
+        )
     history.save()
 
     out_path = Path(args.out)
@@ -4755,6 +4874,7 @@ def main() -> int:
         backup_count=max(1, args.backup_count),
         fallback_used=fallback_used,
         emergency_sources=emergency_sources,
+        sports_diagnose=sports_diagnose_payload,
     )
 
     print(

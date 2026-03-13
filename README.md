@@ -33,7 +33,8 @@
 - `sources.json` 已改为优先使用 2026-03 仍活跃的公开仓库，减少 404/失效入口
 - 支持只扫描指定频道，适合单独修 `CCTV-1`、`东方卫视` 这类问题
 - 支持 `--sports-relaxed`，对 `CCTV-5/5+/6/8` 放宽探测（更长超时 + 更多重试）
-- 当 `CCTV-5/5+/6/8` 当次候选不足时，自动从历史里回填高分源（`from_history`）
+- 当 `CCTV-5/5+/6/8` 当次候选不足时，自动从历史里回填高分源（`from_history`，默认分数阈值 `50`）
+- 支持 `--diagnose-sports`，只跑 `CCTV-5/6/8` 并输出失败原因统计
 - 额外生成一份“主源 + 备用源”的备份播放列表
 - 主列表会优先保留低卡顿源，明显慢源会降级到备用或抢修订阅
 - 历史回填只补“近期且高稳定”的源，避免旧失效源回流到主列表
@@ -140,6 +141,12 @@ python3 find_cn_streams.py --sources sources.json --ffprobe --verbose
 python3 find_cn_streams.py --sources sources.json --ffprobe --verbose --sports-relaxed --channel "CCTV-5,CCTV-6,CCTV-8"
 ```
 
+只做体育诊断（失败原因占比）：
+
+```bash
+python3 find_cn_streams.py --sources sources.json --sports-relaxed --diagnose-sports --verbose
+```
+
 如果临时只想用脚本内置源：
 
 ```bash
@@ -204,11 +211,24 @@ python3 find_cn_streams.py --sources "" --verbose
   - `frankwuzp/iptv-cn`：中国区 IPv4 聚合较全
   - `Free-TV/IPTV`：`playlist_china.m3u8` 作为国际聚合补充
   - `qwerttvv/Beijing-IPTV`：联通/移动线路多样，适合补 CCTV
+  - `lylehust/Chinese-IPTV`：省网源补充，常见 CCTV 体育链路
+  - `iptv-org/streams/cn.m3u`：官方 streams 入口，适合兜底抓取
 
 `output/chinese-public-report.json` 增强字段：
 
 - `fallback_used`：本次是否用了应急历史回填
 - `emergency_sources`：本次被加入的历史应急源（频道、URL、历史分）
+- `sports_diagnose`：启用 `--diagnose-sports` 时输出失败原因统计
+
+## 体育频道优化技巧
+
+- 推荐命令（常用）：
+  - `python3 find_cn_streams.py --sources sources.json --ffprobe --sports-relaxed --channel "CCTV-5,CCTV-6,CCTV-8" --verbose`
+  - `python3 find_cn_streams.py --sources sources.json --sports-relaxed --diagnose-sports --verbose`
+- 常见现象：公开体育源容易遇到 `超时`、`429`、`403`、DNS 解析失败，这属于公共聚合链路的行业常态。
+- 历史保底调参：可用 `--history-threshold 50 --history-max-inject 10 --history-max-age-days 30` 调整应急回填强度。
+- 锁定稳定源：一旦发现本地长期稳定的 `CCTV-5/6/8`，及时写入 `state/manual-feedback.json` 的 `preferred`，可显著降低回归波动。
+- 历史记忆机制：`state/probe-history.json` 跑得越多、样本越全，`from_history` 的保底可靠性越高。
 
 ## GitHub 订阅
 
