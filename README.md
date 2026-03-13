@@ -30,7 +30,10 @@
 - 用 `ffmpeg` 做短时连续读流，优先剔除“首开快但长看会缓冲”的源
 - 支持人工反馈文件，能把某条源锁成优先主源，或把串台/错误源直接拉黑
 - 支持外部源清单 `sources.json`，可在不改代码的情况下扩展搜源范围
+- `sources.json` 已改为优先使用 2026-03 仍活跃的公开仓库，减少 404/失效入口
 - 支持只扫描指定频道，适合单独修 `CCTV-1`、`东方卫视` 这类问题
+- 支持 `--sports-relaxed`，对 `CCTV-5/5+/6/8` 放宽探测（更长超时 + 更多重试）
+- 当 `CCTV-5/5+/6/8` 当次候选不足时，自动从历史里回填高分源（`from_history`）
 - 额外生成一份“主源 + 备用源”的备份播放列表
 - 主列表会优先保留低卡顿源，明显慢源会降级到备用或抢修订阅
 - 历史回填只补“近期且高稳定”的源，避免旧失效源回流到主列表
@@ -131,6 +134,12 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 python3 find_cn_streams.py --sources sources.json --ffprobe --verbose
 ```
 
+体育/影视核心台（CCTV-5/6/8）建议使用放宽模式：
+
+```bash
+python3 find_cn_streams.py --sources sources.json --ffprobe --verbose --sports-relaxed --channel "CCTV-5,CCTV-6,CCTV-8"
+```
+
 如果临时只想用脚本内置源：
 
 ```bash
@@ -189,6 +198,17 @@ python3 find_cn_streams.py --sources "" --verbose
 - 用来扩展公开候选源入口，支持 `curated` 和 `deep` 两个顶级键
 - 脚本会先加载内置默认源，再叠加这个文件里的源
 - 配置文件缺失或某些 URL 失效不会中断任务，失效源会自动跳过
+- 当前默认示例包含一批 2026-03 仍可访问的入口，重点覆盖：
+  - `BurningC4/Chinese-IPTV`：CCTV 覆盖更密集
+  - `vbskycn/iptv`：更新频率高，覆盖运营商线路
+  - `frankwuzp/iptv-cn`：中国区 IPv4 聚合较全
+  - `Free-TV/IPTV`：`playlist_china.m3u8` 作为国际聚合补充
+  - `qwerttvv/Beijing-IPTV`：联通/移动线路多样，适合补 CCTV
+
+`output/chinese-public-report.json` 增强字段：
+
+- `fallback_used`：本次是否用了应急历史回填
+- `emergency_sources`：本次被加入的历史应急源（频道、URL、历史分）
 
 ## GitHub 订阅
 

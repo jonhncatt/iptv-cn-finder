@@ -400,6 +400,14 @@ SATELLITE_CORE_RECOVERY_URLS = {
 }
 STRICT_CCTV_CHANNEL_IDS = {"CCTV13.cn"}
 CCTV_HEADER_COMPAT_CHANNEL_IDS = {"CCTV3.cn", "CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
+SPORTS_RELAXED_CHANNEL_IDS = {"CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
+SPORTS_HISTORY_TARGET_COUNT = 2
+SPORTS_HISTORY_MAX_INJECT = 5
+SPORTS_HISTORY_MIN_SCORE = 60.0
+SPORTS_HISTORY_MAX_AGE_HOURS = 24 * 7
+SPORTS_RELAXED_TIMEOUT = 40.0
+SPORTS_RELAXED_MIN_RETRIES = 2
+SPORTS_RELAXED_STABILITY_CHECKS = 2
 PRIMARY_MIN_STARTUP_SCORE = 42
 PRIMARY_MIN_LIVE_SCORE = 80
 PRIMARY_MIN_BUFFER_SCORE = 58
@@ -1096,6 +1104,7 @@ def parse_args() -> argparse.Namespace:
             "iptv-org",
             "cctv-official",
             "curated-public",
+            "deep-discovery",
             "published",
             "legacy-baseline",
             "manual-preferred",
@@ -1248,6 +1257,14 @@ def parse_args() -> argparse.Namespace:
         "--keep-failures",
         action="store_true",
         help="Keep failed entries in the JSON report.",
+    )
+    parser.add_argument(
+        "--sports-relaxed",
+        action="store_true",
+        help=(
+            "Relax probe thresholds for CCTV-5/5+/6/8: timeout up to 40s, "
+            "at least 2 retries, and stability checks capped at 2."
+        ),
     )
     parser.add_argument(
         "--verbose",
@@ -2821,8 +2838,33 @@ def ok_status(status: int | None) -> bool:
     return status is not None and 200 <= status < 400
 
 
-def should_retry_probe(result: ProbeResult) -> bool:
-    return result.status is None or (result.status >= 500 if result.status is not None else False)
+def candidate_is_sports_relaxed_target(candidate: Candidate, sports_relaxed: bool) -> bool:
+    return sports_relaxed and candidate.channel_id in SPORTS_RELAXED_CHANNEL_IDS
+
+
+def resolve_probe_profile(
+    candidate: Candidate,
+    timeout: float,
+    retries: int,
+    stability_checks: int,
+    sports_relaxed: bool,
+) -> tuple[float, int, int, bool]:
+    if not candidate_is_sports_relaxed_target(candidate, sports_relaxed):
+        return timeout, retries, max(1, stability_checks), False
+    return (
+        max(timeout, SPORTS_RELAXED_TIMEOUT),
+        max(retries, SPORTS_RELAXED_MIN_RETRIES),
+        max(1, min(max(1, stability_checks), SPORTS_RELAXED_STABILITY_CHECKS)),
+        True,
+    )
+
+
+def should_retry_probe(result: ProbeResult, allow_rate_limit_retry: bool = False) -> bool:
+    if result.status is None:
+        return True
+    if result.status >= 500:
+        return True
+    return allow_rate_limit_retry and result.status in {429, 503}
 
 
 def run_ffprobe(candidate: Candidate, timeout: float) -> ProbeResult | None:
@@ -3060,22 +3102,40 @@ def probe_candidate(
     retries: int,
     stability_checks: int,
     sequence_delay: float,
+    sports_relaxed: bool = False,
 ) -> ProbeResult:
-    result = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
+    (
+        effective_timeout,
+        effective_retries,
+        effective_stability_checks,
+        allow_rate_limit_retry,
+    ) = resolve_probe_profile(
+        candidate,
+        timeout,
+        retries,
+        stability_checks,
+        sports_relaxed,
+    )
+
+    result = probe_candidate_once(candidate, effective_timeout, use_ffprobe, sequence_delay)
     retry_count = 0
-    while not result.ok and retry_count < retries and should_retry_probe(result):
+    while (
+        not result.ok
+        and retry_count < effective_retries
+        and should_retry_probe(result, allow_rate_limit_retry=allow_rate_limit_retry)
+    ):
         retry_count += 1
-        result = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
+        result = probe_candidate_once(candidate, effective_timeout, use_ffprobe, sequence_delay)
 
     if not result.ok:
         return result
 
-    required_checks = max(1, stability_checks)
+    required_checks = max(1, effective_stability_checks)
     if candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
         required_checks = max(required_checks, 3)
 
     for check_index in range(1, required_checks):
-        follow_up = probe_candidate_once(candidate, timeout, use_ffprobe, sequence_delay)
+        follow_up = probe_candidate_once(candidate, effective_timeout, use_ffprobe, sequence_delay)
         if not follow_up.ok:
             if follow_up.status is None and "timed out" in follow_up.detail.lower():
                 if candidate.channel_id in STRICT_CCTV_CHANNEL_IDS:
@@ -3536,6 +3596,222 @@ def build_core_cctv_history_item(
     return item if candidate_meets_primary_profile(item, relaxed=True) else None
 
 
+def preferred_history_score(history: HistoryStore, url: str, probe_environment: str) -> float:
+    score = history.score(url, probe_environment)
+    if score > 0:
+        return score
+    return history.score(url, "local")
+
+
+def build_sports_history_item(
+    candidate: Candidate,
+    history: HistoryStore,
+    probe_environment: str,
+) -> tuple[Candidate, ProbeResult] | None:
+    preferred_environment = probe_environment if probe_environment in PROBE_ENVIRONMENTS else "local"
+    stats = history.stats(candidate.url, preferred_environment)
+    if not stats and preferred_environment != "local":
+        stats = history.stats(candidate.url, "local")
+    if not stats or not stats.get("last_ok"):
+        return None
+
+    runs = int(stats.get("runs", 0) or 0)
+    successes = int(stats.get("successes", 0) or 0)
+    if runs < 2 or successes / max(runs, 1) < 0.5:
+        return None
+
+    detail = str(stats.get("last_detail", "") or "")
+    lowered_detail = detail.lower()
+    if any(marker in lowered_detail for marker in ("404", "403", "no video", "vod", "ended")):
+        return None
+
+    last_updated = str(stats.get("last_updated") or "")
+    if last_updated:
+        try:
+            updated_epoch = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%SZ"))
+        except ValueError:
+            return None
+        if time.time() - updated_epoch > SPORTS_HISTORY_MAX_AGE_HOURS * 3600:
+            return None
+
+    startup_score = max(30, average_stat(stats, "startup_score_total"))
+    live_score = max(
+        60,
+        average_stat(stats, "live_score_total"),
+        85 if "media sequence advanced" in lowered_detail else 0,
+    )
+    buffer_score = max(
+        30,
+        average_stat(stats, "buffer_score_total"),
+        history_speed_to_buffer_score(history_read_speed(detail)),
+    )
+    content_score = max(45, average_stat(stats, "content_score_total"))
+    if startup_score < 30 or live_score < 60:
+        return None
+
+    return (
+        candidate,
+        ProbeResult(
+            ok=True,
+            status=200,
+            content_type="from_history",
+            detail=f"from_history; {detail}",
+            elapsed_ms=average_stat(stats, "elapsed_total_ms"),
+            final_url=candidate.url,
+            via_ffprobe="ffprobe" in lowered_detail,
+            playlist_ms=average_stat(stats, "playlist_total_ms"),
+            media_ms=average_stat(stats, "media_total_ms"),
+            startup_score=startup_score,
+            live_score=live_score,
+            buffer_score=buffer_score,
+            content_score=content_score,
+            history_local_score=history.score(candidate.url, "local"),
+            history_cloud_score=history.score(candidate.url, "cloud"),
+            anomaly_flags=(),
+        ),
+    )
+
+
+def inject_sports_history_fallbacks(
+    verified_items: list[tuple[Candidate, ProbeResult]],
+    grouped_items: list[list[tuple[Candidate, ProbeResult]]],
+    *,
+    history: HistoryStore,
+    probe_environment: str,
+    feedback: FeedbackStore | None = None,
+    selected_channel_ids: set[str] | None = None,
+    verbose: bool = False,
+) -> tuple[
+    list[tuple[Candidate, ProbeResult]],
+    list[list[tuple[Candidate, ProbeResult]]],
+    bool,
+    list[dict[str, Any]],
+]:
+    target_channel_ids = [
+        channel_id
+        for channel_id in SPORTS_RELAXED_CHANNEL_IDS
+        if channel_id in CCTV_CHANNEL_LABELS
+        and (not selected_channel_ids or channel_id in selected_channel_ids)
+    ]
+    if not target_channel_ids:
+        return verified_items, grouped_items, False, []
+
+    grouped_by_channel: dict[str, list[tuple[Candidate, ProbeResult]]] = {
+        items[0][0].channel_id: list(items)
+        for items in grouped_items
+        if items and items[0][0].channel_id
+    }
+    streams = history.payload.get("streams", {})
+    if not isinstance(streams, dict):
+        return verified_items, grouped_items, False, []
+
+    fallback_used = False
+    emergency_sources: list[dict[str, Any]] = []
+    for channel_id in target_channel_ids:
+        existing_group = grouped_by_channel.get(channel_id, [])
+        if len(existing_group) >= SPORTS_HISTORY_TARGET_COUNT:
+            continue
+
+        title = CCTV_CHANNEL_LABELS.get(channel_id, channel_id)
+        channel_group = target_channel_group(channel_id)
+        if not channel_group:
+            continue
+
+        history_items: list[tuple[float, tuple[Candidate, ProbeResult]]] = []
+        for raw_url, entry in streams.items():
+            if not isinstance(entry, dict) or entry.get("channel_id") != channel_id:
+                continue
+            url = normalize_url(str(raw_url or ""))
+            if not url:
+                continue
+            host = (urlsplit(url).hostname or "").lower()
+            if host in PROBE_BLOCKED_HOSTS:
+                continue
+            score = preferred_history_score(history, url, probe_environment)
+            if score < SPORTS_HISTORY_MIN_SCORE:
+                continue
+            candidate = build_candidate(
+                source="from_history",
+                url=url,
+                title=title,
+                channel_id=channel_id,
+                country="CN",
+                languages=("zho",),
+                group_title=channel_group,
+                website=CCTV_OFFICIAL_WEBSITES.get(channel_id),
+                channel_group=channel_group,
+            )
+            if feedback and feedback.is_blocked(candidate):
+                continue
+            item = build_sports_history_item(candidate, history, probe_environment)
+            if item is None:
+                continue
+            history_items.append((score, item))
+
+        if not history_items:
+            log(f"sports history fallback skipped: {title} (no score>=60 source)", verbose=verbose)
+            continue
+
+        existing_urls = {item[0].url for item in existing_group}
+        history_items.sort(
+            key=lambda entry: (entry[0], verified_item_rank(entry[1], feedback)),
+            reverse=True,
+        )
+        injected_count = 0
+        for score, item in history_items:
+            candidate = item[0]
+            if candidate.url in existing_urls:
+                continue
+            existing_group.append(item)
+            existing_urls.add(candidate.url)
+            injected_count += 1
+            emergency_sources.append(
+                {
+                    "channel_id": channel_id,
+                    "title": title,
+                    "url": candidate.url,
+                    "history_score": round(score, 2),
+                }
+            )
+            if injected_count >= SPORTS_HISTORY_MAX_INJECT:
+                break
+
+        if injected_count <= 0:
+            continue
+
+        existing_group.sort(key=lambda item: verified_item_rank(item, feedback), reverse=True)
+        grouped_by_channel[channel_id] = existing_group
+        fallback_used = True
+        log(f"sports history fallback injected: {title} (+{injected_count})", verbose=verbose)
+
+    if not fallback_used:
+        return verified_items, grouped_items, False, []
+
+    ungrouped = [
+        list(items)
+        for items in grouped_items
+        if items and items[0][0].channel_id not in grouped_by_channel
+    ]
+    updated_groups = [*ungrouped, *grouped_by_channel.values()]
+    updated_groups.sort(
+        key=lambda items: (
+            GROUP_SORT_ORDER.get(items[0][0].channel_group or "", 99),
+            items[0][0].channel_group or "",
+            items[0][0].title,
+        )
+    )
+
+    updated_verified = [items[0] for items in updated_groups if items]
+    updated_verified.sort(
+        key=lambda item: (
+            GROUP_SORT_ORDER.get(item[0].channel_group or "", 99),
+            item[0].channel_group or "",
+            item[0].title,
+        )
+    )
+    return updated_verified, updated_groups, True, emergency_sources
+
+
 def inject_history_fallbacks(
     verified_items: list[tuple[Candidate, ProbeResult]],
     grouped_items: list[list[tuple[Candidate, ProbeResult]]],
@@ -3632,6 +3908,7 @@ def recover_core_cctv_channels(
     probe_environment: str,
     feedback: FeedbackStore | None = None,
     selected_channel_ids: set[str] | None = None,
+    sports_relaxed: bool = False,
     verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
@@ -3670,6 +3947,7 @@ def recover_core_cctv_channels(
                 retries=retries,
                 stability_checks=stability_checks,
                 sequence_delay=sequence_delay,
+                sports_relaxed=sports_relaxed,
             )
             if not probe.ok:
                 continue
@@ -3747,6 +4025,7 @@ def recover_core_satellite_channels(
     probe_environment: str,
     feedback: FeedbackStore | None = None,
     selected_channel_ids: set[str] | None = None,
+    sports_relaxed: bool = False,
     verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
@@ -3783,6 +4062,7 @@ def recover_core_satellite_channels(
                 retries=retries,
                 stability_checks=2,
                 sequence_delay=sequence_delay,
+                sports_relaxed=sports_relaxed,
             )
             if not probe.ok:
                 continue
@@ -3838,6 +4118,7 @@ def recover_feedback_channels(
     probe_environment: str,
     feedback: FeedbackStore,
     selected_channel_ids: set[str] | None = None,
+    sports_relaxed: bool = False,
     verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[list[tuple[Candidate, ProbeResult]]]]:
     present_channel_ids = {candidate.channel_id for candidate, _probe in verified_items if candidate.channel_id}
@@ -3873,6 +4154,7 @@ def recover_feedback_channels(
                 retries=retries,
                 stability_checks=max(1, stability_checks),
                 sequence_delay=sequence_delay,
+                sports_relaxed=sports_relaxed,
             )
             if not probe.ok:
                 continue
@@ -4003,6 +4285,8 @@ def write_report(
     feedback_path: Path | None,
     requested_channel_ids: tuple[str, ...],
     backup_count: int,
+    fallback_used: bool,
+    emergency_sources: list[dict[str, Any]],
 ) -> None:
     group_counts: dict[str, int] = {}
     for candidate, _probe in verified_items:
@@ -4016,6 +4300,8 @@ def write_report(
         "requested_channels": [TARGET_CHANNEL_LABELS.get(channel_id, channel_id) for channel_id in requested_channel_ids],
         "success_count": len(verified_items),
         "failure_count": len(failed_items),
+        "fallback_used": fallback_used,
+        "emergency_sources": emergency_sources,
         "group_counts": group_counts,
         "verified": [
             {
@@ -4172,6 +4458,7 @@ def probe_all(
     retries: int,
     stability_checks: int,
     sequence_delay: float,
+    sports_relaxed: bool = False,
     feedback: FeedbackStore | None = None,
     verbose: bool = False,
 ) -> tuple[list[tuple[Candidate, ProbeResult]], list[tuple[Candidate, ProbeResult]]]:
@@ -4188,6 +4475,7 @@ def probe_all(
                 retries,
                 stability_checks,
                 sequence_delay,
+                sports_relaxed,
             ): candidate
             for candidate in candidates
         }
@@ -4201,6 +4489,14 @@ def probe_all(
                 verified.append((candidate, probe))
             else:
                 failed.append((candidate, probe))
+                if verbose and candidate.channel_id in SPORTS_RELAXED_CHANNEL_IDS:
+                    status = probe.status if probe.status is not None else "network"
+                    log(
+                        "sports fail "
+                        f"{candidate.title} [{candidate.source}] status={status} "
+                        f"elapsed={probe.elapsed_ms}ms detail={probe.detail}",
+                        verbose=True,
+                    )
             if verbose and (completed == total or completed % 25 == 0):
                 log(
                     f"progress {completed}/{total} "
@@ -4327,6 +4623,8 @@ def main() -> int:
     if unresolved_filters:
         raise SystemExit(f"unknown channel filters: {', '.join(unresolved_filters)}")
     frozen_channel_ids = feedback.frozen_channel_ids() if not requested_channel_ids else ()
+    fallback_used = False
+    emergency_sources: list[dict[str, Any]] = []
 
     candidates = load_candidates(
         args,
@@ -4347,6 +4645,7 @@ def main() -> int:
         retries=max(0, args.retries),
         stability_checks=max(1, args.stability_checks),
         sequence_delay=max(0.5, args.live_sequence_delay),
+        sports_relaxed=args.sports_relaxed,
         feedback=feedback,
         verbose=args.verbose,
     )
@@ -4388,6 +4687,7 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
+        sports_relaxed=args.sports_relaxed,
         verbose=args.verbose,
     )
     verified, grouped_verified = recover_core_satellite_channels(
@@ -4402,6 +4702,7 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
+        sports_relaxed=args.sports_relaxed,
         verbose=args.verbose,
     )
     verified, grouped_verified = recover_feedback_channels(
@@ -4417,8 +4718,21 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
+        sports_relaxed=args.sports_relaxed,
         verbose=args.verbose,
     )
+    verified, grouped_verified, sports_fallback_used, sports_emergency_sources = inject_sports_history_fallbacks(
+        verified,
+        grouped_verified,
+        history=history,
+        probe_environment=args.probe_environment,
+        feedback=feedback,
+        selected_channel_ids=requested_channel_ids or None,
+        verbose=args.verbose,
+    )
+    if sports_fallback_used:
+        fallback_used = True
+        emergency_sources.extend(sports_emergency_sources)
     history.save()
 
     out_path = Path(args.out)
@@ -4439,6 +4753,8 @@ def main() -> int:
         feedback_path=feedback_path,
         requested_channel_ids=tuple(sorted(requested_channel_ids)),
         backup_count=max(1, args.backup_count),
+        fallback_used=fallback_used,
+        emergency_sources=emergency_sources,
     )
 
     print(
