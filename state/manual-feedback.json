@@ -1,17 +1,17 @@
 {
   "version": 1,
-  "updated_at": "2026-03-12T01:02:55Z",
+  "updated_at": "2026-03-13T02:29:18Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
       "preferred": [
         {
-          "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
-          "note": "用户确认当前东方卫视主源播放正确且稳定，优先保留。"
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
+          "note": "用户反馈当前 hls/28 缓冲明显，先把历史上更稳的 38.75 源提到最前。"
         },
         {
-          "url": "http://38.75.136.137:98/gslb/dsdqpub/dfwshd.m3u8?auth=testpub",
-          "note": "保留稳定备选，避开 4K 或非实时变体。"
+          "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
+          "note": "保留当前 hls/28 作为次选，避免更稳备选临时失效时直接缺台。"
         }
       ],
       "blocked": []
@@ -60,8 +60,16 @@
       "title": "浙江卫视",
       "preferred": [
         {
+          "url": "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+          "note": "用户反馈当前 hls/29 间断缓冲，先提升历史上更稳的蓝天源。"
+        },
+        {
+          "url": "https://play-qukan.cztv.com/live/1746687519046362.m3u8",
+          "note": "保留历史上表现不错的第二候选。"
+        },
+        {
           "url": "http://112.27.235.94:8000/hls/29/index.m3u8",
-          "note": "用户确认浙江卫视当前主源播放正确，后续优先保留。"
+          "note": "把当前 hls/29 降为次选，避免继续覆盖更稳的历史源。"
         }
       ],
       "blocked": [
@@ -85,11 +93,16 @@
       "title": "海峡卫视",
       "preferred": [
         {
-          "url": "https://live1-fuyun.fjtv.net/haixiapd/hd/live.m3u8?_upt=e3eeff051773279249",
-          "note": "用户确认海峡卫视当前主源稳定，后续优先保留。"
+          "url": "http://8.138.7.223/tv/hxws.m3u8",
+          "note": "当前 live1-fuyun 源已无法观看，改为直测可读的 8.138 备选。"
         }
       ],
-      "blocked": []
+      "blocked": [
+        {
+          "url": "https://live1-fuyun.fjtv.net/haixiapd/hd/live.m3u8?_upt=e3eeff051773279249",
+          "reason": "用户反馈当前海峡卫视主源看不了，先移出锁定。"
+        }
+      ]
     },
     "HunanSatelliteTV.cn": {
       "title": "湖南卫视",
@@ -105,8 +118,12 @@
       "title": "东南卫视",
       "preferred": [
         {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/dnwshd.m3u8?auth=testpub",
+          "note": "用户反馈当前 hls/38 连接慢，先提升历史上更稳的 38.75 源。"
+        },
+        {
           "url": "http://112.27.235.94:8000/hls/38/index.m3u8",
-          "note": "用户反馈原主源有版权或播放限制，切换到可直接读取的常规备选。"
+          "note": "保留 hls/38 作为次选。"
         }
       ],
       "blocked": [
@@ -134,31 +151,37 @@
       "title": "CCTV-1 综合",
       "preferred": [
         {
-          "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
-          "note": "用户反馈当前主 CDN 变体仍无法正常看，先切到另一条已通过验证的官方 CDN。"
-        }
-      ],
-      "blocked": [
+          "url": "http://74.91.26.218:82/live/cctv1hd.m3u8",
+          "note": "这轮定向扫描里读取速度最好，先提为当前主候选。"
+        },
         {
           "url": "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
-          "reason": "用户反馈当前 CCTV-1 主源仍不可看，暂时拉黑这条 CDN 变体。"
+          "note": "保留历史上比较顺的官方 CNC 变体作为第一备选。"
+        },
+        {
+          "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv1_1/index.m3u8",
+          "note": "把当前 BD 源降为次选，避免继续覆盖用户更满意的旧源。"
         }
-      ]
+      ],
+      "blocked": []
     },
     "CCTV13.cn": {
       "title": "CCTV-13 新闻",
       "preferred": [
         {
-          "url": "http://ldncctvwbcdtxy.liveplay.myqcloud.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
-          "note": "局部扫描发现新的官方腾讯云变体，可通过稳定性校验，优先使用。"
-        }
-      ],
-      "blocked": [
+          "url": "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "note": "当前腾讯云变体会卡在 100%，这轮优先切到内容检测通过的 KCDN 变体。"
+        },
+        {
+          "url": "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "note": "保留历史上更顺的 CNC 变体作为第一备选。"
+        },
         {
           "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
-          "reason": "用户反馈当前 CCTV-13 主源不可看，暂时拉黑。"
+          "note": "保留稳定的百度云 CDN 作为第二候选。"
         }
-      ]
+      ],
+      "blocked": []
     },
     "CCTV5Plus.cn": {
       "title": "CCTV-5+ 体育赛事",
@@ -176,18 +199,8 @@
     },
     "CCTV6.cn": {
       "title": "CCTV-6 电影",
-      "preferred": [
-        {
-          "url": "http://112.27.235.94:8000/hls/7/index.m3u8",
-          "note": "用户确认这次 CCTV-6 主源表现很好，继续固定保留。"
-        }
-      ],
-      "blocked": [
-        {
-          "url": "http://101.35.240.114:88/live.php?id=CCTV6",
-          "reason": "用户反馈旧主源长看容易缓存。"
-        }
-      ]
+      "preferred": [],
+      "blocked": []
     }
   }
 }

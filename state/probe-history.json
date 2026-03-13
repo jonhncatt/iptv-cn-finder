@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-12T01:06:58Z",
+  "updated_at": "2026-03-13T02:32:55Z",
   "streams": {
     "http://bp-resource-dfl.bestv.cn/155/3/video.m3u8": {
       "title": "纪实人文",
@@ -534,21 +534,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
-          "ffprobe_successes": 18,
-          "anomaly_hits": 42,
-          "elapsed_total_ms": 194798,
-          "playlist_total_ms": 6375,
-          "media_total_ms": 20495,
-          "startup_score_total": 795,
-          "live_score_total": 1635,
-          "content_score_total": 1055,
+          "ffprobe_successes": 19,
+          "anomaly_hits": 44,
+          "elapsed_total_ms": 204424,
+          "playlist_total_ms": 6594,
+          "media_total_ms": 21213,
+          "startup_score_total": 841,
+          "live_score_total": 1735,
+          "content_score_total": 1115,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5017ms over 4 segment checks; avg 2.13Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 364
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5282ms over 4 segment checks; avg 2.92Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 404
         }
       }
     },
@@ -559,21 +559,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 47,
-          "elapsed_total_ms": 251231,
-          "playlist_total_ms": 3891,
+          "anomaly_hits": 50,
+          "elapsed_total_ms": 265481,
+          "playlist_total_ms": 4139,
           "media_total_ms": 0,
-          "startup_score_total": 468,
-          "live_score_total": 360,
-          "content_score_total": 1055,
+          "startup_score_total": 494,
+          "live_score_total": 380,
+          "content_score_total": 1115,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 210
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 228
         }
       }
     },
@@ -584,21 +584,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 60,
-          "elapsed_total_ms": 356815,
-          "playlist_total_ms": 21977,
-          "media_total_ms": 52001,
-          "startup_score_total": 990,
-          "live_score_total": 2500,
-          "content_score_total": 1475,
+          "anomaly_hits": 63,
+          "elapsed_total_ms": 368649,
+          "playlist_total_ms": 22748,
+          "media_total_ms": 53533,
+          "startup_score_total": 1029,
+          "live_score_total": 2600,
+          "content_score_total": 1535,
           "last_ok": true,
-          "last_detail": "variant segment reachable; media sequence advanced; buffer margin 3542ms over 3 segment checks; avg 1.19Mbps over 211KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 433
+          "last_detail": "variant segment reachable; media sequence advanced; buffer margin 3468ms over 3 segment checks; avg 1.23Mbps over 229KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 452
         }
       }
     },
@@ -606,24 +606,24 @@
       "title": "CCTV-1 综合",
       "channel_id": "CCTV1.cn",
       "group": "央视",
-      "source": "feedback-preferred",
+      "source": "published",
       "environments": {
         "local": {
-          "runs": 28,
-          "successes": 28,
+          "runs": 29,
+          "successes": 29,
           "failures": 0,
-          "ffprobe_successes": 26,
-          "anomaly_hits": 28,
-          "elapsed_total_ms": 176302,
-          "playlist_total_ms": 6064,
-          "media_total_ms": 14583,
-          "startup_score_total": 1317,
-          "live_score_total": 2610,
-          "content_score_total": 2100,
+          "ffprobe_successes": 27,
+          "anomaly_hits": 29,
+          "elapsed_total_ms": 181735,
+          "playlist_total_ms": 6223,
+          "media_total_ms": 14958,
+          "startup_score_total": 1367,
+          "live_score_total": 2710,
+          "content_score_total": 2165,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3643ms over 3 segment checks; avg 4.35Mbps over 189KB samples; ffmpeg read 6s media in 3.0s (2.01x)",
-          "last_updated": "2026-03-12T01:06:58Z",
-          "buffer_score_total": 1731
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3625ms over 3 segment checks; avg 3.75Mbps over 171KB samples; ffmpeg read 6s media in 3.3s (1.84x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1817
         }
       }
     },
@@ -634,21 +634,21 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
-          "ffprobe_successes": 24,
-          "anomaly_hits": 19,
-          "elapsed_total_ms": 159208,
-          "playlist_total_ms": 7880,
-          "media_total_ms": 9956,
-          "startup_score_total": 1226,
-          "live_score_total": 2390,
-          "content_score_total": 2035,
+          "ffprobe_successes": 25,
+          "anomaly_hits": 20,
+          "elapsed_total_ms": 164187,
+          "playlist_total_ms": 8008,
+          "media_total_ms": 10179,
+          "startup_score_total": 1276,
+          "live_score_total": 2490,
+          "content_score_total": 2100,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3742ms over 3 segment checks; avg 8.13Mbps over 256KB samples; ffmpeg read 6s media in 2.7s (2.20x)",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 1553
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3777ms over 3 segment checks; avg 6.32Mbps over 171KB samples; ffmpeg read 6s media in 2.8s (2.14x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1647
         }
       }
     },
@@ -656,24 +656,24 @@
       "title": "CCTV-1 综合",
       "channel_id": "CCTV1.cn",
       "group": "央视",
-      "source": "cctv-recovery",
+      "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 27,
-          "successes": 27,
+          "runs": 28,
+          "successes": 28,
           "failures": 0,
-          "ffprobe_successes": 25,
-          "anomaly_hits": 28,
-          "elapsed_total_ms": 198000,
-          "playlist_total_ms": 10234,
-          "media_total_ms": 17749,
-          "startup_score_total": 1278,
-          "live_score_total": 2645,
-          "content_score_total": 1965,
+          "ffprobe_successes": 26,
+          "anomaly_hits": 29,
+          "elapsed_total_ms": 203594,
+          "playlist_total_ms": 10373,
+          "media_total_ms": 18098,
+          "startup_score_total": 1328,
+          "live_score_total": 2745,
+          "content_score_total": 2030,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3653ms over 3 segment checks; avg 4.31Mbps over 182KB samples; ffmpeg read 6s media in 3.2s (1.90x)",
-          "last_updated": "2026-03-12T01:06:20Z",
-          "buffer_score_total": 1541
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3651ms over 3 segment checks; avg 5.02Mbps over 213KB samples; ffmpeg read 6s media in 4.0s (1.50x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1624
         }
       }
     },
@@ -684,21 +684,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
-          "ffprobe_successes": 23,
-          "anomaly_hits": 29,
-          "elapsed_total_ms": 184189,
-          "playlist_total_ms": 6150,
-          "media_total_ms": 15712,
-          "startup_score_total": 1186,
-          "live_score_total": 2500,
-          "content_score_total": 1710,
+          "ffprobe_successes": 24,
+          "anomaly_hits": 30,
+          "elapsed_total_ms": 189632,
+          "playlist_total_ms": 6329,
+          "media_total_ms": 16096,
+          "startup_score_total": 1236,
+          "live_score_total": 2600,
+          "content_score_total": 1775,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3285ms over 3 segment checks; avg 2.39Mbps over 208KB samples; ffmpeg read 6s media in 4.2s (1.43x)",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 1249
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3616ms over 3 segment checks; avg 4.72Mbps over 221KB samples; ffmpeg read 6s media in 6.6s (0.90x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1315
         }
       }
     },
@@ -709,21 +709,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 68,
-          "elapsed_total_ms": 76345,
-          "playlist_total_ms": 10696,
+          "anomaly_hits": 71,
+          "elapsed_total_ms": 78305,
+          "playlist_total_ms": 10897,
           "media_total_ms": 0,
-          "startup_score_total": 644,
-          "live_score_total": 500,
-          "content_score_total": 1295,
+          "startup_score_total": 670,
+          "live_score_total": 520,
+          "content_score_total": 1355,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 404: Not Found); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 391
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 409
         }
       }
     },
@@ -734,21 +734,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 68,
-          "elapsed_total_ms": 27502,
-          "playlist_total_ms": 8269,
+          "anomaly_hits": 71,
+          "elapsed_total_ms": 28144,
+          "playlist_total_ms": 8535,
           "media_total_ms": 0,
-          "startup_score_total": 644,
-          "live_score_total": 500,
-          "content_score_total": 1110,
+          "startup_score_total": 670,
+          "live_score_total": 520,
+          "content_score_total": 1155,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 404: Not Found); ffmpeg did not produce enough video frames",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 421
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 444
         }
       }
     },
@@ -959,21 +959,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
-          "ffprobe_successes": 18,
-          "anomaly_hits": 50,
-          "elapsed_total_ms": 220198,
-          "playlist_total_ms": 7660,
-          "media_total_ms": 19255,
-          "startup_score_total": 774,
-          "live_score_total": 1635,
-          "content_score_total": 1055,
+          "ffprobe_successes": 19,
+          "anomaly_hits": 54,
+          "elapsed_total_ms": 232273,
+          "playlist_total_ms": 7889,
+          "media_total_ms": 20825,
+          "startup_score_total": 820,
+          "live_score_total": 1735,
+          "content_score_total": 1115,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5309ms over 4 segment checks; avg 3.03Mbps over 256KB samples; stable x2; stable x3; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 329
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4430ms over 4 segment checks; avg 1.34Mbps over 256KB samples; stable x2; stable x3; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 355
         }
       }
     },
@@ -984,21 +984,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 47,
-          "elapsed_total_ms": 255800,
-          "playlist_total_ms": 8194,
+          "anomaly_hits": 50,
+          "elapsed_total_ms": 270015,
+          "playlist_total_ms": 8382,
           "media_total_ms": 0,
-          "startup_score_total": 462,
-          "live_score_total": 360,
-          "content_score_total": 1055,
+          "startup_score_total": 488,
+          "live_score_total": 380,
+          "content_score_total": 1115,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); stable x2; stable x3; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 210
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 228
         }
       }
     },
@@ -1009,21 +1009,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 61,
-          "elapsed_total_ms": 305251,
-          "playlist_total_ms": 21130,
-          "media_total_ms": 32545,
-          "startup_score_total": 1015,
-          "live_score_total": 2500,
-          "content_score_total": 1475,
+          "anomaly_hits": 64,
+          "elapsed_total_ms": 317366,
+          "playlist_total_ms": 21928,
+          "media_total_ms": 33937,
+          "startup_score_total": 1054,
+          "live_score_total": 2600,
+          "content_score_total": 1535,
           "last_ok": true,
-          "last_detail": "variant segment reachable; media sequence advanced; buffer margin 3639ms over 3 segment checks; avg 1.36Mbps over 225KB samples; stable x2; stable x3; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 390
+          "last_detail": "variant segment reachable; media sequence advanced; buffer margin 3608ms over 3 segment checks; avg 1.51Mbps over 256KB samples; stable x2; stable x3; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 409
         }
       }
     },
@@ -1034,21 +1034,21 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 24,
-          "successes": 24,
+          "runs": 25,
+          "successes": 25,
           "failures": 0,
-          "ffprobe_successes": 22,
-          "anomaly_hits": 23,
-          "elapsed_total_ms": 177399,
-          "playlist_total_ms": 5797,
-          "media_total_ms": 13035,
-          "startup_score_total": 1125,
-          "live_score_total": 2210,
-          "content_score_total": 1910,
+          "ffprobe_successes": 23,
+          "anomaly_hits": 24,
+          "elapsed_total_ms": 183908,
+          "playlist_total_ms": 5958,
+          "media_total_ms": 13499,
+          "startup_score_total": 1171,
+          "live_score_total": 2310,
+          "content_score_total": 1975,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3429ms over 3 segment checks; avg 3.67Mbps over 256KB samples; stable x2; stable x3; ffmpeg read 6s media in 3.1s (1.91x)",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 1324
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 4536ms over 3 segment checks; avg 4.52Mbps over 256KB samples; stable x2; stable x3; ffmpeg read 6s media in 3.1s (1.91x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1414
         }
       }
     },
@@ -1059,21 +1059,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
-          "ffprobe_successes": 24,
-          "anomaly_hits": 17,
-          "elapsed_total_ms": 159363,
-          "playlist_total_ms": 4139,
-          "media_total_ms": 9297,
-          "startup_score_total": 1244,
-          "live_score_total": 2390,
-          "content_score_total": 1960,
+          "ffprobe_successes": 25,
+          "anomaly_hits": 18,
+          "elapsed_total_ms": 165245,
+          "playlist_total_ms": 4304,
+          "media_total_ms": 9508,
+          "startup_score_total": 1294,
+          "live_score_total": 2490,
+          "content_score_total": 2025,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3727ms over 3 segment checks; avg 6.24Mbps over 208KB samples; stable x2; stable x3; ffmpeg read 6s media in 2.7s (2.22x)",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 1673
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 4789ms over 3 segment checks; avg 9.94Mbps over 255KB samples; stable x2; stable x3; ffmpeg read 6s media in 3.1s (1.94x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1761
         }
       }
     },
@@ -1084,21 +1084,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
-          "ffprobe_successes": 24,
+          "ffprobe_successes": 25,
           "anomaly_hits": 24,
-          "elapsed_total_ms": 180323,
-          "playlist_total_ms": 8718,
-          "media_total_ms": 11622,
-          "startup_score_total": 1197,
-          "live_score_total": 2500,
-          "content_score_total": 1790,
+          "elapsed_total_ms": 186700,
+          "playlist_total_ms": 8863,
+          "media_total_ms": 11991,
+          "startup_score_total": 1247,
+          "live_score_total": 2600,
+          "content_score_total": 1890,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3613ms over 3 segment checks; avg 4.24Mbps over 200KB samples; stable x2; stable x3; ffmpeg read 6s media in 3.7s (1.62x)",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 1486
+          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3631ms over 3 segment checks; avg 5.68Mbps over 256KB samples; stable x2; stable x3; ffmpeg read 6s media in 3.5s (1.71x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1565
         }
       }
     },
@@ -1106,23 +1106,23 @@
       "title": "CCTV-13 新闻",
       "channel_id": "CCTV13.cn",
       "group": "央视",
-      "source": "cctv-official",
+      "source": "published",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 25,
-          "failures": 0,
+          "failures": 1,
           "ffprobe_successes": 24,
           "anomaly_hits": 25,
-          "elapsed_total_ms": 231309,
+          "elapsed_total_ms": 245311,
           "playlist_total_ms": 8121,
           "media_total_ms": 13833,
           "startup_score_total": 1186,
           "live_score_total": 2500,
-          "content_score_total": 1920,
-          "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; variant segment reachable; media sequence advanced; buffer margin 3492ms over 3 segment checks; avg 3.39Mbps over 210KB samples; stable x2; stable x3; ffmpeg read 6s media in 6.2s (0.97x)",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "content_score_total": 1970,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 1329
         }
       }
@@ -1134,21 +1134,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 68,
-          "elapsed_total_ms": 94445,
-          "playlist_total_ms": 10287,
+          "anomaly_hits": 71,
+          "elapsed_total_ms": 97645,
+          "playlist_total_ms": 10530,
           "media_total_ms": 0,
-          "startup_score_total": 647,
-          "live_score_total": 500,
-          "content_score_total": 1295,
+          "startup_score_total": 673,
+          "live_score_total": 520,
+          "content_score_total": 1355,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 404: Not Found); stable x2; stable x3; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 391
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 409
         }
       }
     },
@@ -1159,21 +1159,21 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 68,
-          "elapsed_total_ms": 21593,
-          "playlist_total_ms": 8518,
+          "anomaly_hits": 71,
+          "elapsed_total_ms": 23139,
+          "playlist_total_ms": 8764,
           "media_total_ms": 0,
-          "startup_score_total": 647,
-          "live_score_total": 500,
-          "content_score_total": 1110,
+          "startup_score_total": 673,
+          "live_score_total": 520,
+          "content_score_total": 1155,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 404: Not Found); stable x2; stable x3; ffmpeg did not produce enough video frames",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 421
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 444
         }
       }
     },
@@ -1184,21 +1184,21 @@
       "source": "iptv-org",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 46,
-          "elapsed_total_ms": 123907,
-          "playlist_total_ms": 1152,
-          "media_total_ms": 3902,
-          "startup_score_total": 900,
-          "live_score_total": 920,
-          "content_score_total": 795,
+          "anomaly_hits": 49,
+          "elapsed_total_ms": 131323,
+          "playlist_total_ms": 1206,
+          "media_total_ms": 4069,
+          "startup_score_total": 950,
+          "live_score_total": 965,
+          "content_score_total": 840,
           "last_ok": true,
-          "last_detail": "playlist segment reachable; media sequence advanced; buffer margin 9789ms over 4 segment checks; avg 9.94Mbps over 256KB samples; stable x2; stable x3; ffmpeg did not produce enough video frames",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 608
+          "last_detail": "playlist segment reachable; media sequence advanced; buffer margin 9833ms over 4 segment checks; avg 12.56Mbps over 256KB samples; stable x2; stable x3; ffmpeg did not produce enough video frames",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 660
         }
       }
     },
@@ -1609,21 +1609,21 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 27,
-          "successes": 27,
+          "runs": 28,
+          "successes": 28,
           "failures": 0,
-          "ffprobe_successes": 26,
-          "anomaly_hits": 64,
-          "elapsed_total_ms": 285504,
-          "playlist_total_ms": 6982,
-          "media_total_ms": 29729,
-          "startup_score_total": 1166,
-          "live_score_total": 2590,
-          "content_score_total": 1715,
+          "ffprobe_successes": 27,
+          "anomaly_hits": 66,
+          "elapsed_total_ms": 295482,
+          "playlist_total_ms": 7213,
+          "media_total_ms": 30521,
+          "startup_score_total": 1212,
+          "live_score_total": 2690,
+          "content_score_total": 1775,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4758ms over 4 segment checks; avg 1.69Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 664
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5208ms over 4 segment checks; avg 2.65Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 704
         }
       }
     },
@@ -1634,21 +1634,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 17,
-          "successes": 17,
+          "runs": 18,
+          "successes": 18,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 44,
-          "elapsed_total_ms": 238160,
-          "playlist_total_ms": 4261,
+          "anomaly_hits": 47,
+          "elapsed_total_ms": 252378,
+          "playlist_total_ms": 4476,
           "media_total_ms": 0,
-          "startup_score_total": 442,
-          "live_score_total": 340,
-          "content_score_total": 995,
+          "startup_score_total": 468,
+          "live_score_total": 360,
+          "content_score_total": 1055,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 192
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 210
         }
       }
     },
@@ -1756,24 +1756,24 @@
       "title": "CCTV-6 电影",
       "channel_id": "CCTV6.cn",
       "group": "央视",
-      "source": "cctv-recovery",
+      "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 25,
-          "successes": 25,
+          "runs": 26,
+          "successes": 26,
           "failures": 0,
-          "ffprobe_successes": 24,
-          "anomaly_hits": 63,
-          "elapsed_total_ms": 278302,
-          "playlist_total_ms": 9171,
-          "media_total_ms": 30968,
-          "startup_score_total": 1060,
-          "live_score_total": 2445,
-          "content_score_total": 1480,
+          "ffprobe_successes": 25,
+          "anomaly_hits": 64,
+          "elapsed_total_ms": 289339,
+          "playlist_total_ms": 9398,
+          "media_total_ms": 32281,
+          "startup_score_total": 1101,
+          "live_score_total": 2545,
+          "content_score_total": 1580,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5241ms over 4 segment checks; avg 2.76Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:42:57Z",
-          "buffer_score_total": 554
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4687ms over 4 segment checks; avg 1.6Mbps over 256KB samples; ffmpeg read 6s media in 4.3s (1.40x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 620
         }
       }
     },
@@ -1784,21 +1784,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 16,
-          "successes": 16,
+          "runs": 17,
+          "successes": 17,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 41,
-          "elapsed_total_ms": 234462,
-          "playlist_total_ms": 17825,
+          "anomaly_hits": 44,
+          "elapsed_total_ms": 248617,
+          "playlist_total_ms": 17978,
           "media_total_ms": 0,
-          "startup_score_total": 416,
-          "live_score_total": 320,
-          "content_score_total": 935,
+          "startup_score_total": 442,
+          "live_score_total": 340,
+          "content_score_total": 995,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); stable x2; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-09T03:14:19Z",
-          "buffer_score_total": 174
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 192
         }
       }
     },
@@ -1809,20 +1809,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 16,
+          "runs": 17,
           "successes": 13,
-          "failures": 3,
+          "failures": 4,
           "ffprobe_successes": 0,
           "anomaly_hits": 31,
-          "elapsed_total_ms": 112492,
-          "playlist_total_ms": 7991,
+          "elapsed_total_ms": 112734,
+          "playlist_total_ms": 8233,
           "media_total_ms": 3999,
           "startup_score_total": 631,
           "live_score_total": 1040,
-          "content_score_total": 720,
-          "last_ok": true,
-          "last_detail": "playlist segment reachable; media sequence advanced; buffer margin 5864ms over 3 segment checks; avg 0.04Mbps over 0KB samples; stable x2; ffmpeg did not produce enough video frames",
-          "last_updated": "2026-03-09T03:14:19Z",
+          "content_score_total": 770,
+          "last_ok": false,
+          "last_detail": "generic http body is not a validated stream",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 316
         }
       }
@@ -1930,24 +1930,24 @@
       "title": "CCTV-8 电视剧",
       "channel_id": "CCTV8.cn",
       "group": "央视",
-      "source": "feedback-preferred",
+      "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 26,
-          "successes": 26,
+          "runs": 27,
+          "successes": 27,
           "failures": 0,
-          "ffprobe_successes": 25,
-          "anomaly_hits": 66,
-          "elapsed_total_ms": 302293,
-          "playlist_total_ms": 8122,
-          "media_total_ms": 33730,
-          "startup_score_total": 1070,
-          "live_score_total": 2435,
-          "content_score_total": 1615,
+          "ffprobe_successes": 26,
+          "anomaly_hits": 68,
+          "elapsed_total_ms": 312188,
+          "playlist_total_ms": 8376,
+          "media_total_ms": 34750,
+          "startup_score_total": 1111,
+          "live_score_total": 2535,
+          "content_score_total": 1675,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 3775ms over 4 segment checks; avg 0.94Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:56:20Z",
-          "buffer_score_total": 571
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4980ms over 4 segment checks; avg 2.06Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 606
         }
       }
     },
@@ -1958,21 +1958,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 17,
-          "successes": 17,
+          "runs": 18,
+          "successes": 18,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 44,
-          "elapsed_total_ms": 247082,
-          "playlist_total_ms": 11890,
+          "anomaly_hits": 47,
+          "elapsed_total_ms": 251264,
+          "playlist_total_ms": 12059,
           "media_total_ms": 0,
-          "startup_score_total": 427,
-          "live_score_total": 340,
-          "content_score_total": 995,
+          "startup_score_total": 453,
+          "live_score_total": 360,
+          "content_score_total": 1055,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 192
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error [Errno 61] Connection refused>); ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 210
         }
       }
     },
@@ -2151,24 +2151,24 @@
       "title": "东南卫视",
       "channel_id": "FujianSoutheastTV.cn",
       "group": "卫视",
-      "source": "feedback-preferred",
+      "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 26,
-          "successes": 26,
+          "runs": 27,
+          "successes": 27,
           "failures": 0,
-          "ffprobe_successes": 25,
-          "anomaly_hits": 64,
-          "elapsed_total_ms": 283391,
-          "playlist_total_ms": 9529,
-          "media_total_ms": 31854,
-          "startup_score_total": 1116,
-          "live_score_total": 2490,
-          "content_score_total": 1615,
+          "ffprobe_successes": 26,
+          "anomaly_hits": 67,
+          "elapsed_total_ms": 297242,
+          "playlist_total_ms": 10120,
+          "media_total_ms": 33777,
+          "startup_score_total": 1150,
+          "live_score_total": 2590,
+          "content_score_total": 1675,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 5088ms over 4 segment checks; avg 2.3Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:06:45Z",
-          "buffer_score_total": 605
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4077ms over 4 segment checks; avg 1.09Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 626
         }
       }
     },
@@ -2179,21 +2179,21 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
-          "ffprobe_successes": 18,
+          "ffprobe_successes": 19,
           "anomaly_hits": 16,
-          "elapsed_total_ms": 175855,
-          "playlist_total_ms": 12414,
-          "media_total_ms": 14662,
-          "startup_score_total": 758,
-          "live_score_total": 1195,
-          "content_score_total": 1800,
+          "elapsed_total_ms": 185860,
+          "playlist_total_ms": 12985,
+          "media_total_ms": 15740,
+          "startup_score_total": 797,
+          "live_score_total": 1295,
+          "content_score_total": 1900,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 8964ms over 3 segment checks; avg 2.02Mbps over 256KB samples; ffmpeg read 6s media in 2.8s (2.16x)",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 957
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 8922ms over 3 segment checks; avg 1.95Mbps over 256KB samples; ffmpeg read 6s media in 2.2s (2.73x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1044
         }
       }
     },
@@ -2204,21 +2204,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 18,
-          "successes": 18,
+          "runs": 19,
+          "successes": 19,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 47,
-          "elapsed_total_ms": 239702,
-          "playlist_total_ms": 7658,
+          "anomaly_hits": 50,
+          "elapsed_total_ms": 253889,
+          "playlist_total_ms": 7843,
           "media_total_ms": 0,
-          "startup_score_total": 453,
-          "live_score_total": 360,
-          "content_score_total": 1055,
+          "startup_score_total": 479,
+          "live_score_total": 380,
+          "content_score_total": 1115,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error [Errno 61] Connection refused>); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 210
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 228
         }
       }
     },
@@ -2253,21 +2253,21 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 26,
-          "successes": 25,
+          "runs": 27,
+          "successes": 26,
           "failures": 1,
-          "ffprobe_successes": 24,
+          "ffprobe_successes": 25,
           "anomaly_hits": 26,
-          "elapsed_total_ms": 241145,
-          "playlist_total_ms": 15540,
-          "media_total_ms": 22601,
-          "startup_score_total": 1031,
-          "live_score_total": 1565,
-          "content_score_total": 2495,
+          "elapsed_total_ms": 251156,
+          "playlist_total_ms": 16109,
+          "media_total_ms": 23694,
+          "startup_score_total": 1070,
+          "live_score_total": 1665,
+          "content_score_total": 2595,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 9956ms over 3 segment checks; avg 2.01Mbps over 256KB samples; ffmpeg read 6s media in 2.5s (2.40x)",
-          "last_updated": "2026-03-12T00:42:36Z",
-          "buffer_score_total": 1620
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 10907ms over 3 segment checks; avg 1.92Mbps over 256KB samples; ffmpeg read 6s media in 2.2s (2.75x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1707
         }
       }
     },
@@ -2278,21 +2278,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 16,
-          "successes": 16,
+          "runs": 17,
+          "successes": 17,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 41,
-          "elapsed_total_ms": 234456,
-          "playlist_total_ms": 17476,
+          "anomaly_hits": 44,
+          "elapsed_total_ms": 248632,
+          "playlist_total_ms": 17649,
           "media_total_ms": 0,
-          "startup_score_total": 404,
-          "live_score_total": 320,
-          "content_score_total": 935,
+          "startup_score_total": 430,
+          "live_score_total": 340,
+          "content_score_total": 995,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); stable x2; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-09T03:14:19Z",
-          "buffer_score_total": 174
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 192
         }
       }
     },
@@ -3598,24 +3598,24 @@
       "title": "东方卫视",
       "channel_id": "DragonTV.cn",
       "group": "卫视",
-      "source": "curated:suxuang",
+      "source": "published",
       "environments": {
         "local": {
-          "runs": 23,
-          "successes": 23,
+          "runs": 24,
+          "successes": 24,
           "failures": 0,
-          "ffprobe_successes": 22,
-          "anomaly_hits": 57,
-          "elapsed_total_ms": 232814,
-          "playlist_total_ms": 6361,
-          "media_total_ms": 24407,
-          "startup_score_total": 990,
-          "live_score_total": 1915,
-          "content_score_total": 1435,
+          "ffprobe_successes": 23,
+          "anomaly_hits": 60,
+          "elapsed_total_ms": 244619,
+          "playlist_total_ms": 6604,
+          "media_total_ms": 25905,
+          "startup_score_total": 1031,
+          "live_score_total": 2015,
+          "content_score_total": 1495,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4956ms over 4 segment checks; avg 2.01Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:42:36Z",
-          "buffer_score_total": 567
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4502ms over 4 segment checks; avg 1.4Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 593
         }
       }
     },
@@ -3626,21 +3626,21 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 17,
-          "successes": 17,
+          "runs": 18,
+          "successes": 18,
           "failures": 0,
-          "ffprobe_successes": 17,
-          "anomaly_hits": 42,
-          "elapsed_total_ms": 206626,
-          "playlist_total_ms": 10227,
-          "media_total_ms": 20257,
-          "startup_score_total": 720,
-          "live_score_total": 1645,
-          "content_score_total": 1020,
+          "ffprobe_successes": 18,
+          "anomaly_hits": 46,
+          "elapsed_total_ms": 217238,
+          "playlist_total_ms": 10448,
+          "media_total_ms": 21457,
+          "startup_score_total": 761,
+          "live_score_total": 1745,
+          "content_score_total": 1080,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4608ms over 4 segment checks; avg 1.51Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-12T00:42:36Z",
-          "buffer_score_total": 357
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4800ms over 3 segment checks; avg 1.75Mbps over 256KB samples; 1 segment checks failed; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 376
         }
       }
     },
@@ -3651,21 +3651,21 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 16,
-          "successes": 16,
+          "runs": 17,
+          "successes": 17,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 41,
-          "elapsed_total_ms": 238099,
-          "playlist_total_ms": 21035,
+          "anomaly_hits": 44,
+          "elapsed_total_ms": 252297,
+          "playlist_total_ms": 21231,
           "media_total_ms": 0,
-          "startup_score_total": 389,
-          "live_score_total": 320,
-          "content_score_total": 935,
+          "startup_score_total": 415,
+          "live_score_total": 340,
+          "content_score_total": 995,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); stable x2; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-09T03:14:19Z",
-          "buffer_score_total": 174
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 192
         }
       }
     },
@@ -3676,21 +3676,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
-          "successes": 23,
+          "runs": 24,
+          "successes": 24,
           "failures": 0,
-          "ffprobe_successes": 22,
-          "anomaly_hits": 26,
-          "elapsed_total_ms": 178754,
-          "playlist_total_ms": 6660,
-          "media_total_ms": 13450,
-          "startup_score_total": 1086,
-          "live_score_total": 1035,
-          "content_score_total": 2220,
+          "ffprobe_successes": 23,
+          "anomaly_hits": 27,
+          "elapsed_total_ms": 187077,
+          "playlist_total_ms": 6925,
+          "media_total_ms": 14117,
+          "startup_score_total": 1132,
+          "live_score_total": 1080,
+          "content_score_total": 2320,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; playlist did not prove forward movement; buffer margin 7319ms over 3 segment checks; avg 3.08Mbps over 256KB samples; ffmpeg read 6s media in 1.7s (3.52x)",
-          "last_updated": "2026-03-12T00:42:36Z",
-          "buffer_score_total": 1494
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; playlist did not prove forward movement; buffer margin 7333ms over 3 segment checks; avg 3.14Mbps over 256KB samples; ffmpeg read 6s media in 1.4s (4.25x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1586
         }
       }
     },
@@ -3701,21 +3701,21 @@
       "source": "legacy-baseline",
       "environments": {
         "local": {
-          "runs": 23,
-          "successes": 23,
+          "runs": 24,
+          "successes": 24,
           "failures": 0,
-          "ffprobe_successes": 22,
-          "anomaly_hits": 16,
-          "elapsed_total_ms": 232495,
-          "playlist_total_ms": 16201,
-          "media_total_ms": 18167,
-          "startup_score_total": 1066,
-          "live_score_total": 2135,
-          "content_score_total": 2220,
+          "ffprobe_successes": 23,
+          "anomaly_hits": 19,
+          "elapsed_total_ms": 244002,
+          "playlist_total_ms": 16264,
+          "media_total_ms": 19422,
+          "startup_score_total": 1107,
+          "live_score_total": 2235,
+          "content_score_total": 2280,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 7022ms over 4 segment checks; avg 2.14Mbps over 256KB samples; ffmpeg read 6s media in 8.9s (0.67x)",
-          "last_updated": "2026-03-12T00:42:36Z",
-          "buffer_score_total": 1165
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 6745ms over 4 segment checks; avg 1.67Mbps over 256KB samples; ffmpeg continuous read timed out",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1184
         }
       }
     },
@@ -3801,21 +3801,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 16,
-          "successes": 16,
+          "runs": 17,
+          "successes": 17,
           "failures": 0,
           "ffprobe_successes": 8,
-          "anomaly_hits": 39,
-          "elapsed_total_ms": 75836,
-          "playlist_total_ms": 3818,
+          "anomaly_hits": 40,
+          "elapsed_total_ms": 76210,
+          "playlist_total_ms": 3955,
           "media_total_ms": 5141,
-          "startup_score_total": 625,
-          "live_score_total": 400,
-          "content_score_total": 1070,
+          "startup_score_total": 651,
+          "live_score_total": 420,
+          "content_score_total": 1170,
           "last_ok": true,
-          "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 403: Forbidden); stable x2; ffmpeg read 6s media in 1.7s (3.53x)",
-          "last_updated": "2026-03-09T03:14:19Z",
-          "buffer_score_total": 458
+          "last_detail": "playlist reachable; child fetch slow but may still be playable (HTTP Error 403: Forbidden); ffmpeg read 6s media in 1.6s (3.86x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 528
         }
       }
     },
@@ -3823,24 +3823,24 @@
       "title": "海峡卫视",
       "channel_id": "FujianStraitsTV.cn",
       "group": "卫视",
-      "source": "published",
+      "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 20,
-          "successes": 19,
+          "runs": 21,
+          "successes": 20,
           "failures": 1,
-          "ffprobe_successes": 18,
-          "anomaly_hits": 8,
-          "elapsed_total_ms": 111138,
-          "playlist_total_ms": 4466,
-          "media_total_ms": 2290,
-          "startup_score_total": 850,
-          "live_score_total": 1700,
-          "content_score_total": 1685,
-          "last_ok": false,
-          "last_detail": "http error: 530",
-          "last_updated": "2026-03-10T18:54:04Z",
-          "buffer_score_total": 1237
+          "ffprobe_successes": 19,
+          "anomaly_hits": 9,
+          "elapsed_total_ms": 117422,
+          "playlist_total_ms": 4613,
+          "media_total_ms": 2386,
+          "startup_score_total": 900,
+          "live_score_total": 1800,
+          "content_score_total": 1750,
+          "last_ok": true,
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 7904ms over 3 segment checks; avg 19.69Mbps over 230KB samples; ffmpeg read 6s media in 0.7s (8.40x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1337
         }
       }
     },
@@ -5316,20 +5316,20 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 24,
+          "runs": 25,
           "successes": 0,
-          "failures": 24,
+          "failures": 25,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 10966,
-          "playlist_total_ms": 10964,
+          "elapsed_total_ms": 11265,
+          "playlist_total_ms": 11263,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1200,
+          "content_score_total": 1250,
           "last_ok": false,
           "last_detail": "playlist looks like ended vod, not live tv",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -5609,20 +5609,20 @@
       "source": "iptv-org",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 5636,
+          "elapsed_total_ms": 5730,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -5733,20 +5733,20 @@
       "source": "iptv-org",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2751,
+          "elapsed_total_ms": 2819,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -5858,20 +5858,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 35,
+          "elapsed_total_ms": 36,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -5883,20 +5883,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 31,
+          "elapsed_total_ms": 32,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -6033,20 +6033,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 34,
+          "elapsed_total_ms": 35,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -6158,31 +6158,6 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 24,
-          "successes": 0,
-          "failures": 24,
-          "ffprobe_successes": 0,
-          "anomaly_hits": 0,
-          "elapsed_total_ms": 35,
-          "playlist_total_ms": 0,
-          "media_total_ms": 0,
-          "startup_score_total": 0,
-          "live_score_total": 0,
-          "content_score_total": 1200,
-          "last_ok": false,
-          "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:55:34Z",
-          "buffer_score_total": 0
-        }
-      }
-    },
-    "https://zby.130519.xyz/PLTV/11/224/3221226128/index.m3u8": {
-      "title": "CCTV-13 新闻",
-      "channel_id": "CCTV13.cn",
-      "group": "央视",
-      "source": "curated:suxuang",
-      "environments": {
-        "local": {
           "runs": 25,
           "successes": 0,
           "failures": 25,
@@ -6196,7 +6171,32 @@
           "content_score_total": 1250,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 0
+        }
+      }
+    },
+    "https://zby.130519.xyz/PLTV/11/224/3221226128/index.m3u8": {
+      "title": "CCTV-13 新闻",
+      "channel_id": "CCTV13.cn",
+      "group": "央视",
+      "source": "curated:suxuang",
+      "environments": {
+        "local": {
+          "runs": 26,
+          "successes": 0,
+          "failures": 26,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 38,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "content_score_total": 1300,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -6508,20 +6508,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 33,
+          "elapsed_total_ms": 34,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -6758,20 +6758,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 24,
+          "runs": 25,
           "successes": 0,
-          "failures": 24,
+          "failures": 25,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 40,
+          "elapsed_total_ms": 42,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1200,
+          "content_score_total": 1250,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -6883,20 +6883,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 44,
+          "elapsed_total_ms": 46,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8108,20 +8108,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 33,
+          "elapsed_total_ms": 34,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8133,20 +8133,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 26,
+          "elapsed_total_ms": 28,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8183,20 +8183,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 275601,
+          "elapsed_total_ms": 289826,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8233,20 +8233,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 316367,
+          "elapsed_total_ms": 330597,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8308,20 +8308,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 24,
+          "runs": 25,
           "successes": 0,
-          "failures": 24,
+          "failures": 25,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 289985,
+          "elapsed_total_ms": 304212,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1200,
+          "content_score_total": 1250,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8558,20 +8558,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 288149,
+          "elapsed_total_ms": 302378,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8608,20 +8608,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 304617,
+          "elapsed_total_ms": 318848,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8733,20 +8733,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 24,
+          "runs": 25,
           "successes": 0,
-          "failures": 24,
+          "failures": 25,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 290232,
+          "elapsed_total_ms": 304460,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1200,
+          "content_score_total": 1250,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8858,20 +8858,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 316258,
+          "elapsed_total_ms": 330498,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8883,20 +8883,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 288222,
+          "elapsed_total_ms": 302447,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:42:36Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8958,20 +8958,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 24,
+          "elapsed_total_ms": 25,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -8983,20 +8983,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 30,
+          "elapsed_total_ms": 31,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9032,20 +9032,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 6761,
+          "elapsed_total_ms": 6798,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9057,20 +9057,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 6579,
+          "elapsed_total_ms": 6615,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9132,20 +9132,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 50633,
+          "elapsed_total_ms": 65705,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9407,20 +9407,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 38224,
+          "elapsed_total_ms": 38427,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
-          "last_detail": "network error: timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_detail": "http error: 403",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9557,20 +9557,20 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 20,
+          "runs": 21,
           "successes": 0,
-          "failures": 20,
+          "failures": 21,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 264041,
+          "elapsed_total_ms": 278043,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1000,
+          "content_score_total": 1050,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9582,20 +9582,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 313209,
+          "elapsed_total_ms": 327282,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9632,20 +9632,20 @@
       "source": "cctv-official",
       "environments": {
         "local": {
-          "runs": 25,
+          "runs": 26,
           "successes": 0,
-          "failures": 25,
+          "failures": 26,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 312807,
+          "elapsed_total_ms": 326887,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1250,
+          "content_score_total": 1300,
           "last_ok": false,
           "last_detail": "network error: timed out",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9782,20 +9782,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 31470,
+          "elapsed_total_ms": 45473,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9832,20 +9832,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 16,
+          "runs": 17,
           "successes": 0,
-          "failures": 16,
+          "failures": 17,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 6908,
+          "elapsed_total_ms": 20910,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 800,
+          "content_score_total": 850,
           "last_ok": false,
-          "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
-          "last_updated": "2026-03-09T03:14:19Z",
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -9907,20 +9907,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 17,
+          "runs": 18,
           "successes": 0,
-          "failures": 17,
+          "failures": 18,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 18747,
+          "elapsed_total_ms": 32749,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 850,
+          "content_score_total": 900,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -10007,20 +10007,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 17,
+          "runs": 18,
           "successes": 0,
-          "failures": 17,
+          "failures": 18,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 20233,
+          "elapsed_total_ms": 34235,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 850,
+          "content_score_total": 900,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -10082,20 +10082,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 30539,
+          "elapsed_total_ms": 44541,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -10281,20 +10281,20 @@
       "source": "curated:chinaiptv",
       "environments": {
         "local": {
-          "runs": 17,
+          "runs": 18,
           "successes": 0,
-          "failures": 17,
+          "failures": 18,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 228037,
+          "elapsed_total_ms": 242039,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 850,
+          "content_score_total": 900,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -10581,20 +10581,20 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 17,
+          "runs": 18,
           "successes": 0,
-          "failures": 17,
+          "failures": 18,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 6,
+          "elapsed_total_ms": 7,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 850,
+          "content_score_total": 900,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-12T00:55:34Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -13254,20 +13254,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 4988,
+          "elapsed_total_ms": 5110,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -13379,20 +13379,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 6025,
+          "elapsed_total_ms": 6290,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -13704,20 +13704,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 5044,
+          "elapsed_total_ms": 5305,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -14004,20 +14004,20 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 18,
+          "runs": 19,
           "successes": 0,
-          "failures": 18,
+          "failures": 19,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 37908,
+          "elapsed_total_ms": 39259,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 900,
+          "content_score_total": 950,
           "last_ok": false,
           "last_detail": "http error: 302",
-          "last_updated": "2026-03-12T01:05:57Z",
+          "last_updated": "2026-03-13T02:32:55Z",
           "buffer_score_total": 0
         }
       }
@@ -15011,21 +15011,21 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 14,
-          "successes": 13,
+          "runs": 15,
+          "successes": 14,
           "failures": 1,
-          "ffprobe_successes": 13,
+          "ffprobe_successes": 14,
           "anomaly_hits": 14,
-          "elapsed_total_ms": 138950,
-          "playlist_total_ms": 8885,
-          "media_total_ms": 12256,
-          "startup_score_total": 531,
-          "live_score_total": 750,
-          "content_score_total": 1295,
+          "elapsed_total_ms": 149093,
+          "playlist_total_ms": 9576,
+          "media_total_ms": 13352,
+          "startup_score_total": 570,
+          "live_score_total": 850,
+          "content_score_total": 1395,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 8981ms over 3 segment checks; avg 2.06Mbps over 256KB samples; ffmpeg read 6s media in 1.8s (3.34x)",
-          "last_updated": "2026-03-12T01:05:57Z",
-          "buffer_score_total": 943
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 14904ms over 3 segment checks; avg 1.91Mbps over 256KB samples; ffmpeg read 6s media in 1.9s (3.19x)",
+          "last_updated": "2026-03-13T02:32:55Z",
+          "buffer_score_total": 1031
         }
       }
     },
@@ -19528,21 +19528,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 2,
-          "successes": 2,
+          "runs": 3,
+          "successes": 3,
           "failures": 0,
-          "ffprobe_successes": 2,
+          "ffprobe_successes": 3,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 4790,
+          "elapsed_total_ms": 6388,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "buffer_score_total": 113,
-          "content_score_total": 200,
+          "buffer_score_total": 178,
+          "content_score_total": 300,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; ffmpeg read 6s media in 3.9s (1.54x)",
-          "last_updated": "2026-03-12T01:05:57Z"
+          "last_detail": "ffprobe detected video+audio streams; ffmpeg read 6s media in 3.0s (2.00x)",
+          "last_updated": "2026-03-13T02:32:55Z"
         }
       }
     },
@@ -19553,21 +19553,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 1,
-          "successes": 1,
+          "runs": 2,
+          "successes": 2,
           "failures": 0,
-          "ffprobe_successes": 1,
+          "ffprobe_successes": 2,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3244,
+          "elapsed_total_ms": 5580,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "buffer_score_total": 53,
-          "content_score_total": 100,
+          "buffer_score_total": 99,
+          "content_score_total": 200,
           "last_ok": true,
-          "last_detail": "ffprobe detected video+audio streams; ffmpeg read 6s media in 4.7s (1.27x)",
-          "last_updated": "2026-03-12T00:55:34Z"
+          "last_detail": "ffprobe detected video+audio streams; ffmpeg read 6s media in 5.9s (1.01x)",
+          "last_updated": "2026-03-13T02:32:55Z"
         }
       }
     },
@@ -19628,21 +19628,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 2,
+          "runs": 3,
           "successes": 0,
-          "failures": 2,
+          "failures": 3,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2045,
+          "elapsed_total_ms": 2078,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 100,
+          "content_score_total": 150,
           "last_ok": false,
-          "last_detail": "stability check 2 failed: http error: 429",
-          "last_updated": "2026-03-12T01:05:57Z"
+          "last_detail": "http error: 429",
+          "last_updated": "2026-03-13T02:32:55Z"
         }
       }
     },
@@ -19678,21 +19678,21 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 2,
+          "runs": 3,
           "successes": 0,
-          "failures": 2,
+          "failures": 3,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 68,
+          "elapsed_total_ms": 105,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 100,
+          "content_score_total": 150,
           "last_ok": false,
           "last_detail": "http error: 429",
-          "last_updated": "2026-03-12T01:05:57Z"
+          "last_updated": "2026-03-13T02:32:55Z"
         }
       }
     },
@@ -19703,12 +19703,87 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
+          "runs": 2,
+          "successes": 0,
+          "failures": 2,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 472,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 100,
+          "last_ok": false,
+          "last_detail": "http error: 429",
+          "last_updated": "2026-03-13T02:32:55Z"
+        }
+      }
+    },
+    "http://t.061899.xyz/tl/tl.php?id=cctv6": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "curated:suxuang",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 1,
+          "failures": 0,
+          "ffprobe_successes": 1,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 1703,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 60,
+          "content_score_total": 100,
+          "last_ok": true,
+          "last_detail": "ffprobe detected video+audio streams; ffmpeg read 6s media in 3.4s (1.78x)",
+          "last_updated": "2026-03-13T02:32:55Z"
+        }
+      }
+    },
+    "http://zwebl02.cztv.com/live/channel01720Pnew.m3u8?auth_key=1773365470-ca51cc714c051dd0a83f310a61a96c72-0-cdbfa81b626c0f0e50230ad7542095c5": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:chinaiptv",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 1,
+          "failures": 0,
+          "ffprobe_successes": 1,
+          "anomaly_hits": 3,
+          "elapsed_total_ms": 16295,
+          "playlist_total_ms": 30,
+          "media_total_ms": 2108,
+          "startup_score_total": 36,
+          "live_score_total": 100,
+          "buffer_score_total": 24,
+          "content_score_total": 45,
+          "last_ok": true,
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 3892ms over 4 segment checks; avg 0.99Mbps over 256KB samples; ffmpeg did not produce enough video frames",
+          "last_updated": "2026-03-13T02:32:55Z"
+        }
+      }
+    },
+    "http://t.061899.xyz/tl/tl.php?id=hxws": {
+      "title": "海峡卫视",
+      "channel_id": "FujianStraitsTV.cn",
+      "group": "卫视",
+      "source": "curated:suxuang",
+      "environments": {
+        "local": {
           "runs": 1,
           "successes": 0,
           "failures": 1,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 340,
+          "elapsed_total_ms": 29,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
@@ -19716,8 +19791,33 @@
           "buffer_score_total": 0,
           "content_score_total": 50,
           "last_ok": false,
-          "last_detail": "http error: 404",
-          "last_updated": "2026-03-12T00:55:34Z"
+          "last_detail": "http error: 429",
+          "last_updated": "2026-03-13T02:32:55Z"
+        }
+      }
+    },
+    "http://t.061899.xyz/tl/tl.php?id=dfws": {
+      "title": "东方卫视",
+      "channel_id": "DragonTV.cn",
+      "group": "卫视",
+      "source": "curated:suxuang",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 42,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 429",
+          "last_updated": "2026-03-13T02:32:55Z"
         }
       }
     }
