@@ -29,6 +29,7 @@
 - 额外做连续片段抓取和缓冲余量评分，避免只看首开快却长看卡顿
 - 用 `ffmpeg` 做短时连续读流，优先剔除“首开快但长看会缓冲”的源
 - 支持人工反馈文件，能把某条源锁成优先主源，或把串台/错误源直接拉黑
+- 支持外部源清单 `sources.json`，可在不改代码的情况下扩展搜源范围
 - 支持只扫描指定频道，适合单独修 `CCTV-1`、`东方卫视` 这类问题
 - 额外生成一份“主源 + 备用源”的备份播放列表
 - 主列表会优先保留低卡顿源，明显慢源会降级到备用或抢修订阅
@@ -69,6 +70,7 @@ python3 find_cn_streams.py --ffprobe --timeout 14 --workers 12 --retries 2 --ver
 
 - `state/probe-history.json`
 - `state/manual-feedback.json`
+- `sources.json`（可选外部源配置，手动维护）
 
 默认策略会做稳定性检查，并优先保留更可靠的候选源。
 脚本默认不偏好裸 IP 源，但当前也会保留一部分已经实测可用的手工优选源。
@@ -123,6 +125,18 @@ python3 find_cn_streams.py --channel "CCTV-6, CCTV-8, 辽宁卫视" --verbose
 python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 ```
 
+使用外部源配置（推荐）：
+
+```bash
+python3 find_cn_streams.py --sources sources.json --ffprobe --verbose
+```
+
+如果临时只想用脚本内置源：
+
+```bash
+python3 find_cn_streams.py --sources "" --verbose
+```
+
 ## 输出内容
 
 `output/chinese-public-verified.m3u`
@@ -169,6 +183,12 @@ python3 find_cn_streams.py --local-m3u /path/to/your.m3u --verbose
 
 如果你是直接把反馈告诉我，也可以只说“哪个频道、哪条 URL 要锁定/拉黑”，我会把它写进这个文件。
 如果某个已经锁定的频道后来又出问题，再单独用 `--channel` 扫它即可，不需要重扫整张表。
+
+`sources.json`
+
+- 用来扩展公开候选源入口，支持 `curated` 和 `deep` 两个顶级键
+- 脚本会先加载内置默认源，再叠加这个文件里的源
+- 配置文件缺失或某些 URL 失效不会中断任务，失效源会自动跳过
 
 ## GitHub 订阅
 

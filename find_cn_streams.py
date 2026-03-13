@@ -15,7 +15,7 @@ import sys
 import time
 import calendar
 from pathlib import Path
-from typing import Any, Collection, Iterable
+from typing import Any, Collection, Iterable, Mapping
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, quote, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
@@ -97,6 +97,7 @@ PUBLISHED_REPAIR_PLAYLIST_PATH = Path("m3u/chinese-public-repair.m3u")
 LEGACY_BASELINE_PLAYLIST_PATH = Path("m3u/chinese-public-verified-legacy-413cc62.m3u")
 DEFAULT_HISTORY_PATH = Path("state/probe-history.json")
 DEFAULT_FEEDBACK_PATH = Path("state/manual-feedback.json")
+DEFAULT_SOURCES_PATH = Path("sources.json")
 BLOCKED_CANDIDATE_URL_PATTERNS = (
     "iptv.catvod.com/live.php",
     "cdn.jsdelivr.net/gh/namegenliang/fast-github-access",
@@ -1035,6 +1036,43 @@ class FeedbackStore:
         self.path.write_text(json.dumps(self.payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def parse_source_url_map(raw: Any) -> dict[str, str]:
+    if not isinstance(raw, dict):
+        return {}
+    parsed: dict[str, str] = {}
+    for name, url in raw.items():
+        key = str(name or "").strip()
+        value = str(url or "").strip()
+        if not key or not value:
+            continue
+        if not value.startswith(("http://", "https://")):
+            continue
+        parsed[key] = value
+    return parsed
+
+
+def load_source_registry(path: Path | None) -> tuple[dict[str, str], dict[str, str]]:
+    curated = dict(CURATED_PUBLIC_M3U_URLS)
+    deep = dict(DEEP_DISCOVERY_M3U_URLS)
+    if not path or not path.exists():
+        return curated, deep
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return curated, deep
+    if not isinstance(payload, dict):
+        return curated, deep
+
+    curated.update(parse_source_url_map(payload.get("curated")))
+    curated.update(parse_source_url_map(payload.get("curated-public")))
+    curated.update(parse_source_url_map(payload.get("curated_public")))
+
+    deep.update(parse_source_url_map(payload.get("deep")))
+    deep.update(parse_source_url_map(payload.get("deep-discovery")))
+    deep.update(parse_source_url_map(payload.get("deep_discovery")))
+    return curated, deep
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -1111,6 +1149,14 @@ def parse_args() -> argparse.Namespace:
         "--feedback",
         default=str(DEFAULT_FEEDBACK_PATH),
         help="Persistent JSON feedback file used to pin or block specific sources.",
+    )
+    parser.add_argument(
+        "--sources",
+        default=str(DEFAULT_SOURCES_PATH),
+        help=(
+            "Optional JSON file with extra source URLs. "
+            "Supports top-level keys curated/deep. Empty string disables loading the file."
+        ),
     )
     parser.add_argument(
         "--probe-environment",
@@ -2124,9 +2170,10 @@ def load_curated_public_candidates(
     timeout: float,
     include_nsfw: bool,
     min_quality: int,
+    source_urls: Mapping[str, str] | None = None,
 ) -> list[Candidate]:
     candidates: list[Candidate] = []
-    for name, url in CURATED_PUBLIC_M3U_URLS.items():
+    for name, url in (source_urls or CURATED_PUBLIC_M3U_URLS).items():
         try:
             text = fetch_text(url, cache, timeout=timeout)
         except Exception:  # noqa: BLE001
@@ -2149,9 +2196,10 @@ def load_deep_discovery_candidates(
     include_nsfw: bool,
     min_quality: int,
     allow_ip_hosts: bool,
+    source_urls: Mapping[str, str] | None = None,
 ) -> list[Candidate]:
     candidates: list[Candidate] = []
-    for name, url in DEEP_DISCOVERY_M3U_URLS.items():
+    for name, url in (source_urls or DEEP_DISCOVERY_M3U_URLS).items():
         try:
             text = fetch_text(url, cache, timeout=timeout)
         except Exception:  # noqa: BLE001
@@ -4006,6 +4054,8 @@ def load_candidates(
     feedback: FeedbackStore | None = None,
     selected_channel_ids: set[str] | None = None,
     frozen_channel_ids: Collection[str] | None = None,
+    curated_source_urls: Mapping[str, str] | None = None,
+    deep_source_urls: Mapping[str, str] | None = None,
 ) -> list[Candidate]:
     candidates: list[Candidate] = []
     providers = list(dict.fromkeys(args.provider))
@@ -4037,6 +4087,7 @@ def load_candidates(
                 timeout=args.timeout,
                 include_nsfw=args.include_nsfw,
                 min_quality=args.min_quality,
+                source_urls=curated_source_urls,
             )
         )
 
@@ -4048,6 +4099,7 @@ def load_candidates(
                 include_nsfw=args.include_nsfw,
                 min_quality=args.min_quality,
                 allow_ip_hosts=args.allow_ip_hosts,
+                source_urls=deep_source_urls,
             )
         )
 
@@ -4264,7 +4316,13 @@ def main() -> int:
     history = HistoryStore(history_path)
     feedback_path = Path(args.feedback) if args.feedback else None
     feedback = FeedbackStore(feedback_path)
+    sources_path = Path(args.sources) if args.sources else None
+    curated_source_urls, deep_source_urls = load_source_registry(sources_path)
     feedback.save()
+    log(
+        f"source registry ready: curated={len(curated_source_urls)} deep={len(deep_source_urls)}",
+        verbose=args.verbose,
+    )
     requested_channel_ids, unresolved_filters = resolve_channel_filters(args.channel)
     if unresolved_filters:
         raise SystemExit(f"unknown channel filters: {', '.join(unresolved_filters)}")
@@ -4276,6 +4334,8 @@ def main() -> int:
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
         frozen_channel_ids=frozen_channel_ids,
+        curated_source_urls=curated_source_urls,
+        deep_source_urls=deep_source_urls,
     )
     log(f"loaded {len(candidates)} ranked candidates", verbose=args.verbose)
 
