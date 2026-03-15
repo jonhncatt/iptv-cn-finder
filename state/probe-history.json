@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T05:25:27Z",
+  "updated_at": "2026-03-15T06:30:25Z",
   "streams": {
     "http://bp-resource-dfl.bestv.cn/155/3/video.m3u8": {
       "title": "纪实人文",
@@ -5411,22 +5411,22 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 43,
+          "runs": 44,
           "successes": 0,
-          "failures": 43,
+          "failures": 44,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 21177,
-          "playlist_total_ms": 21175,
+          "elapsed_total_ms": 21919,
+          "playlist_total_ms": 21917,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2150,
+          "content_score_total": 2200,
           "last_ok": false,
           "last_detail": "playlist looks like ended vod, not live tv",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -6278,22 +6278,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 44,
+          "runs": 45,
           "successes": 0,
-          "failures": 44,
+          "failures": 45,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 557,
+          "elapsed_total_ms": 560,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2200,
+          "content_score_total": 2250,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -6642,22 +6642,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 42,
+          "runs": 43,
           "successes": 0,
-          "failures": 42,
+          "failures": 43,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 549,
+          "elapsed_total_ms": 552,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2100,
+          "content_score_total": 2150,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -6902,22 +6902,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 43,
+          "runs": 44,
           "successes": 0,
-          "failures": 43,
+          "failures": 44,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 542,
+          "elapsed_total_ms": 543,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2150,
+          "content_score_total": 2200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -8384,22 +8384,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 39,
+          "runs": 40,
           "successes": 0,
-          "failures": 39,
+          "failures": 40,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 335465,
+          "elapsed_total_ms": 335692,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1950,
+          "content_score_total": 2000,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -8514,22 +8514,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 40,
+          "runs": 41,
           "successes": 0,
-          "failures": 40,
+          "failures": 41,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 350350,
+          "elapsed_total_ms": 350579,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2000,
+          "content_score_total": 2050,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -8956,22 +8956,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 40,
+          "runs": 41,
           "successes": 0,
-          "failures": 40,
+          "failures": 41,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 390057,
+          "elapsed_total_ms": 390283,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 2000,
+          "content_score_total": 2050,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -9811,22 +9811,22 @@
       "source": "curated:guovin",
       "environments": {
         "local": {
-          "runs": 34,
+          "runs": 35,
           "successes": 0,
-          "failures": 34,
+          "failures": 35,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 528069,
+          "elapsed_total_ms": 568072,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1700,
+          "content_score_total": 1750,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-15T05:25:27Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -10096,22 +10096,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 21,
+          "runs": 22,
           "successes": 0,
-          "failures": 21,
+          "failures": 22,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 102921,
+          "elapsed_total_ms": 142924,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1050,
+          "content_score_total": 1100,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-15T02:32:31Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T02:32:31Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -10172,22 +10172,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 23,
+          "runs": 24,
           "successes": 0,
-          "failures": 23,
+          "failures": 24,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 134760,
+          "elapsed_total_ms": 174763,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1150,
+          "content_score_total": 1200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-15T02:32:31Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T02:32:31Z"
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -10274,22 +10274,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 21,
+          "runs": 22,
           "successes": 0,
-          "failures": 21,
+          "failures": 22,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 76242,
+          "elapsed_total_ms": 116245,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1050,
+          "content_score_total": 1100,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-13T02:57:05Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": null
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -10550,22 +10550,22 @@
       "source": "curated:chinaiptv",
       "environments": {
         "local": {
-          "runs": 21,
+          "runs": 22,
           "successes": 0,
-          "failures": 21,
+          "failures": 22,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 284046,
+          "elapsed_total_ms": 324049,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1050,
+          "content_score_total": 1100,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_updated": "2026-03-13T02:57:05Z",
+          "last_updated": "2026-03-15T06:30:24Z",
           "buffer_score_total": 0,
-          "last_seen": null
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -17147,22 +17147,22 @@
       "source": "deep:fanmingming-ipv6",
       "environments": {
         "local": {
-          "runs": 15,
+          "runs": 16,
           "successes": 0,
-          "failures": 15,
+          "failures": 16,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3495,
+          "elapsed_total_ms": 3734,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 750,
+          "content_score_total": 800,
           "last_ok": false,
           "last_detail": "http error: 400",
-          "last_updated": "2026-03-15T02:39:28Z",
-          "last_seen": "2026-03-15T02:39:28Z"
+          "last_updated": "2026-03-15T06:30:24Z",
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -17424,22 +17424,22 @@
       "source": "deep:fanmingming-ipv6",
       "environments": {
         "local": {
-          "runs": 15,
+          "runs": 16,
           "successes": 0,
-          "failures": 15,
+          "failures": 16,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3541,
+          "elapsed_total_ms": 3767,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 750,
+          "content_score_total": 800,
           "last_ok": false,
           "last_detail": "http error: 400",
-          "last_updated": "2026-03-15T02:39:28Z",
-          "last_seen": "2026-03-15T02:39:28Z"
+          "last_updated": "2026-03-15T06:30:24Z",
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -17476,22 +17476,22 @@
       "source": "deep:fanmingming-ipv6",
       "environments": {
         "local": {
-          "runs": 15,
+          "runs": 16,
           "successes": 0,
-          "failures": 15,
+          "failures": 16,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3824,
+          "elapsed_total_ms": 4042,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 750,
+          "content_score_total": 800,
           "last_ok": false,
           "last_detail": "http error: 400",
-          "last_updated": "2026-03-15T02:39:28Z",
-          "last_seen": "2026-03-15T02:39:28Z"
+          "last_updated": "2026-03-15T06:30:24Z",
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20150,22 +20150,22 @@
       "source": "deep:free-tv-china",
       "environments": {
         "local": {
-          "runs": 15,
+          "runs": 16,
           "successes": 0,
-          "failures": 15,
+          "failures": 16,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 112251,
+          "elapsed_total_ms": 113371,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 750,
+          "content_score_total": 800,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 65] No route to host>",
-          "last_updated": "2026-03-15T05:25:27Z",
-          "last_seen": "2026-03-15T05:25:27Z"
+          "last_updated": "2026-03-15T06:30:24Z",
+          "last_seen": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20176,22 +20176,22 @@
       "source": "deep:free-tv-china",
       "environments": {
         "local": {
-          "runs": 12,
+          "runs": 13,
           "successes": 0,
-          "failures": 12,
+          "failures": 13,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 34346,
+          "elapsed_total_ms": 34467,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 600,
+          "content_score_total": 650,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 65] No route to host>",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20202,22 +20202,22 @@
       "source": "curated:fanmingming-index",
       "environments": {
         "local": {
-          "runs": 10,
+          "runs": 11,
           "successes": 0,
-          "failures": 10,
+          "failures": 11,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 42,
+          "elapsed_total_ms": 43,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 500,
+          "content_score_total": 550,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20228,22 +20228,22 @@
       "source": "curated:fanmingming-index",
       "environments": {
         "local": {
-          "runs": 10,
+          "runs": 11,
           "successes": 0,
-          "failures": 10,
+          "failures": 11,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 332,
+          "elapsed_total_ms": 333,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 500,
+          "content_score_total": 550,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20254,22 +20254,22 @@
       "source": "curated:fanmingming-index",
       "environments": {
         "local": {
-          "runs": 10,
+          "runs": 11,
           "successes": 0,
-          "failures": 10,
+          "failures": 11,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2674,
+          "elapsed_total_ms": 2781,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 500,
+          "content_score_total": 550,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20280,22 +20280,22 @@
       "source": "curated:fanmingming-itv",
       "environments": {
         "local": {
-          "runs": 6,
+          "runs": 7,
           "successes": 0,
-          "failures": 6,
+          "failures": 7,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 1359,
+          "elapsed_total_ms": 1588,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 300,
+          "content_score_total": 350,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20306,38 +20306,12 @@
       "source": "curated:fanmingming-itv",
       "environments": {
         "local": {
-          "runs": 6,
-          "successes": 0,
-          "failures": 6,
-          "ffprobe_successes": 0,
-          "anomaly_hits": 0,
-          "elapsed_total_ms": 1342,
-          "playlist_total_ms": 0,
-          "media_total_ms": 0,
-          "startup_score_total": 0,
-          "live_score_total": 0,
-          "buffer_score_total": 0,
-          "content_score_total": 300,
-          "last_ok": false,
-          "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
-        }
-      }
-    },
-    "http://gslbserv.itv.cmvideo.cn/1000000005000265006/1.m3u8?channel-id=ystenlive&Contentid=1000000005000265006&livemode=1&stbId=3": {
-      "title": "CCTV-6 电影",
-      "channel_id": "CCTV6.cn",
-      "group": "央视",
-      "source": "curated:fanmingming-itv",
-      "environments": {
-        "local": {
           "runs": 7,
           "successes": 0,
           "failures": 7,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 1879,
+          "elapsed_total_ms": 1574,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
@@ -20346,12 +20320,12 @@
           "content_score_total": 350,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
-    "http://gslbserv.itv.cmvideo.cn/6000000001000004574/1.m3u8?channel-id=wasusyt&Contentid=6000000001000004574&livemode=1&stbId=3": {
+    "http://gslbserv.itv.cmvideo.cn/1000000005000265006/1.m3u8?channel-id=ystenlive&Contentid=1000000005000265006&livemode=1&stbId=3": {
       "title": "CCTV-6 电影",
       "channel_id": "CCTV6.cn",
       "group": "央视",
@@ -20363,7 +20337,7 @@
           "failures": 8,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2177,
+          "elapsed_total_ms": 2112,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
@@ -20372,12 +20346,12 @@
           "content_score_total": 400,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
-    "http://gslbserv.itv.cmvideo.cn/1000000001000001737/1.m3u8?channel-id=ystenlive&Contentid=1000000001000001737&livemode=1&stbId=3": {
+    "http://gslbserv.itv.cmvideo.cn/6000000001000004574/1.m3u8?channel-id=wasusyt&Contentid=6000000001000004574&livemode=1&stbId=3": {
       "title": "CCTV-6 电影",
       "channel_id": "CCTV6.cn",
       "group": "央视",
@@ -20389,7 +20363,7 @@
           "failures": 9,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2419,
+          "elapsed_total_ms": 2550,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
@@ -20398,8 +20372,34 @@
           "content_score_total": 450,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://gslbserv.itv.cmvideo.cn/1000000001000001737/1.m3u8?channel-id=ystenlive&Contentid=1000000001000001737&livemode=1&stbId=3": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "curated:fanmingming-itv",
+      "environments": {
+        "local": {
+          "runs": 10,
+          "successes": 0,
+          "failures": 10,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 3637,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 500,
+          "last_ok": false,
+          "last_detail": "http error: 403",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20410,22 +20410,22 @@
       "source": "curated:fanmingming-itv",
       "environments": {
         "local": {
-          "runs": 10,
+          "runs": 11,
           "successes": 0,
-          "failures": 10,
+          "failures": 11,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3978,
+          "elapsed_total_ms": 4207,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 500,
+          "content_score_total": 550,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20436,22 +20436,22 @@
       "source": "curated:fanmingming-itv",
       "environments": {
         "local": {
-          "runs": 10,
+          "runs": 11,
           "successes": 0,
-          "failures": 10,
+          "failures": 11,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 2877,
+          "elapsed_total_ms": 3413,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 500,
+          "content_score_total": 550,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_seen": "2026-03-15T05:25:27Z",
-          "last_updated": "2026-03-15T05:25:27Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20462,22 +20462,22 @@
       "source": "deep:burningc4-chinese-ipv4",
       "environments": {
         "local": {
-          "runs": 3,
+          "runs": 4,
           "successes": 0,
-          "failures": 3,
+          "failures": 4,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 152011,
+          "elapsed_total_ms": 232017,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 150,
+          "content_score_total": 200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_seen": "2026-03-15T02:39:28Z",
-          "last_updated": "2026-03-15T02:39:28Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20488,22 +20488,22 @@
       "source": "deep:burningc4-chinese-ipv4",
       "environments": {
         "local": {
-          "runs": 3,
+          "runs": 4,
           "successes": 0,
-          "failures": 3,
+          "failures": 4,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 152011,
+          "elapsed_total_ms": 232017,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 150,
+          "content_score_total": 200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_seen": "2026-03-15T02:39:28Z",
-          "last_updated": "2026-03-15T02:39:28Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -20514,22 +20514,22 @@
       "source": "deep:burningc4-chinese-ipv4",
       "environments": {
         "local": {
-          "runs": 3,
+          "runs": 4,
           "successes": 0,
-          "failures": 3,
+          "failures": 4,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 152013,
+          "elapsed_total_ms": 232019,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 150,
+          "content_score_total": 200,
           "last_ok": false,
           "last_detail": "network error: <urlopen error timed out>",
-          "last_seen": "2026-03-15T02:39:28Z",
-          "last_updated": "2026-03-15T02:39:28Z"
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     },
@@ -24508,6 +24508,266 @@
           "last_detail": "network error: <urlopen error timed out>",
           "last_seen": "2026-03-15T05:25:27Z",
           "last_updated": "2026-03-15T05:25:27Z"
+        }
+      }
+    },
+    "http://123.175.209.52:9003/hls/5/index.m3u8": {
+      "title": "CCTV-5 体育",
+      "channel_id": "CCTV5.cn",
+      "group": "央视",
+      "source": "iptv-org",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 99,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://58.248.112.205:8006/GD_CUCC/G_CCTV-8-CQ.m3u8?Authinfo=3iRp8RZG1d3hGsaPmj%2FtHW6PrfWRPRPmGe%2BdNGyl5jItN86kueV3HZoMvTL28BOV&p=GITV&area=GD_CUCC&mac=d4%3A38%3A44%3Aa5%3A72%3A8b": {
+      "title": "CCTV-8 电视剧",
+      "channel_id": "CCTV8.cn",
+      "group": "央视",
+      "source": "curated:fanmingming-index",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 333,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://58.248.112.205:8006/GD_CUCC/G_CCTV-5-CQ.m3u8?Authinfo=3iRp8RZG1d3hGsaPmj%2FtHfjI6wzwX5YlP5VGDtCFYEotN86kueV3HZoMvTL28BOV&p=GITV&area=GD_CUCC&mac=d4%3A38%3A44%3Aa5%3A72%3A8b": {
+      "title": "CCTV-5 体育",
+      "channel_id": "CCTV5.cn",
+      "group": "央视",
+      "source": "curated:fanmingming-index",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 352,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://58.248.112.205:8006/GD_CUCC/G_CCTV-6-CQ.m3u8?Authinfo=3iRp8RZG1d3hGsaPmj%2FtHaquAvgVGCBNc5yICXxWYNYtN86kueV3HZoMvTL28BOV&p=GITV&area=GD_CUCC&mac=d4%3A38%3A44%3Aa5%3A72%3A8b": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "curated:fanmingming-index",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 356,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://123.175.209.52:9003/hls/7/index.m3u8": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "iptv-org",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 1084,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://123.175.209.52:9003/hls/9/index.m3u8": {
+      "title": "CCTV-8 电视剧",
+      "channel_id": "CCTV8.cn",
+      "group": "央视",
+      "source": "iptv-org",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 2104,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error [Errno 61] Connection refused>",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://218.204.171.201/gitv_live/G_CCTV-5-HQ/G_CCTV-5-HQ.m3u8?p=GITV&area=GD_CMCC": {
+      "title": "CCTV-5 体育",
+      "channel_id": "CCTV5.cn",
+      "group": "央视",
+      "source": "deep:frankwuzp-gd",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 151,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://218.204.171.201/gitv_live/G_CCTV-6-HQ/G_CCTV-6-HQ.m3u8?p=GITV&area=GD_CMCC": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "deep:frankwuzp-gd",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 158,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://39.134.18.82/dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221226395/index.m3u8": {
+      "title": "CCTV-5 体育",
+      "channel_id": "CCTV5.cn",
+      "group": "央视",
+      "source": "deep:frankwuzp-cn",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 40003,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://39.134.18.82/dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221226393/index.m3u8": {
+      "title": "CCTV-6 电影",
+      "channel_id": "CCTV6.cn",
+      "group": "央视",
+      "source": "deep:frankwuzp-cn",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 40003,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T06:30:24Z",
+          "last_updated": "2026-03-15T06:30:24Z"
         }
       }
     }
