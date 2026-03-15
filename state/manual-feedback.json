@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T04:29:47Z",
+  "updated_at": "2026-03-15T05:19:27Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
@@ -22,6 +22,36 @@
         {
           "url": "http://38.75.136.137:98/gslb/dsdqpub/bjwshd.m3u8?auth=testpub",
           "note": "用户确认北京卫视当前主源稳定，后续优先保留。"
+        }
+      ],
+      "blocked": []
+    },
+    "SichuanSatelliteTV.cn": {
+      "title": "四川卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/scwshd.m3u8?auth=testpub",
+          "note": "用户最新反馈四川卫视可以锁定，后续固定优先该源。"
+        }
+      ],
+      "blocked": []
+    },
+    "TianjinSatelliteTV.cn": {
+      "title": "天津卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/tjwshd.m3u8?auth=testpub",
+          "note": "用户最新反馈天津卫视可以锁定，后续固定优先该源。"
+        }
+      ],
+      "blocked": []
+    },
+    "ShaanxiSatelliteTV.cn": {
+      "title": "陕西卫视",
+      "preferred": [
+        {
+          "url": "http://stream.snrtv.com/sxbc-star-nrEH89.m3u8",
+          "note": "用户最新反馈陕西卫视可以锁定，后续固定优先该源。"
         }
       ],
       "blocked": []
@@ -91,12 +121,13 @@
     },
     "FujianStraitsTV.cn": {
       "title": "海峡卫视",
-      "preferred": [],
-      "blocked": [
+      "preferred": [
         {
           "url": "http://t.061899.xyz/tl/tl.php?id=hxws",
-          "reason": "用户反馈海峡卫视仍不可看，不锁定并拉黑当前来源。"
-        },
+          "note": "用户最新反馈海峡卫视的备用1可用，锁定为优先源。"
+        }
+      ],
+      "blocked": [
         {
           "url": "http://r.jdshipin.com/WtYt3",
           "reason": "用户反馈海峡卫视仍不可看，不锁定并拉黑当前来源。"
