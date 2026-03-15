@@ -10,9 +10,9 @@ http://112.27.235.94:8000/hls/38/index.m3u8
 #EXTINF:-1 tvg-id="DragonTV.cn" tvg-name="东方卫视 抢修1" group-title="卫视抢修",东方卫视 抢修1
 http://112.27.235.94:8000/hls/28/index.m3u8
 #EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 抢修1" group-title="卫视抢修",浙江卫视 抢修1
-https://play-qukan.cztv.com/live/1746687519046362.m3u8
-#EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 抢修2" group-title="卫视抢修",浙江卫视 抢修2
 http://112.27.235.94:8000/hls/29/index.m3u8
+#EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 抢修2" group-title="卫视抢修",浙江卫视 抢修2
+http://58.57.40.22:9901/tsfile/live/1029_1.m3u8
 #EXTINF:-1 tvg-id="LiaoningSatelliteTV.cn" tvg-name="辽宁卫视 抢修1" group-title="卫视抢修",辽宁卫视 抢修1
 http://112.27.235.94:8000/hls/47/index.m3u8
 #EXTINF:-1 tvg-id="ChongqingSatelliteTV.cn" tvg-name="重庆卫视 抢修1" group-title="卫视抢修",重庆卫视 抢修1

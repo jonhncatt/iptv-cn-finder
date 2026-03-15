@@ -30,11 +30,9 @@ http://event.pull.hebtv.com/jishi/weishi_tingyun.m3u8
 #EXTINF:-1 tvg-id="HenanSatelliteTV.cn" tvg-name="河南卫视" group-title="卫视",河南卫视
 http://1.94.31.214/php/hntv.php?id=hnws
 #EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视" group-title="卫视",浙江卫视
-http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8
-#EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 备用1" group-title="卫视",浙江卫视 备用1
-https://play-qukan.cztv.com/live/1746687519046362.m3u8
-#EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 备用2" group-title="卫视",浙江卫视 备用2
 http://112.27.235.94:8000/hls/29/index.m3u8
+#EXTINF:-1 tvg-id="ZhejiangSatelliteTV.cn" tvg-name="浙江卫视 备用1" group-title="卫视",浙江卫视 备用1
+http://58.57.40.22:9901/tsfile/live/1029_1.m3u8
 #EXTINF:-1 tvg-id="HainanSatelliteTV.cn" tvg-name="海南卫视" group-title="卫视",海南卫视
 http://nn.7x9d.cn/%E5%9C%B0%E6%96%B9%E5%8F%B08563/%E6%B5%B7%E5%8D%97.php?id=hnws
 #EXTINF:-1 tvg-id="FujianStraitsTV.cn" tvg-name="海峡卫视" group-title="卫视",海峡卫视
@@ -75,3 +73,21 @@ http://phonehwei.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcW
 https://phoneqq.qing.mgtv.com/nn_live/nn_x64/dWlwPTEwNi4xNC4zOC41NSZ0ZXJtPTUmcWlkPSZyYXV0aF9lbmFibGU9b2ZmJmNkbmV4X2lkPXFxX3Bob25lX2xpdmUmY2hzPSZkZWY9MSZzPTUxMmE0YmQ4OGQ4YjQ1YTYwYjcyYTVjNTM1MjJmMTQ2JnVpZD0mdXVpZD1hZThmY2E0ZGEzMjhhZmFjZTlmNGZkOWZlNTcyNzNmMS02YTBlMjYzNyZ2PTImYXM9MCZlcz0xNzczNTYxNjIw/JYJSMPP360.m3u8
 #EXTINF:-1 tvg-id="GuangdongNews.local" tvg-name="广东新闻" tvg-logo="https://gh-proxy.com/https://raw.githubusercontent.com/fanmingming/live/main/tv/广东新闻.png" group-title="广东台",广东新闻
 https://stream1.freetv.fun/yan-dong-xin-wen-2.m3u8
+#EXTINF:-1 tvg-id="CCTV3.cn" tvg-name="CCTV-3 综艺 待测" group-title="待反馈",CCTV-3 综艺 待测
+https://zby.130519.xyz/PLTV/11/224/3221225766/index.m3u8
+#EXTINF:-1 tvg-id="CCTV5.cn" tvg-name="CCTV-5 体育 待测" group-title="待反馈",CCTV-5 体育 待测
+https://zby.130519.xyz/PLTV/11/224/3221225734/index.m3u8
+#EXTINF:-1 tvg-id="CCTV6.cn" tvg-name="CCTV-6 电影 待测" group-title="待反馈",CCTV-6 电影 待测
+https://zby.130519.xyz/PLTV/11/224/3221225741/index.m3u8
+#EXTINF:-1 tvg-id="CCTV8.cn" tvg-name="CCTV-8 电视剧 待测" group-title="待反馈",CCTV-8 电视剧 待测
+https://zby.130519.xyz/PLTV/11/224/3221225736/index.m3u8
+#EXTINF:-1 tvg-id="CCTV10.cn" tvg-name="CCTV-10 科教 待测" group-title="待反馈",CCTV-10 科教 待测
+https://zby.130519.xyz/PLTV/11/224/3221225743/index.m3u8
+#EXTINF:-1 tvg-id="CCTV13.cn" tvg-name="CCTV-13 新闻 待测" group-title="待反馈",CCTV-13 新闻 待测
+https://live-play.cctvnews.cctv.com/cctv/merge_cctv13.m3u8
+#EXTINF:-1 tvg-id="ShandongSatelliteTV.cn" tvg-name="山东卫视 待测" group-title="待反馈",山东卫视 待测
+https://zby.130519.xyz/PLTV/11/224/3221225733/index.m3u8
+#EXTINF:-1 tvg-id="GuangdongSatelliteTV.cn" tvg-name="广东卫视 待测" group-title="待反馈",广东卫视 待测
+https://zby.130519.xyz/PLTV/11/224/3221225731/index.m3u8
+#EXTINF:-1 tvg-id="JiangsuSatelliteTV.cn" tvg-name="江苏卫视 待测" group-title="待反馈",江苏卫视 待测
+https://zby.130519.xyz/PLTV/11/224/3221225720/index.m3u8

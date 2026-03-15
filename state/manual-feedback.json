@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T06:22:10Z",
+  "updated_at": "2026-03-15T15:35:34Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
@@ -90,19 +90,19 @@
       "title": "浙江卫视",
       "preferred": [
         {
-          "url": "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
-          "note": "用户反馈当前 hls/29 间断缓冲，先提升历史上更稳的蓝天源。"
-        },
-        {
-          "url": "https://play-qukan.cztv.com/live/1746687519046362.m3u8",
-          "note": "保留历史上表现不错的第二候选。"
-        },
-        {
-          "url": "http://112.27.235.94:8000/hls/29/index.m3u8",
-          "note": "把当前 hls/29 降为次选，避免继续覆盖更稳的历史源。"
+          "url": "http://58.57.40.22:9901/tsfile/live/1029_1.m3u8",
+          "note": "用户确认浙江卫视备用1可用，锁定为当前优先源。"
         }
       ],
       "blocked": [
+        {
+          "url": "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+          "reason": "用户反馈该浙江卫视源长期播放非实时《庆余年》，判定为假直播，拉黑。"
+        },
+        {
+          "url": "https://play-qukan.cztv.com/live/1746687519046362.m3u8",
+          "reason": "用户反馈浙江卫视当前锁定源异常为非实时内容，先拉黑该备选避免复用。"
+        },
         {
           "url": "http://112.27.235.94:8000/hls/28/index.m3u8",
           "reason": "用户反馈这条实际播放东方卫视，不应再作为浙江卫视。"

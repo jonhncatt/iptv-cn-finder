@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T06:30:25Z",
+  "updated_at": "2026-03-15T15:25:14Z",
   "streams": {
     "http://bp-resource-dfl.bestv.cn/155/3/video.m3u8": {
       "title": "纪实人文",
@@ -3702,22 +3702,22 @@
       "source": "manual-preferred",
       "environments": {
         "local": {
-          "runs": 23,
-          "successes": 23,
+          "runs": 24,
+          "successes": 24,
           "failures": 0,
-          "ffprobe_successes": 18,
-          "anomaly_hits": 58,
-          "elapsed_total_ms": 269914,
-          "playlist_total_ms": 11513,
-          "media_total_ms": 27170,
-          "startup_score_total": 966,
-          "live_score_total": 2245,
-          "content_score_total": 1380,
+          "ffprobe_successes": 19,
+          "anomaly_hits": 60,
+          "elapsed_total_ms": 280008,
+          "playlist_total_ms": 11755,
+          "media_total_ms": 28191,
+          "startup_score_total": 1007,
+          "live_score_total": 2345,
+          "content_score_total": 1480,
           "last_ok": true,
-          "last_detail": "playlist segment reachable; media sequence advanced; buffer margin 4938ms over 4 segment checks; avg 1.97Mbps over 256KB samples; ffmpeg continuous read timed out",
-          "last_updated": "2026-03-15T04:28:08Z",
-          "buffer_score_total": 532,
-          "last_seen": "2026-03-15T04:28:08Z"
+          "last_detail": "ffprobe detected video+audio streams; playlist segment reachable; media sequence advanced; buffer margin 4979ms over 3 segment checks; avg 2.05Mbps over 256KB samples; 1 segment checks failed; ffmpeg read 6s media in 4.7s (1.28x)",
+          "last_updated": "2026-03-15T15:25:14Z",
+          "buffer_score_total": 601,
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -3728,21 +3728,22 @@
       "source": "curated:zbds",
       "environments": {
         "local": {
-          "runs": 17,
-          "successes": 17,
+          "runs": 18,
+          "successes": 18,
           "failures": 0,
           "ffprobe_successes": 0,
-          "anomaly_hits": 44,
-          "elapsed_total_ms": 252297,
-          "playlist_total_ms": 21231,
+          "anomaly_hits": 47,
+          "elapsed_total_ms": 270789,
+          "playlist_total_ms": 21721,
           "media_total_ms": 0,
-          "startup_score_total": 415,
-          "live_score_total": 340,
-          "content_score_total": 995,
+          "startup_score_total": 438,
+          "live_score_total": 360,
+          "content_score_total": 1055,
           "last_ok": true,
           "last_detail": "playlist reachable; child fetch slow but may still be playable (<urlopen error timed out>); ffmpeg continuous read timed out",
-          "last_updated": "2026-03-13T02:32:55Z",
-          "buffer_score_total": 192
+          "last_updated": "2026-03-15T15:25:14Z",
+          "buffer_score_total": 210,
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -5708,22 +5709,22 @@
       "source": "iptv-org",
       "environments": {
         "local": {
-          "runs": 29,
+          "runs": 30,
           "successes": 0,
-          "failures": 29,
+          "failures": 30,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 9544,
+          "elapsed_total_ms": 9933,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1450,
+          "content_score_total": 1500,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-15T04:28:08Z",
+          "last_updated": "2026-03-15T15:25:14Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T04:28:08Z"
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -5966,22 +5967,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 29,
+          "runs": 30,
           "successes": 0,
-          "failures": 29,
+          "failures": 30,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 41,
+          "elapsed_total_ms": 45,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1450,
+          "content_score_total": 1500,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_updated": "2026-03-15T04:28:08Z",
+          "last_updated": "2026-03-15T15:25:14Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T04:28:08Z"
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -8774,22 +8775,22 @@
       "source": "curated:suxuang",
       "environments": {
         "local": {
-          "runs": 29,
+          "runs": 30,
           "successes": 0,
-          "failures": 29,
+          "failures": 30,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 303512,
+          "elapsed_total_ms": 321745,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
-          "content_score_total": 1450,
+          "content_score_total": 1500,
           "last_ok": false,
           "last_detail": "http error: 404",
-          "last_updated": "2026-03-15T04:28:08Z",
+          "last_updated": "2026-03-15T15:25:14Z",
           "buffer_score_total": 0,
-          "last_seen": "2026-03-15T04:28:08Z"
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -17579,21 +17580,22 @@
       "source": "deep:fanmingming-ipv6",
       "environments": {
         "local": {
-          "runs": 6,
+          "runs": 7,
           "successes": 0,
-          "failures": 6,
+          "failures": 7,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 3125,
+          "elapsed_total_ms": 3583,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 300,
+          "content_score_total": 350,
           "last_ok": false,
           "last_detail": "http error: 403",
-          "last_updated": "2026-03-09T03:14:19Z"
+          "last_updated": "2026-03-15T15:25:14Z",
+          "last_seen": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -22204,22 +22206,22 @@
       "source": "deep:frankwuzp-2204",
       "environments": {
         "local": {
-          "runs": 4,
+          "runs": 5,
           "successes": 0,
-          "failures": 4,
+          "failures": 5,
           "ffprobe_successes": 0,
           "anomaly_hits": 0,
-          "elapsed_total_ms": 221,
+          "elapsed_total_ms": 222,
           "playlist_total_ms": 0,
           "media_total_ms": 0,
           "startup_score_total": 0,
           "live_score_total": 0,
           "buffer_score_total": 0,
-          "content_score_total": 200,
+          "content_score_total": 250,
           "last_ok": false,
           "last_detail": "network error: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
-          "last_seen": "2026-03-15T04:28:08Z",
-          "last_updated": "2026-03-15T04:28:08Z"
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
         }
       }
     },
@@ -24768,6 +24770,240 @@
           "last_detail": "network error: <urlopen error timed out>",
           "last_seen": "2026-03-15T06:30:24Z",
           "last_updated": "2026-03-15T06:30:24Z"
+        }
+      }
+    },
+    "http://zwebl02.cztv.com/live/channel01720Pnew.m3u8?auth_key=1773583774-e7a01c5897fd02b3e2333c0309914730-0-49e99c0e405def499935bdb2f7981765": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:chinaiptv",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 23,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 403",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://gslbserv.itv.cmvideo.cn/1000000001000014260/1.m3u8?channel-id=ystenlive&Contentid=1000000001000014260&livemode=1&stbId=3": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:fanmingming-itv",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 229,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 403",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://gslbserv.itv.cmvideo.cn/5000000004000007275/1.m3u8?channel-id=bestzb&Contentid=5000000004000007275&livemode=1&stbId=3": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:fanmingming-itv",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 241,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 403",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://gslbserv.itv.cmvideo.cn/1000000005000265031/1.m3u8?channel-id=ystenlive&Contentid=1000000005000265031&livemode=1&stbId=3": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:fanmingming-itv",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 241,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 403",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226339/index.m3u8": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "deep:burningc4-chinese-ipv4",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 36004,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221225798/index.m3u8": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "deep:lylehust-sxyd",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 72005,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221226199/index.m3u8": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "deep:lylehust-sxyd",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 72006,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221225788/index.m3u8": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "deep:lylehust-sxyd",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 72007,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "network error: <urlopen error timed out>",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
+        }
+      }
+    },
+    "http://58.248.112.205:8006/GD_CUCC/G_ZHEJIANG-CQ.m3u8?Authinfo=3iRp8RZG1d3hGsaPmj%2FtHdr3tmmw%2BL49D6e6Yw0TfYx4NHMHVaPey3ntJx7niV8g&p=GITV&area=GD_CUCC&mac=d4%3A38%3A44%3Aa5%3A72%3A8b": {
+      "title": "浙江卫视",
+      "channel_id": "ZhejiangSatelliteTV.cn",
+      "group": "卫视",
+      "source": "curated:fanmingming-index",
+      "environments": {
+        "local": {
+          "runs": 1,
+          "successes": 0,
+          "failures": 1,
+          "ffprobe_successes": 0,
+          "anomaly_hits": 0,
+          "elapsed_total_ms": 302,
+          "playlist_total_ms": 0,
+          "media_total_ms": 0,
+          "startup_score_total": 0,
+          "live_score_total": 0,
+          "buffer_score_total": 0,
+          "content_score_total": 50,
+          "last_ok": false,
+          "last_detail": "http error: 404",
+          "last_seen": "2026-03-15T15:25:14Z",
+          "last_updated": "2026-03-15T15:25:14Z"
         }
       }
     }
