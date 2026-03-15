@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T15:35:34Z",
+  "updated_at": "2026-03-15T15:49:29Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
@@ -208,6 +208,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "https://live-play.cctvnews.cctv.com/cctv/merge_cctv13.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
+        {
           "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
           "reason": "用户反馈 CCTV-13 无法连接，移出锁定并拉黑当前优选。"
         },
@@ -229,6 +233,10 @@
       "title": "CCTV-5 体育",
       "preferred": [],
       "blocked": [
+        {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225734/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
         {
           "url": "http://58.57.40.22:9901/tsfile/live/1004_1.m3u8",
           "reason": "用户反馈 CCTV-5 反复缓存，移出锁定并拉黑当前优选。"
@@ -263,6 +271,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225741/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
+        {
           "url": "http://58.57.40.22:9901/tsfile/live/1006_1.m3u8",
           "reason": "用户反馈 CCTV-6 秒连后立刻缓存，移出锁定并拉黑当前优选。"
         },
@@ -276,6 +288,10 @@
       "title": "CCTV-8 电视剧",
       "preferred": [],
       "blocked": [
+        {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225736/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
         {
           "url": "http://58.57.40.22:9901/tsfile/live/1008_1.m3u8",
           "reason": "用户反馈 CCTV-8 持续缓存，移出锁定并拉黑当前优选。"
@@ -291,6 +307,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225766/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
+        {
           "url": "http://58.57.40.22:9901/tsfile/live/1002_1.m3u8",
           "reason": "用户反馈 CCTV-3 无法连接，移出锁定并拉黑当前优选。"
         },
@@ -304,6 +324,10 @@
       "title": "CCTV-10 科教",
       "preferred": [],
       "blocked": [
+        {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225743/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
         {
           "url": "http://58.57.40.22:9901/tsfile/live/1010_1.m3u8",
           "reason": "用户反馈 CCTV-10 无法连接，移出锁定并拉黑当前优选。"
@@ -338,6 +362,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225731/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
+        {
           "url": "http://38.75.136.137:98/gslb/dsdqpub/gdwshd.m3u8?auth=testpub",
           "reason": "用户反馈广东卫视无法连接，移出锁定并拉黑当前优选。"
         },
@@ -356,6 +384,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225720/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
+        {
           "url": "http://58.57.40.22:9901/tsfile/live/1031_1.m3u8",
           "reason": "用户反馈江苏卫视连接快但有缓存，移出锁定并拉黑当前优选。"
         },
@@ -369,6 +401,10 @@
       "title": "山东卫视",
       "preferred": [],
       "blocked": [
+        {
+          "url": "https://zby.130519.xyz/PLTV/11/224/3221225733/index.m3u8",
+          "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
+        },
         {
           "url": "http://120.76.248.139/live/bfgd/4200000099.m3u8",
           "reason": "用户反馈山东卫视连接慢且缓存多，移出锁定并拉黑当前优选。"
