@@ -1,4 +1,8 @@
 {
+  "_meta": {
+    "last_validated": "2026-03-13",
+    "maintainer_note": "定期检查 deep 源是否仍返回 HTTP 200。"
+  },
   "_notes": {
     "deep_focus": "专注 CCTV 体育/影视覆盖，推荐配合 --sports-relaxed 使用。JSON 不支持注释，这里用字段备注。"
   },

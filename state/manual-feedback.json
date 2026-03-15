@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-13T02:29:18Z",
+  "updated_at": "2026-03-15T01:08:38Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
@@ -93,11 +93,19 @@
       "title": "海峡卫视",
       "preferred": [
         {
-          "url": "http://8.138.7.223/tv/hxws.m3u8",
-          "note": "当前 live1-fuyun 源已无法观看，改为直测可读的 8.138 备选。"
+          "url": "http://t.061899.xyz/tl/tl.php?id=hxws",
+          "note": "2026-03-15 定向修复实测可读，先作为新主源验证。"
+        },
+        {
+          "url": "http://r.jdshipin.com/WtYt3",
+          "note": "同轮修复新增备选，主源失效时自动兜底。"
         }
       ],
       "blocked": [
+        {
+          "url": "http://8.138.7.223/tv/hxws.m3u8",
+          "reason": "用户反馈海峡卫视暂时看不了，先不锁定并避免继续命中该源。"
+        },
         {
           "url": "https://live1-fuyun.fjtv.net/haixiapd/hd/live.m3u8?_upt=e3eeff051773279249",
           "reason": "用户反馈当前海峡卫视主源看不了，先移出锁定。"
@@ -169,16 +177,34 @@
       "title": "CCTV-13 新闻",
       "preferred": [
         {
-          "url": "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
-          "note": "当前腾讯云变体会卡在 100%，这轮优先切到内容检测通过的 KCDN 变体。"
-        },
-        {
           "url": "http://ldncctvwbcdcnc.v.wscdns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
-          "note": "保留历史上更顺的 CNC 变体作为第一备选。"
+          "note": "用户反馈原主源不可看，切换到同轮通过探测且更稳的 CNC 变体。"
         },
         {
           "url": "http://ldncctvwbcdbd.a.bdydns.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
-          "note": "保留稳定的百度云 CDN 作为第二候选。"
+          "note": "保留稳定的百度云 CDN 作为第一备选。"
+        },
+        {
+          "url": "http://ldncctvwbcdks.v.kcdnvip.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "note": "KCDN 变体降为第二备选，避免继续命中用户端不兼容路径。"
+        },
+        {
+          "url": "http://ldncctvwbcdali.v.myalicdn.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "note": "补充阿里云变体作为第三备选，提升多网络可达性。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV5.cn": {
+      "title": "CCTV-5 体育",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/5/index.m3u8",
+          "note": "保留当前主源；用户反馈卡顿时优先走此地址。"
+        },
+        {
+          "url": "http://58.57.40.22:9901/tsfile/live/1004_1.m3u8",
+          "note": "补充历史长期成功备选，主源不稳时自动切换。"
         }
       ],
       "blocked": []
@@ -195,11 +221,159 @@
           "note": "保留第二候选，连续读取表现优于原主源。"
         }
       ],
-      "blocked": []
+      "blocked": [
+        {
+          "url": "http://112.27.235.94:8000/hls/6/index.m3u8",
+          "reason": "用户要求 CCTV-5+ 锁定，避免自动回切到 hls/6。"
+        }
+      ]
     },
     "CCTV6.cn": {
       "title": "CCTV-6 电影",
-      "preferred": [],
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/7/index.m3u8",
+          "note": "保留当前主源；用户反馈卡顿时优先走此地址。"
+        },
+        {
+          "url": "http://58.57.40.22:9901/tsfile/live/1006_1.m3u8",
+          "note": "补充历史长期成功备选，主源不稳时自动切换。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV8.cn": {
+      "title": "CCTV-8 电视剧",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/9/index.m3u8",
+          "note": "保留当前主源；用户反馈卡顿时优先走此地址。"
+        },
+        {
+          "url": "http://58.57.40.22:9901/tsfile/live/1008_1.m3u8",
+          "note": "补充历史长期成功备选，主源不稳时自动切换。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV3.cn": {
+      "title": "CCTV-3 综艺",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/3/index.m3u8",
+          "note": "新增央视：历史多次成功，先锁定主源。"
+        }
+      ],
+      "blocked": []
+    },
+    "CCTV10.cn": {
+      "title": "CCTV-10 科教",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/11/index.m3u8",
+          "note": "新增央视：历史多次成功，先锁定主源。"
+        }
+      ],
+      "blocked": []
+    },
+    "ChongqingSatelliteTV.cn": {
+      "title": "重庆卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/cqwshd.m3u8?auth=testpub",
+          "note": "新增卫视：近期探测通过，优先保留。"
+        },
+        {
+          "url": "http://112.27.235.94:8000/hls/36/index.m3u8",
+          "note": "保留历史稳定备选。"
+        }
+      ],
+      "blocked": []
+    },
+    "SichuanSatelliteTV.cn": {
+      "title": "四川卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/scwshd.m3u8?auth=testpub",
+          "note": "新增卫视：近期探测通过，优先保留。"
+        },
+        {
+          "url": "http://112.27.235.94:8000/hls/35/index.m3u8",
+          "note": "保留历史稳定备选。"
+        }
+      ],
+      "blocked": []
+    },
+    "TianjinSatelliteTV.cn": {
+      "title": "天津卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/tjwshd.m3u8?auth=testpub",
+          "note": "新增卫视：近期探测通过，优先保留。"
+        },
+        {
+          "url": "http://112.27.235.94:8000/hls/42/index.m3u8",
+          "note": "保留历史稳定备选。"
+        }
+      ],
+      "blocked": []
+    },
+    "ShaanxiSatelliteTV.cn": {
+      "title": "陕西卫视",
+      "preferred": [
+        {
+          "url": "http://38.75.136.137:98/gslb/dsdqpub/snwshd.m3u8?auth=testpub",
+          "note": "新增卫视：近期探测通过，优先保留。"
+        },
+        {
+          "url": "http://112.27.235.94:8000/hls/43/index.m3u8",
+          "note": "保留历史稳定备选。"
+        }
+      ],
+      "blocked": []
+    },
+    "XinjiangSatelliteTV.cn": {
+      "title": "新疆卫视",
+      "preferred": [
+        {
+          "url": "http://58.57.40.22:9901/tsfile/live/1055_1.m3u8",
+          "note": "新增卫视：避免短效鉴权参数，先用稳定静态地址。"
+        },
+        {
+          "url": "http://101.35.240.114:88/live.php?id=%E6%96%B0%E7%96%86%E5%8D%AB%E8%A7%86",
+          "note": "保留历史可用备用地址。"
+        }
+      ],
+      "blocked": []
+    },
+    "GuangdongSatelliteTV.cn": {
+      "title": "广东卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/30/index.m3u8",
+          "note": "新增卫视：历史多次成功，先锁定主源。"
+        }
+      ],
+      "blocked": []
+    },
+    "JiangsuSatelliteTV.cn": {
+      "title": "江苏卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/32/index.m3u8",
+          "note": "新增卫视：历史多次成功，先锁定主源。"
+        }
+      ],
+      "blocked": []
+    },
+    "ShandongSatelliteTV.cn": {
+      "title": "山东卫视",
+      "preferred": [
+        {
+          "url": "http://112.27.235.94:8000/hls/34/index.m3u8",
+          "note": "新增卫视：历史多次成功，先锁定主源。"
+        }
+      ],
       "blocked": []
     }
   }

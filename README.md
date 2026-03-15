@@ -33,6 +33,7 @@
 - `sources.json` 已改为优先使用 2026-03 仍活跃的公开仓库，减少 404/失效入口
 - 支持只扫描指定频道，适合单独修 `CCTV-1`、`东方卫视` 这类问题
 - 支持 `--sports-relaxed`，对 `CCTV-5/5+/6/8` 放宽探测（更长超时 + 更多重试）
+- 默认开启 `--auto-sports-detect`：当扫描包含 `CCTV-5/5+/6/8` 时自动启用放宽策略
 - 当 `CCTV-5/5+/6/8` 当次候选不足时，自动从历史里回填高分源（`from_history`，默认分数阈值 `50`）
 - 支持 `--diagnose-sports`，只跑 `CCTV-5/6/8` 并输出失败原因统计
 - 额外生成一份“主源 + 备用源”的备份播放列表
@@ -141,6 +142,12 @@ python3 find_cn_streams.py --sources sources.json --ffprobe --verbose
 python3 find_cn_streams.py --sources sources.json --ffprobe --verbose --sports-relaxed --channel "CCTV-5,CCTV-6,CCTV-8"
 ```
 
+如果你只想手动控制，不想自动触发体育放宽：
+
+```bash
+python3 find_cn_streams.py --sources sources.json --no-auto-sports-detect --channel "东方卫视,浙江卫视" --verbose
+```
+
 只做体育诊断（失败原因占比）：
 
 ```bash
@@ -220,15 +227,29 @@ python3 find_cn_streams.py --sources "" --verbose
 - `emergency_sources`：本次被加入的历史应急源（频道、URL、历史分）
 - `sports_diagnose`：启用 `--diagnose-sports` 时输出失败原因统计
 
+### 如何添加/更新源
+
+1. 发现新的公开 `m3u` 入口，先手动验证是否可访问（建议返回 `HTTP 200`）。
+2. 把链接加入 `sources.json` 的 `deep`（或 `curated`）字段。
+3. 运行 `python3 find_cn_streams.py --sources sources.json --verbose` 观察候选数量和失败原因。
+4. 若发现优质稳定源，用 `state/manual-feedback.json` 的 `preferred` 锁定；错误源用 `blocked` 拉黑。
+5. 更新 `sources.json` 的 `_meta.last_validated` 日期，便于后续维护。
+
 ## 体育频道优化技巧
 
 - 推荐命令（常用）：
   - `python3 find_cn_streams.py --sources sources.json --ffprobe --sports-relaxed --channel "CCTV-5,CCTV-6,CCTV-8" --verbose`
   - `python3 find_cn_streams.py --sources sources.json --sports-relaxed --diagnose-sports --verbose`
-- 常见现象：公开体育源容易遇到 `超时`、`429`、`403`、DNS 解析失败，这属于公共聚合链路的行业常态。
-- 历史保底调参：可用 `--history-threshold 50 --history-max-inject 10 --history-max-age-days 30` 调整应急回填强度。
+- 常见失败原因解释：
+  - `超时`：跨境网络延迟高或链路抖动。
+  - `HTTP 429`：源站限流，请求过快或同出口流量过大。
+  - `HTTP 404`：源地址已失效或被上游替换。
+  - `DNS 解析失败/路由不可达`：网络环境或运营商路径问题。
+- 日本网络建议：优先使用低延迟 VPN/代理，必要时用 `--timeout 60` 覆盖高峰时段。
+- 历史保底调参：可用 `--history-threshold 50 --history-max-inject 8 --history-max-age-days 30` 调整应急回填强度。
 - 锁定稳定源：一旦发现本地长期稳定的 `CCTV-5/6/8`，及时写入 `state/manual-feedback.json` 的 `preferred`，可显著降低回归波动。
 - 历史记忆机制：`state/probe-history.json` 跑得越多、样本越全，`from_history` 的保底可靠性越高。
+- 最佳实践：每周跑 1-2 次探测积累 history；稳定后把好源写入 `manual-feedback.json` 锁定；日常播放器使用 `output/*.m3u`。
 
 ## GitHub 订阅
 

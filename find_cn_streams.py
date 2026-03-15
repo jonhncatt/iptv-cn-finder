@@ -403,7 +403,7 @@ CCTV_HEADER_COMPAT_CHANNEL_IDS = {"CCTV3.cn", "CCTV5.cn", "CCTV5Plus.cn", "CCTV6
 SPORTS_RELAXED_CHANNEL_IDS = {"CCTV5.cn", "CCTV5Plus.cn", "CCTV6.cn", "CCTV8.cn"}
 SPORTS_DIAGNOSE_CHANNEL_IDS = {"CCTV5.cn", "CCTV6.cn", "CCTV8.cn"}
 SPORTS_HISTORY_TARGET_COUNT = 2
-SPORTS_HISTORY_MAX_INJECT = 10
+SPORTS_HISTORY_MAX_INJECT = 8
 SPORTS_HISTORY_MIN_SCORE = 50.0
 SPORTS_HISTORY_MAX_AGE_DAYS = 30
 SPORTS_RELAXED_TIMEOUT = 40.0
@@ -1286,6 +1286,15 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Relax probe thresholds for CCTV-5/5+/6/8: timeout up to 40s, "
             "at least 2 retries, and stability checks capped at 2."
+        ),
+    )
+    parser.add_argument(
+        "--auto-sports-detect",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Auto-enable sports-relaxed when scanning includes CCTV-5/5+/6/8. "
+            "Disable with --no-auto-sports-detect."
         ),
     )
     parser.add_argument(
@@ -4601,6 +4610,55 @@ def render_failure_summary(summary: list[tuple[str, int]], limit: int = 3) -> st
     return "、".join(f"{reason} {count}次" for reason, count in summary[: max(1, limit)])
 
 
+def resolve_effective_sports_relaxed(
+    args: argparse.Namespace,
+    requested_channel_ids: Collection[str],
+) -> bool:
+    if args.sports_relaxed:
+        return True
+    if not args.auto_sports_detect:
+        return False
+    if args.diagnose_sports:
+        return True
+    if requested_channel_ids:
+        return bool(set(requested_channel_ids) & SPORTS_RELAXED_CHANNEL_IDS)
+    return True
+
+
+def sports_history_coverage(
+    history: HistoryStore,
+    probe_environment: str,
+    *,
+    history_threshold: float,
+    max_age_days: int,
+) -> tuple[int, int]:
+    streams = history.payload.get("streams", {})
+    if not isinstance(streams, dict):
+        return 0, 0
+
+    now = time.time()
+    total_entries = 0
+    high_score_entries = 0
+    for raw_url, entry in streams.items():
+        if not isinstance(entry, dict) or entry.get("channel_id") not in SPORTS_DIAGNOSE_CHANNEL_IDS:
+            continue
+        url = normalize_url(str(raw_url or ""))
+        if not url:
+            continue
+        stats = history.stats(url, probe_environment if probe_environment in PROBE_ENVIRONMENTS else "local")
+        if not stats and probe_environment != "local":
+            stats = history.stats(url, "local")
+        last_seen_epoch = history_last_seen_epoch(stats)
+        if last_seen_epoch is None:
+            continue
+        total_entries += 1
+        if max_age_days > 0 and now - last_seen_epoch > max_age_days * 24 * 3600:
+            continue
+        if preferred_history_score(history, url, probe_environment) >= history_threshold:
+            high_score_entries += 1
+    return total_entries, high_score_entries
+
+
 def iter_channel_filters(raw_filters: Iterable[str]) -> Iterable[str]:
     for raw_value in raw_filters:
         for part in re.split(r"[,，]", raw_value or ""):
@@ -4691,6 +4749,18 @@ def inject_locked_feedback_channels(
 
 def main() -> int:
     args = parse_args()
+    history_threshold = max(0.0, min(100.0, float(args.history_threshold)))
+    history_max_inject = max(1, int(args.history_max_inject))
+    history_max_age_days = max(1, int(args.history_max_age_days))
+    ffprobe_available = shutil.which("ffprobe") is not None
+    if args.ffprobe and not ffprobe_available:
+        print(
+            "ffprobe not found; continuing with HTTP/HLS probing only. "
+            "Install ffmpeg for deeper validation.",
+            file=sys.stderr,
+        )
+    use_ffprobe = bool(args.ffprobe and ffprobe_available)
+
     socket.setdefaulttimeout(max(1.0, args.timeout))
     cache_dir = Path(args.cache_dir) if args.cache_dir else None
     cache = CacheStore(cache_dir, ttl_seconds=args.cache_ttl)
@@ -4711,6 +4781,9 @@ def main() -> int:
     if args.diagnose_sports:
         requested_channel_ids = set(SPORTS_DIAGNOSE_CHANNEL_IDS)
         log("diagnose-sports enabled: forcing channels to CCTV-5/CCTV-6/CCTV-8", verbose=True)
+    effective_sports_relaxed = resolve_effective_sports_relaxed(args, requested_channel_ids)
+    if args.verbose and effective_sports_relaxed and not args.sports_relaxed:
+        log("auto sports-relaxed enabled for CCTV-5/5+/6/8", verbose=True)
     frozen_channel_ids = feedback.frozen_channel_ids() if not requested_channel_ids else ()
     fallback_used = False
     emergency_sources: list[dict[str, Any]] = []
@@ -4731,11 +4804,11 @@ def main() -> int:
         candidates,
         timeout=args.timeout,
         workers=args.workers,
-        use_ffprobe=args.ffprobe,
+        use_ffprobe=use_ffprobe,
         retries=max(0, args.retries),
         stability_checks=max(1, args.stability_checks),
         sequence_delay=max(0.5, args.live_sequence_delay),
-        sports_relaxed=args.sports_relaxed,
+        sports_relaxed=effective_sports_relaxed,
         feedback=feedback,
         verbose=args.verbose,
     )
@@ -4745,11 +4818,22 @@ def main() -> int:
         workers=args.workers,
     )
     sports_failure_summary = summarize_failure_reasons(failed, SPORTS_DIAGNOSE_CHANNEL_IDS)
+    history_total_entries, history_high_score_entries = sports_history_coverage(
+        history,
+        args.probe_environment,
+        history_threshold=history_threshold,
+        max_age_days=history_max_age_days,
+    )
     if args.diagnose_sports:
         print(
             f"sports diagnose top failures: {render_failure_summary(sports_failure_summary, limit=5)}",
             file=sys.stderr,
         )
+        if history_high_score_entries <= 0:
+            print(
+                "sports diagnose hint: history.json 高分样本不足，建议多跑几次 probe 累积历史稳定分。",
+                file=sys.stderr,
+            )
         sports_diagnose_payload = {
             "enabled": True,
             "target_channels": [CCTV_CHANNEL_LABELS[channel_id] for channel_id in sorted(SPORTS_DIAGNOSE_CHANNEL_IDS)],
@@ -4757,6 +4841,8 @@ def main() -> int:
                 {"reason": reason, "count": count}
                 for reason, count in sports_failure_summary[:5]
             ],
+            "history_entries": history_total_entries,
+            "history_high_score_entries": history_high_score_entries,
         }
     for candidate, probe in [*verified, *failed]:
         history.record(candidate, probe, args.probe_environment)
@@ -4783,7 +4869,7 @@ def main() -> int:
         verified,
         grouped_verified,
         timeout=args.timeout,
-        use_ffprobe=args.ffprobe,
+        use_ffprobe=use_ffprobe,
         retries=max(0, args.retries),
         sequence_delay=max(0.5, args.live_sequence_delay),
         content_timeout=max(1.0, args.content_check_timeout),
@@ -4791,14 +4877,14 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
-        sports_relaxed=args.sports_relaxed,
+        sports_relaxed=effective_sports_relaxed,
         verbose=args.verbose,
     )
     verified, grouped_verified = recover_core_satellite_channels(
         verified,
         grouped_verified,
         timeout=args.timeout,
-        use_ffprobe=args.ffprobe,
+        use_ffprobe=use_ffprobe,
         retries=max(0, args.retries),
         sequence_delay=max(0.5, args.live_sequence_delay),
         content_timeout=max(1.0, args.content_check_timeout),
@@ -4806,14 +4892,14 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
-        sports_relaxed=args.sports_relaxed,
+        sports_relaxed=effective_sports_relaxed,
         verbose=args.verbose,
     )
     verified, grouped_verified = recover_feedback_channels(
         verified,
         grouped_verified,
         timeout=args.timeout,
-        use_ffprobe=args.ffprobe,
+        use_ffprobe=use_ffprobe,
         retries=max(0, args.retries),
         stability_checks=max(1, args.stability_checks),
         sequence_delay=max(0.5, args.live_sequence_delay),
@@ -4822,7 +4908,7 @@ def main() -> int:
         probe_environment=args.probe_environment,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
-        sports_relaxed=args.sports_relaxed,
+        sports_relaxed=effective_sports_relaxed,
         verbose=args.verbose,
     )
     verified, grouped_verified, sports_fallback_used, sports_emergency_sources = inject_sports_history_fallbacks(
@@ -4830,9 +4916,9 @@ def main() -> int:
         grouped_verified,
         history=history,
         probe_environment=args.probe_environment,
-        history_threshold=max(0.0, min(100.0, float(args.history_threshold))),
-        max_inject=max(1, int(args.history_max_inject)),
-        max_age_days=max(1, int(args.history_max_age_days)),
+        history_threshold=history_threshold,
+        max_inject=history_max_inject,
+        max_age_days=history_max_age_days,
         feedback=feedback,
         selected_channel_ids=requested_channel_ids or None,
         verbose=args.verbose,
@@ -4845,13 +4931,20 @@ def main() -> int:
         for candidate, _probe in verified
         if candidate.channel_id in SPORTS_DIAGNOSE_CHANNEL_IDS
     }
-    if args.verbose and len(sports_verified_channel_ids) < 2:
+    sports_relevant_run = (
+        args.diagnose_sports
+        or not requested_channel_ids
+        or bool(set(requested_channel_ids) & SPORTS_DIAGNOSE_CHANNEL_IDS)
+    )
+    if args.verbose and sports_relevant_run and len(sports_verified_channel_ids) < 2:
         log(
             "CCTV-5/6/8 存活率低（"
             f"{len(sports_verified_channel_ids)}/3；失败主因：{render_failure_summary(sports_failure_summary)}）。"
             "建议：1. 用 --sports-relaxed 重跑；2. 检查日本网络/VPN；3. 手动 feedback 锁定好源。",
             verbose=True,
         )
+        if history_high_score_entries <= 0:
+            log("history.json 积累不足：当前无近期高分体育历史源，建议多跑几次探测。", verbose=True)
     history.save()
 
     out_path = Path(args.out)
