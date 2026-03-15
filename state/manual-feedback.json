@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-15T15:49:29Z",
+  "updated_at": "2026-03-15T16:18:01Z",
   "channels": {
     "DragonTV.cn": {
       "title": "东方卫视",
@@ -208,6 +208,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "http://ldncctvwbcdtxy.liveplay.myqcloud.com/ldncctvwbcd/cdrmldcctv13_1/index.m3u8",
+          "reason": "用户反馈 CCTV-13 待测2不行，拉黑该候选。"
+        },
+        {
           "url": "https://live-play.cctvnews.cctv.com/cctv/merge_cctv13.m3u8",
           "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
         },
@@ -231,7 +235,12 @@
     },
     "CCTV5.cn": {
       "title": "CCTV-5 体育",
-      "preferred": [],
+      "preferred": [
+        {
+          "url": "http://t.061899.xyz/tl/tl.php?id=cctv5",
+          "note": "用户反馈 CCTV-5 待测2可用，锁定为优先源。"
+        }
+      ],
       "blocked": [
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225734/index.m3u8",
@@ -268,7 +277,12 @@
     },
     "CCTV6.cn": {
       "title": "CCTV-6 电影",
-      "preferred": [],
+      "preferred": [
+        {
+          "url": "http://8.138.7.223/tv/1905.php?id=LIVE3YPYZ30E7V1R0",
+          "note": "用户反馈 CCTV-6 待测2可用，锁定为优先源。"
+        }
+      ],
       "blocked": [
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225741/index.m3u8",
@@ -286,7 +300,12 @@
     },
     "CCTV8.cn": {
       "title": "CCTV-8 电视剧",
-      "preferred": [],
+      "preferred": [
+        {
+          "url": "http://t.061899.xyz/tl/tl.php?id=cctv8",
+          "note": "用户反馈 CCTV-8 待测2可用，锁定为优先源。"
+        }
+      ],
       "blocked": [
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225736/index.m3u8",
@@ -307,6 +326,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "http://58.248.112.205:8006/GD_CUCC/G_CCTV-3-CQ.m3u8?Authinfo=3iRp8RZG1d3hGsaPmj%2FtHTZfkz7RIpdfIwJsxT6gQaB4ZwGH0TEaahnmJ3AUk9g%2B&p=GITV&area=GD_CUCC&mac=d4%3A38%3A44%3Aa5%3A72%3A8b",
+          "reason": "用户反馈 CCTV-3 待测2不行，拉黑该候选。"
+        },
+        {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225766/index.m3u8",
           "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
         },
@@ -324,6 +347,10 @@
       "title": "CCTV-10 科教",
       "preferred": [],
       "blocked": [
+        {
+          "url": "http://123.175.209.52:9003/hls/11/index.m3u8",
+          "reason": "用户反馈 CCTV-10 待测2不行，拉黑该候选。"
+        },
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225743/index.m3u8",
           "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
@@ -359,7 +386,12 @@
     },
     "GuangdongSatelliteTV.cn": {
       "title": "广东卫视",
-      "preferred": [],
+      "preferred": [
+        {
+          "url": "http://goo.bkpcp.top/mg/gdws",
+          "note": "用户反馈广东卫视待测2可用，锁定为优先源。"
+        }
+      ],
       "blocked": [
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225731/index.m3u8",
@@ -384,6 +416,10 @@
       "preferred": [],
       "blocked": [
         {
+          "url": "http://8.138.7.223/tv/jsws4k.php",
+          "reason": "用户反馈江苏卫视待测2画面总花，拉黑该候选。"
+        },
+        {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225720/index.m3u8",
           "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
         },
@@ -401,6 +437,10 @@
       "title": "山东卫视",
       "preferred": [],
       "blocked": [
+        {
+          "url": "http://dbiptv.sn.chinamobile.com/PLTV/88888890/224/3221226209/index.m3u8",
+          "reason": "用户反馈山东卫视待测2不行，拉黑该候选。"
+        },
         {
           "url": "https://zby.130519.xyz/PLTV/11/224/3221225733/index.m3u8",
           "reason": "用户反馈这轮新增待测源全部不可用，拉黑该候选。"
